@@ -144,6 +144,17 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
 .seisan-group.support td:first-child{color:var(--green)}
 /* 入力ガイド */
 .input-hint{font-size:10px;color:var(--gray);margin-top:2px}
+/* ヘルプボタン */
+.help-btn{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#e3f2fd;color:var(--accent);border:1px solid #bbdefb;font-size:10px;font-weight:700;cursor:pointer;padding:0;margin-left:4px;vertical-align:middle;line-height:1;transition:all .15s;font-family:inherit}
+.help-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent);transform:scale(1.1)}
+.help-btn:focus{outline:2px solid var(--accent);outline-offset:1px}
+.help-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.help-pop{position:absolute;z-index:200;background:#1e3a5f;color:#fff;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.6;max-width:260px;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,.25);font-weight:400;pointer-events:auto}
+.help-pop::before{content:'';position:absolute;top:-6px;left:12px;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:6px solid #1e3a5f}
+.help-pop.flip-up::before{top:auto;bottom:-6px;border-bottom:none;border-top:6px solid #1e3a5f}
+.help-pop .help-pop-title{font-size:11px;font-weight:700;color:#90caf9;margin-bottom:4px;letter-spacing:.02em}
+.help-pop .help-pop-close{position:absolute;top:4px;right:6px;background:transparent;border:none;color:rgba(255,255,255,.6);font-size:14px;cursor:pointer;padding:2px 6px;line-height:1}
+.help-pop .help-pop-close:hover{color:#fff}
 /* 単位切替 */
 .unit-btns{display:flex;gap:2px;background:rgba(255,255,255,.15);border-radius:8px;padding:3px}
 .unit-btn{padding:3px 10px;border-radius:6px;font-size:12px;font-weight:700;color:rgba(255,255,255,.7);background:transparent;border:none;cursor:pointer;transition:all .15s}
@@ -309,35 +320,31 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
           </tbody>
         </table>
         </div>
-        <div class="input-hint mt-1">※ 日販or売上のどちらを入力してもOK（自動連動）/ 全角→半角自動変換 / Enterで次項目</div>
+        <div class="mt-1" style="font-size:11px;color:var(--gray)">入力のヒント<button class="help-btn" data-help-title="入力の便利機能" data-help="・日販 or 売上のどちらを入力してもOK（自動連動）<br>・全角数字は自動で半角に変換<br>・Enterキーで次の項目に移動">?</button></div>
       </div>
       <div class="card">
         <div class="section-title">📊 自動算出（精算書の結果）</div>
         <div class="section-banner">
           <div class="stat-card good">
-            <div class="stat-label">💰 店利益（最終利益）</div>
+            <div class="stat-label">💰 店利益（最終利益）<button class="help-btn" data-help-title="店利益の算出式" data-help="粗利 − 経費 + 雑益<br><br>売上から原価を除いた粗利から、人件費や光熱費などの営業経費を差し引き、支援金などの雑益を加えた最終的な店舗利益です。">?</button></div>
             <div class="stat-value" id="r-rieki">¥0</div>
-            <div class="stat-sub">粗利 − 経費 + 雑益</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">📉 営業費計</div>
+            <div class="stat-label">📉 営業費計<button class="help-btn" data-help-title="営業費計の内訳" data-help="給与・見切・ロス・包装・光熱・雑費の合計<br><br>店舗運営にかかる主な経費項目をまとめた金額です。">?</button></div>
             <div class="stat-value" id="r-eigyo">¥0</div>
-            <div class="stat-sub">給与・見切・ロス・包装・光熱・雑費</div>
           </div>
           <div class="stat-card accent" id="box-invest">
-            <div class="stat-label">💼 投資可能額</div>
+            <div class="stat-label">💼 投資可能額<button class="help-btn" data-help-title="投資可能額とは" data-help="店利益 − 最低確保利益ライン<br><br>店舗として必ず確保したい利益ラインを超えて稼げた金額。この範囲で販促や改善への投資が可能です。">?</button></div>
             <div class="stat-value" id="r-toshi">¥0</div>
-            <div class="stat-sub">店利益 − 最低確保利益ライン</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">📅 前月平均日販</div>
+            <div class="stat-label">📅 前月平均日販<button class="help-btn" data-help-title="前月平均日販" data-help="売上 ÷ 営業日数<br><br>精算書の売上を営業日数で割った1日あたりの平均売上です。">?</button></div>
             <div class="stat-value" id="r-nishin">¥—</div>
-            <div class="stat-sub" id="r-nishin-sub">30日換算</div>
+            <div class="stat-sub" id="r-nishin-sub">—</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">📐 売変率</div>
+            <div class="stat-label">📐 売変率<button class="help-btn" data-help-title="売変率の算出式" data-help="売変高 ÷ 売上<br><br>値下げ・見切り販売など、定価からの値引き割合を示す指標です。">?</button></div>
             <div class="stat-value" id="r-urihenritsu">0.0%</div>
-            <div class="stat-sub">売変高 ÷ 売上</div>
           </div>
         </div>
         <div class="row">
@@ -375,70 +382,58 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
 
       <!-- Card 1: 予測値（自動算出） -->
       <div class="card">
-        <div class="section-title">① 予測値（前年日販×現状トレンド）</div>
-        <div class="input-hint mb-2">前年同月の平均日販に①現状値（前年比）を掛けて、何もしない場合の着地を自動算出します</div>
+        <div class="section-title">① 予測値（前年日販×現状トレンド）<button class="help-btn" data-help-title="このセクションの目的" data-help="前年同月の平均日販に現状値（前年比）を掛けて、何もしない場合の着地を自動算出します。<br><br>ここで出る予測値が「現状のままだとどうなるか」の基準になります。">?</button></div>
 
         <div class="row mb-2">
           <div class="col" style="max-width:200px">
             <div class="form-group">
-              <label>前年同月の平均日販</label>
+              <label>前年同月の平均日販<button class="help-btn" data-help-title="前年同月の平均日販" data-help="前年実績の日販（円/日）を入力してください。<br><br>前年の月合計売上 ÷ 前年の営業日数 で算出できます。">?</button></label>
               <input type="text" id="m-zennen-nishin" inputmode="numeric" placeholder="例: 270,000" oninput="calcMonthly()">
-              <div class="input-hint">前年実績の日販（円/日）</div>
             </div>
           </div>
           <div class="col" style="max-width:200px">
             <div class="form-group">
-              <label>①現状値（前年比） <span class="unit-hint">%</span></label>
+              <label>①現状値（前年比） <span class="unit-hint">%</span><button class="help-btn" data-help-title="現状値（前年比）" data-help="直近2〜3ヶ月の対前年平均を%で入力します。<br><br>例：95.0 → 前年の95%水準<br>現状のトレンドを予測に反映させるための補正値です。">?</button></label>
               <input type="text" id="m-jyokyo-nenhi" inputmode="decimal" data-nounit placeholder="例: 95.0" oninput="calcMonthly()">
-              <div class="input-hint">直近2〜3ヶ月の対前年平均</div>
             </div>
           </div>
           <div class="col" style="max-width:160px">
             <div class="form-group">
-              <label>当月営業日数 <span class="unit-hint">日</span></label>
+              <label>当月営業日数 <span class="unit-hint">日</span><button class="help-btn" data-help-title="当月営業日数" data-help="空欄にすると精算書側で入力した営業日数を使用します。<br><br>臨時休業などで精算書と異なる日数を使いたい場合だけ入力してください。">?</button></label>
               <input type="text" id="m-eigyo-nissu" inputmode="numeric" data-nounit placeholder="精算書と同じ" oninput="calcMonthly()">
-              <div class="input-hint">空欄で精算書側を使用</div>
             </div>
           </div>
         </div>
 
         <div class="overflow-auto">
-        <table style="max-width:720px">
+        <table style="max-width:560px">
           <thead><tr>
             <th>項目</th>
-            <th style="width:120px">前月実績</th>
-            <th style="width:120px">予測値</th>
-            <th>算出ロジック</th>
+            <th style="width:140px">前月実績</th>
+            <th style="width:140px">予測値</th>
           </tr></thead>
           <tbody>
-            <tr style="background:#e3f2fd"><td class="text-right font-bold" style="color:var(--accent)">日販</td>
+            <tr style="background:#e3f2fd"><td class="text-right font-bold" style="color:var(--accent)">日販<button class="help-btn" data-help-title="日販の算出式" data-help="前年同月の平均日販 × 現状値（前年比%）<br><br>何もしない場合の予測日販。前年実績に直近の前年比トレンドを掛けて算出します。">?</button></td>
               <td id="pv-prev-nishin" class="text-right">—</td>
-              <td id="pv-yoso-nishin" class="text-right font-bold" style="color:var(--accent);font-size:15px">—</td>
-              <td class="text-sm text-gray">売上 ÷ 営業日数</td></tr>
-            <tr><td class="text-right font-bold">売上（月合計）</td>
+              <td id="pv-yoso-nishin" class="text-right font-bold" style="color:var(--accent);font-size:15px">—</td></tr>
+            <tr><td class="text-right font-bold">売上（月合計）<button class="help-btn" data-help-title="予測売上の算出式" data-help="予測日販 × 当月営業日数">?</button></td>
               <td id="pv-prev-uriage" class="text-right">—</td>
-              <td id="pv-yoso-uriage" class="text-right font-bold">—</td>
-              <td class="text-sm text-gray">予測日販 × 営業日数</td></tr>
-            <tr><td class="text-right font-bold">粗利率</td>
+              <td id="pv-yoso-uriage" class="text-right font-bold">—</td></tr>
+            <tr><td class="text-right font-bold">粗利率<button class="help-btn" data-help-title="粗利率の根拠" data-help="精算書から算出（前月と同率を想定）<br><br>前月実績の粗利率をそのまま予測値として使います。">?</button></td>
               <td id="pv-prev-arariritsu" class="text-right">—</td>
-              <td id="pv-yoso-arariritsu" class="text-right font-bold">—</td>
-              <td class="text-sm text-gray">精算書から算出（前月と同率を想定）</td></tr>
-            <tr><td class="text-right font-bold">粗利</td>
+              <td id="pv-yoso-arariritsu" class="text-right font-bold">—</td></tr>
+            <tr><td class="text-right font-bold">粗利<button class="help-btn" data-help-title="予測粗利の算出式" data-help="予測売上 × 粗利率">?</button></td>
               <td id="pv-prev-arari" class="text-right">—</td>
-              <td id="pv-yoso-arari" class="text-right font-bold" style="color:var(--green)">—</td>
-              <td class="text-sm text-gray">予測売上 × 粗利率</td></tr>
-            <tr style="background:#fff8e1"><td class="text-right text-sm" style="color:#e65100">経費合計</td>
+              <td id="pv-yoso-arari" class="text-right font-bold" style="color:var(--green)">—</td></tr>
+            <tr style="background:#fff8e1"><td class="text-right text-sm" style="color:#e65100">経費合計<button class="help-btn" data-help-title="経費合計の根拠" data-help="前月同額を想定<br><br>経費は固定費中心のため、前月実績と同額が継続すると仮定します。">?</button></td>
               <td id="pv-prev-keihi" class="text-right">—</td>
-              <td id="pv-yoso-keihi" class="text-right font-bold" style="color:#e65100">—</td>
-              <td class="text-sm text-gray">前月同額を想定（固定費中心）</td></tr>
-            <tr style="background:var(--green-lt)"><td class="text-right text-sm" style="color:var(--green)">雑益計</td>
+              <td id="pv-yoso-keihi" class="text-right font-bold" style="color:#e65100">—</td></tr>
+            <tr style="background:var(--green-lt)"><td class="text-right text-sm" style="color:var(--green)">雑益計<button class="help-btn" data-help-title="雑益計の根拠" data-help="前月同額を想定<br><br>見切・処分支援、電気・光熱費支援などの支援金は、前月実績と同額が継続すると仮定します。">?</button></td>
               <td id="pv-prev-zeki" class="text-right">—</td>
-              <td id="pv-yoso-zeki" class="text-right font-bold" style="color:var(--green)">—</td>
-              <td class="text-sm text-gray">前月同額を想定（支援金）</td></tr>
-            <tr style="background:var(--main-lt);font-weight:700"><td class="text-right">予測利益</td>
+              <td id="pv-yoso-zeki" class="text-right font-bold" style="color:var(--green)">—</td></tr>
+            <tr style="background:var(--main-lt);font-weight:700"><td class="text-right">予測利益<button class="help-btn" data-help-title="予測利益の算出式" data-help="予測粗利 − 予測経費 + 予測雑益">?</button></td>
               <td id="pv-prev-rieki" class="text-right">—</td>
-              <td id="pv-yoso-rieki" class="text-right" style="font-size:15px">—</td>
-              <td class="text-sm text-gray">予測粗利 − 予測経費 + 予測雑益</td></tr>
+              <td id="pv-yoso-rieki" class="text-right" style="font-size:15px">—</td></tr>
           </tbody>
         </table>
         </div>
@@ -447,28 +442,25 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
       <!-- Card 2: 利益シミュレーション -->
       <div class="card">
         <div class="section-title">② 利益シミュレーション（目標利益から逆算）</div>
-        <div class="input-hint mb-2">目標利益を入れると、達成に必要な売上・粗利・経費削減が自動で算出されます</div>
-
         <div class="row mb-2">
           <div class="col" style="max-width:200px">
             <div class="form-group">
-              <label>目標利益</label>
+              <label>目標利益<button class="help-btn" data-help-title="目標利益" data-help="今月達成したい店利益を入力します。<br><br>この値から逆算して、必要な売上・粗利・経費削減が自動で算出されます。">?</button></label>
               <input type="text" id="m-target-profit" inputmode="numeric" placeholder="例: 600,000" oninput="calcMonthly()">
               <div class="input-hint" id="m-minrieki-hint">最低確保利益ライン: 精算書より —</div>
             </div>
           </div>
           <div class="col" style="max-width:200px">
             <div class="form-group">
-              <label>目標粗利率 <span class="unit-hint">%</span></label>
+              <label>目標粗利率 <span class="unit-hint">%</span><button class="help-btn" data-help-title="目標粗利率" data-help="未入力なら予測粗利率（前月と同率）を使用します。<br><br>粗利率改善施策を見込む場合のみ入力してください。">?</button></label>
               <input type="text" id="m-target-arari-rate" inputmode="decimal" data-nounit placeholder="例: 32.5" oninput="calcMonthly()">
-              <div class="input-hint" id="m-target-arari-hint">未入力なら予測粗利率を使用</div>
+              <div class="input-hint" id="m-target-arari-hint"></div>
             </div>
           </div>
           <div class="col" style="max-width:200px">
             <div class="form-group">
-              <label>経費削減目標</label>
+              <label>経費削減目標<button class="help-btn" data-help-title="経費削減目標" data-help="月全体で削減したい経費額を入力します。<br><br>具体的な削減内訳は Card④（経費削減計画）で項目別に配分します。">?</button></label>
               <input type="text" id="m-keihi-gensaku" inputmode="numeric" placeholder="0" oninput="calcMonthly()">
-              <div class="input-hint">Card④で項目別に配分</div>
             </div>
           </div>
         </div>
@@ -521,23 +513,21 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
       <!-- Card 3: 売上目標・週別配分 -->
       <div class="card">
         <div class="section-title">③ 日販目標・週別配分</div>
-        <div class="input-hint mb-2">Card②の必要売上が月売上目標として自動流入します。日販ベースで4週に配分して重点施策で埋めていきます</div>
+        <div class="mb-2" style="font-size:12px;color:#374151">月売上目標の配分<button class="help-btn" data-help-title="週別配分の考え方" data-help="Card②の必要売上が月売上目標として自動流入します。<br><br>日販ベースで4週に配分し、重点施策で売上ギャップを埋める計画を立てます。">?</button></div>
 
         <div class="flow-row">
           <div class="flow-cell">
-            <div class="flow-label">予測日販</div>
+            <div class="flow-label">予測日販<button class="help-btn" data-help-title="予測日販" data-help="現状トレンド（前年比）から算出した、何もしない場合の予測日販です。">?</button></div>
             <div class="flow-value" id="m-nishin-yoso">¥—</div>
-            <div class="flow-sub">現状トレンド</div>
           </div>
           <div class="flow-arrow">→</div>
           <div class="flow-cell hero">
-            <div class="flow-label">目標日販</div>
+            <div class="flow-label">目標日販<button class="help-btn" data-help-title="目標日販の算出式" data-help="必要売上 ÷ 営業日数<br><br>目標利益達成に必要な売上を、営業日数で割った1日あたりの目標額です。">?</button></div>
             <div class="flow-value" id="m-nishin-target">¥—</div>
-            <div class="flow-sub">必要売上÷営業日数</div>
           </div>
           <div class="flow-arrow">→</div>
           <div class="flow-cell" id="hero-keikaku-cell">
-            <div class="flow-label">日販ギャップ</div>
+            <div class="flow-label">日販ギャップ<button class="help-btn" data-help-title="日販ギャップ" data-help="目標日販 − 予測日販<br><br>施策で埋めるべき1日あたりの売上差です。">?</button></div>
             <div class="flow-value" id="m-nishin-gap">—</div>
             <div class="flow-sub" id="m-keikakuchi-rate"></div>
           </div>
@@ -545,24 +535,20 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
 
         <div class="section-banner">
           <div class="stat-card">
-            <div class="stat-label">前月日販</div>
+            <div class="stat-label">前月日販<button class="help-btn" data-help-title="前月日販" data-help="精算書から取得した前月の平均日販です。">?</button></div>
             <div class="stat-value" id="m-nishin-prev">¥—</div>
-            <div class="stat-sub">精算書より</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">予測売上（月合計）</div>
+            <div class="stat-label">予測売上（月合計）<button class="help-btn" data-help-title="予測売上" data-help="現状トレンドのまま進んだ場合の月合計売上（予測日販×営業日数）です。">?</button></div>
             <div class="stat-value" id="m-yosochi">—</div>
-            <div class="stat-sub">現状トレンド</div>
           </div>
           <div class="stat-card accent">
-            <div class="stat-label">月売上目標（月合計）</div>
+            <div class="stat-label">月売上目標（月合計）<button class="help-btn" data-help-title="月売上目標" data-help="Card②（利益シミュレーション）で算出された必要売上が自動で入ります。">?</button></div>
             <div class="stat-value" id="m-saite-disp">—</div>
-            <div class="stat-sub">必要売上（Card②から）</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">月売上ギャップ</div>
+            <div class="stat-label">月売上ギャップ<button class="help-btn" data-help-title="月売上ギャップ" data-help="月売上目標 − 予測売上<br><br>施策で埋めるべき月全体の売上差です。週別配分＆重点施策で計画的に積み上げます。">?</button></div>
             <div class="stat-value" id="m-keikakuchi">—</div>
-            <div class="stat-sub">施策で埋める</div>
           </div>
         </div>
 
@@ -597,21 +583,19 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
             <div class="stat-value" id="inv2-rieki">¥—</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">最低確保利益ライン</div>
+            <div class="stat-label">最低確保利益ライン<button class="help-btn" data-help-title="最低確保利益ライン" data-help="精算書で入力した、店舗として必ず確保したい月次利益の下限です。">?</button></div>
             <div class="stat-value" id="inv2-minrieki">¥—</div>
           </div>
           <div class="stat-card accent" id="inv2-toshi-card">
-            <div class="stat-label">投資可能枠</div>
+            <div class="stat-label">投資可能枠<button class="help-btn" data-help-title="投資可能枠の算出式" data-help="前月店利益 − 最低確保利益ライン<br><br>必ず確保したい利益を超えて稼げた部分で、販促や改善への投資に使える金額です。">?</button></div>
             <div class="stat-value" id="inv2-toshi">¥—</div>
-            <div class="stat-sub">店利益 − 最低確保利益</div>
           </div>
         </div>
       </div>
 
       <!-- Card 4: 経費目標 -->
       <div class="card">
-        <div class="section-title">④ 経費目標（項目別の削減計画）</div>
-        <div class="input-hint mb-2">Card②の経費削減目標を項目別に配分。空欄なら前月実績を目標として使用</div>
+        <div class="section-title">④ 経費目標（項目別の削減計画）<button class="help-btn" data-help-title="このセクションの目的" data-help="Card②の経費削減目標を項目別に配分します。<br><br>空欄の項目は前月実績がそのまま目標として使用されます。">?</button></div>
         <div class="overflow-auto">
         <table style="max-width:720px">
           <thead><tr>
@@ -2482,6 +2466,51 @@ function importJSON(e){
   };
   reader.readAsText(file);e.target.value='';
 }
+
+// ===== HELP POPOVER =====
+let _helpPopEl=null;
+function helpClose(){
+  if(_helpPopEl){_helpPopEl.remove();_helpPopEl=null;}
+  document.querySelectorAll('.help-btn.active').forEach(b=>b.classList.remove('active'));
+}
+function helpToggle(btn){
+  if(_helpPopEl&&_helpPopEl.dataset.forBtn===btn.dataset.helpId){helpClose();return;}
+  helpClose();
+  const text=btn.getAttribute('data-help')||'';
+  const title=btn.getAttribute('data-help-title')||'算出ロジック';
+  if(!btn.dataset.helpId)btn.dataset.helpId='h'+Math.random().toString(36).slice(2,9);
+  const pop=document.createElement('div');
+  pop.className='help-pop';
+  pop.dataset.forBtn=btn.dataset.helpId;
+  pop.innerHTML=`<button class="help-pop-close" aria-label="閉じる">×</button><div class="help-pop-title">${title}</div><div>${text}</div>`;
+  document.body.appendChild(pop);
+  const r=btn.getBoundingClientRect();
+  const popW=pop.offsetWidth,popH=pop.offsetHeight;
+  let top=r.bottom+window.scrollY+8;
+  let left=r.left+window.scrollX-6;
+  // 右端はみ出し防止
+  const maxLeft=window.scrollX+document.documentElement.clientWidth-popW-8;
+  if(left>maxLeft)left=maxLeft;
+  if(left<window.scrollX+8)left=window.scrollX+8;
+  // 下端はみ出し→上向き
+  if(r.bottom+popH+16>window.innerHeight){
+    top=r.top+window.scrollY-popH-8;
+    pop.classList.add('flip-up');
+  }
+  pop.style.top=top+'px';
+  pop.style.left=left+'px';
+  btn.classList.add('active');
+  _helpPopEl=pop;
+  pop.querySelector('.help-pop-close').addEventListener('click',helpClose);
+}
+document.addEventListener('click',e=>{
+  const btn=e.target.closest('.help-btn');
+  if(btn){e.preventDefault();e.stopPropagation();helpToggle(btn);return;}
+  if(_helpPopEl&&!e.target.closest('.help-pop'))helpClose();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')helpClose();});
+window.addEventListener('resize',helpClose);
+window.addEventListener('scroll',helpClose,true);
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded',async()=>{
