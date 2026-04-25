@@ -410,7 +410,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v14.1</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v15.0</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -1411,7 +1411,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v14.1';
+const APP_VERSION='v15.0';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -1521,6 +1521,110 @@ async function claudeKeyTest(){
 }
 
 // 精算書PDFページの canvas を Claude Vision で解析
+// ArrayBuffer → base64 文字列（大きいバッファでも StackOverflow しないようチャンク処理）
+async function arrayBufferToBase64(buf){
+  const bytes=new Uint8Array(buf);
+  const chunkSize=0x8000; // 32KB
+  let binary='';
+  for(let i=0;i<bytes.length;i+=chunkSize){
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i+chunkSize));
+  }
+  return btoa(binary);
+}
+
+// Anthropic API に PDF を直接送信して解析させる（OCR不要・サーバ側で文字認識）
+async function claudeParseFromPDF(pdfBase64, pageNum, onProgress){
+  const key=claudeGetKey();
+  if(!key)throw new Error('Claude APIキーが未設定です');
+  const model=claudeGetModel();
+
+  const fieldDescriptions=OCR_LABEL_MAP.map(m=>{
+    const code=m.code?` (コード${m.code})`:'';
+    return `- ${m.key}${code}: ${m.aliases.join(' / ')}`;
+  }).join('\n');
+
+  const systemPrompt=`あなたはローソンFC加盟店の月次精算書PDFパーサーです。
+PDFファイル本体を渡しているので、サーバ側でテキスト+ページ画像が抽出されます。
+あなたは「どの数値がどのフィールドか」だけを判断してください。
+
+【最重要・厳守】
+- PDFから文字データが抽出されているので、勝手に修正・推測しない
+- 「当月」カラムの値だけを採用（複数月並んでいる場合）
+- 読めない値は fields に入れない（推測禁止）
+- 「見切・処分」は売上原価側(コード5030 → urihen)と営業費側(コード6030 → mikiri)で別物
+
+【読み取り対象】
+${fieldDescriptions}
+
+【出力フォーマット】単一JSON、前置き禁止：
+{
+  "month": "YYYY-MM",
+  "eigyo_nissu": 31,
+  "fields": { "uriage": 11145822, ... },
+  "cells": [
+    {"key":"uriage","raw":"11,145,822","column":"当月","row_label":"商品売上高","code":"4010"}
+  ],
+  "notes": "...",
+  "confidence": "high|medium|low",
+  "warnings": ["..."]
+}
+
+【ルール】
+1. fields の値は整数のみ（カンマ・¥・小数禁止）
+2. 該当しないフィールドは fields/cells から省略
+3. cells には fields の全項目を必ず記録
+4. valid な JSON（trailing comma禁止）`;
+
+  const userText=`添付した精算書PDFの${pageNum?`**${pageNum}ページ目**`:'該当ページ'}を解析し、指定された JSON 形式で返してください。
+
+${pageNum?`【重要】PDFには複数ページ含まれている可能性があります。**${pageNum}ページ目**だけを対象にしてください。他のページは無視。`:''}
+
+「当月」カラムだけを抽出。読めない値は省略。推測・整合性合わせは厳禁。`;
+
+  onProgress&&onProgress('Claude にPDF直送中（OCR不要モード）...',40);
+  const t0=performance.now();
+  const r=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'content-type':'application/json',
+      'x-api-key':key,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body:JSON.stringify({
+      model:model,
+      max_tokens:4000,
+      system:systemPrompt,
+      messages:[{
+        role:'user',
+        content:[
+          {type:'document',source:{type:'base64',media_type:'application/pdf',data:pdfBase64}},
+          {type:'text',text:userText}
+        ]
+      }]
+    })
+  });
+  const dt=((performance.now()-t0)/1000).toFixed(1);
+  if(!r.ok){
+    const errText=await r.text();
+    throw new Error(`Claude PDF API error ${r.status}: ${errText.slice(0,300)}`);
+  }
+  const j=await r.json();
+  const txt=j.content?.[0]?.text||'';
+  console.log('[claude-pdf] response time:',dt+'s, tokens:',j.usage);
+
+  let parsed;
+  try{
+    const m=txt.match(/\{[\s\S]*\}/);
+    if(!m)throw new Error('JSON見つからず');
+    parsed=JSON.parse(m[0]);
+  }catch(e){
+    console.error('[claude-pdf] parse failed. raw:',txt);
+    throw new Error('Claude応答のJSON解析失敗: '+e.message+'\n\n応答:\n'+txt.slice(0,500));
+  }
+  return {parsed,raw:txt,usage:j.usage,timeSec:dt,mode:'pdf'};
+}
+
 // PDF.js の getTextContent() の結果を、行・列が見えるテキストに整形する
 // PDFがテキストレイヤーを持っていればこれが「OCRゼロの正解データ」になる
 function buildStructuredTextFromTC(textContent){
@@ -3021,8 +3125,13 @@ async function handleSeisanPDF(ev){
   try{
     ocrSetStep('PDFを読み込み中...','',5);
     const buf = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({data:buf}).promise;
+    const pdf = await pdfjsLib.getDocument({data:buf.slice(0)}).promise;
     ocrCtx.pdf = pdf;
+    // Anthropic API への直接送信用に PDF を base64 化して保持
+    ocrCtx.pdfBuf = buf;
+    ocrCtx.pdfBase64 = await arrayBufferToBase64(buf);
+    ocrCtx.pdfSizeMB = (buf.byteLength/1024/1024).toFixed(2);
+    console.log('[seisan] PDF size:',ocrCtx.pdfSizeMB,'MB, base64:',(ocrCtx.pdfBase64.length/1024/1024).toFixed(2),'MB');
 
     // 全ページのサムネイルを生成
     ocrSetStep('ページ一覧を作成中...',`合計 ${pdf.numPages} ページ`,15);
@@ -3080,43 +3189,72 @@ async function ocrProcessPage(pageIdx){
 
     if(useClaude){
       // === Claude モード ===
-      // まず PDF テキストレイヤーを抽出する（あれば OCR ゼロで完璧に読める）
-      ocrSetStep('PDFテキストレイヤー確認中...','埋め込みテキストを抽出',8);
-      let structuredText=null;
-      let rawTcInfo={items:0,nonEmpty:0,sample:''};
-      try{
-        const tc=await page.getTextContent();
-        rawTcInfo.items=tc?.items?.length||0;
-        rawTcInfo.nonEmpty=(tc?.items||[]).filter(it=>it && typeof it.str==='string' && it.str.trim()).length;
-        rawTcInfo.sample=(tc?.items||[]).slice(0,10).map(it=>JSON.stringify(it.str)).join(' ');
-        structuredText=buildStructuredTextFromTC(tc);
-      }catch(e){console.warn('[claude] getTextContent failed:',e);}
+      // 優先順位:
+      //   1. PDF直送モード（Anthropic APIの document content block）= サーバ側でテキスト+画像抽出
+      //   2. PDFテキストレイヤー（PDF.js getTextContent）
+      //   3. Vision OCR（最後の砦）
+      const pdfBase64 = ocrCtx.pdfBase64;
+      const pdfBytes = ocrCtx.pdfBuf?.byteLength || 0;
+      const pdfMB = pdfBytes/1024/1024;
+      // Anthropic の PDF 上限は 32MB。base64 化するとさらに膨らむので余裕を見て 23MB まで
+      const canSendPdf = pdfBase64 && pdfMB < 23;
+      console.log('[claude] PDF size:',pdfMB.toFixed(2),'MB, canSendPdf:',canSendPdf);
 
-      const textLen = structuredText?structuredText.length:0;
-      const hasDigit = structuredText?/\d/.test(structuredText):false;
-      // 閾値を緩める：50文字以上で数字を含めばテキスト層ありとみなす
-      const hasTextLayer = structuredText && textLen>50 && hasDigit;
-      console.log('[claude] textContent items:',rawTcInfo.items,'non-empty:',rawTcInfo.nonEmpty);
-      console.log('[claude] textContent sample:',rawTcInfo.sample);
-      console.log('[claude] structuredText length:',textLen,'hasDigit:',hasDigit);
-      if(structuredText)console.log('[claude] structuredText preview (first 500):\n'+structuredText.slice(0,500));
-      console.log('[claude] decision:',hasTextLayer ? '📄 テキスト解析モード' : '👁 Vision OCRへフォールバック');
+      let result=null;
+      let imgCanvas=null;
 
-      // 補助画像（テキストモードでも列ヘッダー確認用に使う）
-      ocrSetStep(hasTextLayer?'PDFを画像化中（補助用）':'PDFを高解像度で画像化中', '...', 15);
-      const vp = page.getViewport({scale: hasTextLayer ? 2.5 : 4});
-      const cv = document.createElement('canvas');
-      cv.width = vp.width; cv.height = vp.height;
-      await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
-      ocrCtx.canvas = cv;
+      // 表示用に画像も作る（モーダル表示用）
+      const vp = page.getViewport({scale:2});
+      imgCanvas = document.createElement('canvas');
+      imgCanvas.width=vp.width;imgCanvas.height=vp.height;
+      await page.render({canvasContext:imgCanvas.getContext('2d'),viewport:vp}).promise;
+      ocrCtx.canvas = imgCanvas;
 
-      let result;
-      if(hasTextLayer){
-        ocrSetStep('テキスト解析モード','OCR不要・100%正確',25);
-        result = await claudeParseFromText(structuredText, cv, ocrSetStep);
-      }else{
-        result = await claudeOcrSeisan(cv, ocrSetStep);
+      // ① PDF 直送モード
+      if(canSendPdf){
+        try{
+          ocrSetStep('PDF直送モード','Anthropic API にPDFをそのまま送信',15);
+          result = await claudeParseFromPDF(pdfBase64, ocrCtx.pages[pageIdx].pageNum, ocrSetStep);
+          console.log('[claude] PDF direct mode succeeded');
+        }catch(e){
+          console.warn('[claude] PDF直送 失敗、フォールバック:',e.message);
+        }
       }
+
+      // ② テキストレイヤー
+      if(!result){
+        ocrSetStep('PDFテキストレイヤー確認中...','...',12);
+        let structuredText=null;
+        let tcInfo={items:0,nonEmpty:0};
+        try{
+          const tc=await page.getTextContent();
+          tcInfo.items=tc?.items?.length||0;
+          tcInfo.nonEmpty=(tc?.items||[]).filter(it=>it && typeof it.str==='string' && it.str.trim()).length;
+          structuredText=buildStructuredTextFromTC(tc);
+        }catch(e){console.warn('[claude] getTextContent failed:',e);}
+        const textLen=structuredText?structuredText.length:0;
+        const hasDigit=structuredText?/\d/.test(structuredText):false;
+        const hasTextLayer=structuredText && textLen>50 && hasDigit;
+        console.log('[claude] textLayer items:',tcInfo.items,'non-empty:',tcInfo.nonEmpty,'len:',textLen);
+        if(hasTextLayer){
+          try{
+            ocrSetStep('テキスト解析モード','OCR不要',25);
+            result = await claudeParseFromText(structuredText, imgCanvas, ocrSetStep);
+          }catch(e){console.warn('[claude] テキストモード 失敗、Vision OCRへ:',e.message);}
+        }
+      }
+
+      // ③ Vision OCR フォールバック
+      if(!result){
+        ocrSetStep('Vision OCR モード','PDFを高解像度で画像化中',15);
+        const vp4 = page.getViewport({scale:4});
+        const cv4 = document.createElement('canvas');
+        cv4.width=vp4.width;cv4.height=vp4.height;
+        await page.render({canvasContext:cv4.getContext('2d'),viewport:vp4}).promise;
+        ocrCtx.canvas = cv4;
+        result = await claudeOcrSeisan(cv4, ocrSetStep);
+      }
+
       const {parsed,raw,usage,timeSec,mode} = result;
 
       ocrSetStep('結果を整形中...','JSON → state 変換',85);
@@ -3146,7 +3284,7 @@ async function ocrProcessPage(pageIdx){
       ocrCtx.issues = issues;
 
       const inT = usage?.input_tokens||0, outT = usage?.output_tokens||0;
-      const modeLabel = (mode==='text') ? '📄テキスト解析' : '👁Vision OCR';
+      const modeLabel = mode==='pdf' ? '📄 PDF直送' : mode==='text' ? '📄 テキスト解析' : '👁 Vision OCR';
       ocrSetStep('完了 ✨',`${modeLabel} / Claude ${claudeGetModel().split('-').slice(0,3).join('-')} / ${timeSec}秒 / ${inT}+${outT} tokens`,100);
       setTimeout(()=>ocrShowConfirmation(),300);
       return;
@@ -3380,7 +3518,8 @@ function ocrShowConfirmation(){
   html += `<span class="pill ok">📊 抽出: ${Object.keys(ext).filter(k=>!k.startsWith('_')).length} / ${OCR_LABEL_MAP.length} 項目</span>`;
   if(ext._month)html += `<span class="pill ok">📅 ${ext._month}</span>`;
   if(ext._eigyo_nissu)html += `<span class="pill ok">📆 営業日数 ${ext._eigyo_nissu}日</span>`;
-  if(ext._mode==='text')html += `<span class="pill" style="background:#dbeafe;color:#1e40af">📄 テキスト解析（OCR不要）</span>`;
+  if(ext._mode==='pdf')html += `<span class="pill" style="background:#d1fae5;color:#065f46">📄 PDF直送（高精度）</span>`;
+  else if(ext._mode==='text')html += `<span class="pill" style="background:#dbeafe;color:#1e40af">📄 テキスト解析</span>`;
   else if(ext._mode==='vision')html += `<span class="pill" style="background:#fef3c7;color:#92400e">👁 Vision OCR</span>`;
   html += '</div>';
 
