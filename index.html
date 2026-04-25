@@ -143,6 +143,17 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
 .seisan-table td.s-pos{color:var(--green);font-weight:600}
 .seisan-table td.s-neg{color:var(--red);font-weight:600}
 .seisan-table .s-auto-tag{display:inline-block;font-size:9px;background:#1976d2;color:#fff;padding:0 4px;border-radius:8px;font-weight:600}
+/* ===== FC-Cn 契約 支援算出 ===== */
+.cn-card{border-left:4px solid #1976d2}
+.cn-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-bottom:10px}
+.cn-section-title{margin:12px 0 6px;padding:4px 10px;background:#e3f2fd;border-left:4px solid #1976d2;font-size:13px;font-weight:700;color:#0d47a1;border-radius:4px}
+.cn-result-table{border-collapse:collapse;width:100%;font-size:12px}
+.cn-result-table th,.cn-result-table td{border:1px solid var(--border);padding:5px 8px;white-space:nowrap}
+.cn-result-table th{background:#f5f5f5;font-weight:600;font-size:11px}
+.cn-result-table tr.cn-row-key td{background:#fff8e1;font-weight:700;color:#e65100}
+.cn-result-table tr.cn-row-sub td{background:#e8eaf6;font-weight:700}
+.cn-result-table tr.cn-row-final td{background:#c8e6c9;color:#1b5e20;font-weight:700;font-size:13px}
+.cn-result-table td.cn-section-mini{background:#eceff1;color:#37474f;font-weight:700;text-align:center;padding:4px;font-size:11px}
 .qsc-row{display:grid;grid-template-columns:1fr 90px 1fr 1fr;gap:6px;align-items:start;padding:6px 0;border-bottom:1px solid var(--border)}
 .qsc-row:last-child{border-bottom:none}
 .qsc-group-head{margin:10px 0 4px;padding:4px 10px;background:#f1f5f9;border-left:4px solid var(--accent);font-size:12px;font-weight:700;color:#334155;border-radius:4px}
@@ -280,16 +291,15 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
     </div>
   </div>
   <div id="tabs">
-    <button class="tab-btn active" onclick="showTab(0)">⓪精算書</button>
-    <button class="tab-btn" onclick="showTab(1)">①月次目標</button>
-    <button class="tab-btn" onclick="showTab(2)">②日販・客数</button>
-    <button class="tab-btn" onclick="showTab(3)">③カテゴリ</button>
-    <button class="tab-btn" onclick="showTab(4)">④施策計画</button>
-    <button class="tab-btn" onclick="showTab(5)">⑤先週検証</button>
-    <button class="tab-btn" onclick="showTab(6)">⑥QSC</button>
-    <button class="tab-btn" onclick="showTab(7)">⑦シーズン</button>
-    <button class="tab-btn" onclick="showTab(8)">⑧発注リスト</button>
-    <button class="tab-btn" onclick="showTab(9)">⑨その他</button>
+    <button class="tab-btn active" data-tab="0" onclick="showTab(0)">⓪精算書</button>
+    <button class="tab-btn" data-tab="2" onclick="showTab(2)">①日販・客数</button>
+    <button class="tab-btn" data-tab="1" onclick="showTab(1)">②次月計画</button>
+    <button class="tab-btn" data-tab="4" onclick="showTab(4)">③施策計画</button>
+    <button class="tab-btn" data-tab="5" onclick="showTab(5)">④先週検証</button>
+    <button class="tab-btn" data-tab="6" onclick="showTab(6)">⑤QSC</button>
+    <button class="tab-btn" data-tab="7" onclick="showTab(7)">⑥シーズン</button>
+    <button class="tab-btn" data-tab="8" onclick="showTab(8)">⑦発注リスト</button>
+    <button class="tab-btn" data-tab="9" onclick="showTab(9)">⑧その他</button>
   </div>
   <div id="content">
 
@@ -374,12 +384,12 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
       </div>
     </div>
 
-    <!-- ===== Tab 1: 月次目標 ===== -->
+    <!-- ===== Tab 1: 次月計画（旧 月次目標 + カテゴリ + Cn支援） ===== -->
     <div class="tab-panel" id="tab1">
 
       <!-- トップバナー: 日販メイン → 利益（コンパクト版） -->
       <div class="card hero-banner">
-        <div class="hero-title">🎯 今月のゴール</div>
+        <div class="hero-title">🎯 次月のゴール</div>
         <div class="hero-flow">
           <div class="hero-cell"><div class="hero-k">前月日販</div><div class="hero-v" id="hero-prev-nishin">¥—</div></div>
           <span class="hero-sep">→</span>
@@ -742,6 +752,172 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
           <div class="summary-box"><div class="label">ROI</div><div class="value" id="inv-roi">—%</div></div>
         </div>
       </div>
+
+      <!-- ===== カテゴリ別計画（旧Tab3を統合） ===== -->
+      <div class="card">
+        <div class="flex justify-between items-center mb-2">
+          <div class="section-title" style="margin:0">📦 カテゴリ別計画</div>
+          <div class="flex gap-2">
+            <button class="btn-secondary btn-sm" onclick="switchCatView('sales')">売上</button>
+            <button class="btn-secondary btn-sm" onclick="switchCatView('arari')">粗利</button>
+            <button class="btn-secondary btn-sm" onclick="switchCatView('aico')">AICO</button>
+          </div>
+        </div>
+        <div id="cat-view-sales" class="overflow-auto">
+          <table class="cat-table">
+            <thead>
+              <tr>
+                <th style="width:100px;position:sticky;left:0;z-index:1">カテゴリ</th>
+                <th>前月実績</th><th>当月計画</th><th>前週実績</th>
+                <th class="konshu">当週計画</th>
+                <th>当週売変高</th><th>当週売変率</th>
+              </tr>
+            </thead>
+            <tbody id="cat-sales-body"></tbody>
+          </table>
+        </div>
+        <div id="cat-view-arari" class="overflow-auto" style="display:none">
+          <table class="cat-table">
+            <thead>
+              <tr>
+                <th style="width:100px;position:sticky;left:0;z-index:1">カテゴリ</th>
+                <th>前月粗利</th><th>当月計画粗利</th><th>前週粗利</th>
+                <th class="konshu">当週計画粗利</th>
+                <th>当週利益率</th>
+              </tr>
+            </thead>
+            <tbody id="cat-arari-body"></tbody>
+          </table>
+        </div>
+        <div id="cat-view-aico" class="overflow-auto" style="display:none">
+          <table class="cat-table">
+            <thead>
+              <tr>
+                <th style="width:100px;position:sticky;left:0;z-index:1">カテゴリ</th>
+                <th>当月販売高</th><th>当月粗利</th><th>値引高</th><th>廃棄高</th>
+                <th class="konshu">処方箋（平日）</th>
+                <th class="konshu">処方箋（土日）</th>
+                <th>判定</th>
+              </tr>
+            </thead>
+            <tbody id="cat-aico-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== FC-Cn 契約 支援算出システム ===== -->
+      <div class="card cn-card">
+        <div class="section-title">💴 FC-Cn 契約 支援算出システム<button class="help-btn" data-help-title="FC-Cn 契約 支援算出システム" data-help="ローソン FC-Cn / FC-5Cn 契約の本部支援を組み込み、計画売上に対する<b>店利益（最適化後）</b>を自動計算します。<br><br><b>対象支援</b><br>① 加盟店サポート（見切・処分の一部負担）<br>② 加盟店サポート（光熱費の半額・上限25万円/月）<br>③ 経営助成金（FC-5Cn 初年度のみ 5万円/月）<br>④ 最低保証フランチャイジー収入（24h:1860万/年、非24h:1560万/年）<br><br><b>本部チャージ（スライド）</b><br>FC-Cn: 〜300万 45% / 〜450万 70% / 450万超 60%<br>FC-5Cn: 〜300万 46% / 〜450万 71% / 450万超 61%<br>※24時間営業未満は各レート+3%">?</button></div>
+        <div class="alert alert-info mb-2" style="font-size:12px;line-height:1.6">
+          📘 <b>次月の計画値を入力</b>すると、本部チャージ（スライド3段階）・見切処分支援・光熱費支援・経営助成金・最低保証を自動算出。<b>支援込みで利益最大化</b>される店利益が見えます。
+        </div>
+
+        <!-- Cn契約条件 -->
+        <div class="cn-grid">
+          <div class="form-group">
+            <label>契約タイプ</label>
+            <select id="cn-type" onchange="calcCnSupport()">
+              <option value="cn">FC-Cn（10年）</option>
+              <option value="5cn">FC-5Cn（5年）</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>営業時間</label>
+            <select id="cn-h24" onchange="calcCnSupport()">
+              <option value="1">24時間営業</option>
+              <option value="0">24時間未満</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>営業日数</label>
+            <input type="text" id="cn-nissu" inputmode="numeric" data-nounit value="30" oninput="calcCnSupport()">
+          </div>
+          <div class="form-group">
+            <label>暦日数</label>
+            <input type="text" id="cn-koyomi" inputmode="numeric" data-nounit value="30" oninput="calcCnSupport()">
+          </div>
+          <div class="form-group" id="cn-firstyear-wrap">
+            <label>初年度（FC-5Cn助成金対象）</label>
+            <select id="cn-firstyear" onchange="calcCnSupport()">
+              <option value="0">対象外</option>
+              <option value="1">初年度（5万円/月）</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 計画入力 -->
+        <div class="cn-section-title">📝 次月の計画値を入力</div>
+        <div class="cn-grid">
+          <div class="form-group">
+            <label>商品売上高（円）<button class="help-btn" data-help-title="商品売上高" data-help="月の商品売上高（4010）。日販×営業日数 などから計画値を入力。">?</button></label>
+            <input type="text" id="cn-uriage" inputmode="numeric" placeholder="例: 9,000,000" oninput="calcCnSupport()">
+          </div>
+          <div class="form-group">
+            <label>その他営業収入（円）</label>
+            <input type="text" id="cn-sonota" inputmode="numeric" placeholder="例: 200,000" oninput="calcCnSupport()">
+          </div>
+          <div class="form-group">
+            <label>純売上原価率%<button class="help-btn" data-help-title="純売上原価率" data-help="商品仕入高 ÷ 商品売上高（見切・棚卸ロスを含まない純粋な原価率）。<br><br>標準値は概ね 70〜75%（カテゴリミックスにより変動）。">?</button></label>
+            <input type="text" id="cn-genkaritsu" inputmode="decimal" placeholder="例: 72.5" value="72" oninput="calcCnSupport()">
+          </div>
+          <div class="form-group">
+            <label>見切・処分高（売価ベース円）<button class="help-btn" data-help-title="見切・処分高（売価）" data-help="売変高（販売価格を下げて販売または廃棄した分の売価ベース合計）。<br><br>支援対象判定に使われ、商品売上高に対する比率（見切率）が支援階層を決めます。">?</button></label>
+            <input type="text" id="cn-mikiri" inputmode="numeric" placeholder="例: 350,000" oninput="calcCnSupport()">
+          </div>
+          <div class="form-group">
+            <label>棚卸ロス（売価ベース円）</label>
+            <input type="text" id="cn-tanaloss" inputmode="numeric" placeholder="例: 50,000" oninput="calcCnSupport()">
+          </div>
+          <div class="form-group">
+            <label>水道光熱費（円）<button class="help-btn" data-help-title="水道光熱費" data-help="月の電気・ガス・水道費の合計。<br><br>本部負担は半額（上限月25万円）。50%×水道光熱費（上限25万円）が雑益に加算されます。">?</button></label>
+            <input type="text" id="cn-konetsu" inputmode="numeric" placeholder="例: 350,000" oninput="calcCnSupport()">
+          </div>
+          <div class="form-group">
+            <label>その他営業費合計（円）<button class="help-btn" data-help-title="その他営業費合計" data-help="水道光熱費を除く営業費の合計（パートタイマー給与・法定福利・包装費・消耗品・通信・修繕など）。">?</button></label>
+            <input type="text" id="cn-eigyo-other" inputmode="numeric" placeholder="例: 1,500,000" oninput="calcCnSupport()">
+          </div>
+          <div class="form-group">
+            <label>その他雑益（円）</label>
+            <input type="text" id="cn-zatsu-other" inputmode="numeric" placeholder="例: 0" oninput="calcCnSupport()">
+          </div>
+        </div>
+
+        <!-- 算出結果 -->
+        <div class="cn-section-title">📊 計算結果</div>
+        <div class="overflow-auto">
+          <table class="cn-result-table">
+            <thead>
+              <tr><th>項目</th><th>金額</th><th>備考</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>① 売上高合計（A）</td><td id="cn-A" class="text-right">¥0</td><td>商品売上＋その他営業収入</td></tr>
+              <tr><td>② 純売上原価（B）</td><td id="cn-B" class="text-right">¥0</td><td>商品売上 × 純原価率（見切・棚卸ロス控除前）</td></tr>
+              <tr class="cn-row-key"><td>③ 総荒利益高（A−B）</td><td id="cn-grossA" class="text-right">¥0</td><td>本部チャージの計算ベース</td></tr>
+              <tr><td>　└ 〜300万（45%/46%）</td><td id="cn-tier1" class="text-right">¥0</td><td id="cn-tier1-rate">—</td></tr>
+              <tr><td>　└ 300万超〜450万（70%/71%）</td><td id="cn-tier2" class="text-right">¥0</td><td id="cn-tier2-rate">—</td></tr>
+              <tr><td>　└ 450万超（60%/61%）</td><td id="cn-tier3" class="text-right">¥0</td><td id="cn-tier3-rate">—</td></tr>
+              <tr class="cn-row-sub"><td>④ 本部チャージ合計</td><td id="cn-charge" class="text-right">¥0</td><td id="cn-charge-note">スライド3段階の合計</td></tr>
+              <tr class="cn-row-key"><td>⑤ フランチャイジー収入（③−④）</td><td id="cn-fcin" class="text-right">¥0</td><td id="cn-fcin-note">最低保証適用前</td></tr>
+              <tr><td>　└ 月最低保証額</td><td id="cn-min-guarantee" class="text-right">¥0</td><td id="cn-min-note">年保証 × 営業日/暦日</td></tr>
+              <tr class="cn-row-key"><td>⑥ フランチャイジー収入（最低保証適用後）</td><td id="cn-fcin-final" class="text-right">¥0</td><td id="cn-min-applied">—</td></tr>
+              <tr><td colspan="3" class="cn-section-mini">─── 加盟店サポート（雑益） ───</td></tr>
+              <tr><td>⑦ 見切・処分支援</td><td id="cn-supp-mikiri" class="text-right">¥0</td><td id="cn-mikiri-tier">—</td></tr>
+              <tr><td>⑧ 光熱費支援（50%・上限25万）</td><td id="cn-supp-konetsu" class="text-right">¥0</td><td id="cn-konetsu-note">—</td></tr>
+              <tr><td>⑨ 経営助成金（5Cn初年度のみ）</td><td id="cn-supp-josei" class="text-right">¥0</td><td>5万円/月 × 12ヶ月</td></tr>
+              <tr><td>⑩ その他雑益</td><td id="cn-zatsu-other-show" class="text-right">¥0</td><td>—</td></tr>
+              <tr class="cn-row-sub"><td>⑪ 雑益合計（⑦+⑧+⑨+⑩）</td><td id="cn-zatsu-total" class="text-right">¥0</td><td>本部支援＋その他</td></tr>
+              <tr><td colspan="3" class="cn-section-mini">─── 営業費 ───</td></tr>
+              <tr><td>⑫ 水道光熱費</td><td id="cn-out-konetsu" class="text-right">¥0</td><td>—</td></tr>
+              <tr><td>⑬ その他営業費</td><td id="cn-out-other" class="text-right">¥0</td><td>—</td></tr>
+              <tr class="cn-row-sub"><td>⑭ 営業費計</td><td id="cn-eigyo-total" class="text-right">¥0</td><td>—</td></tr>
+              <tr class="cn-row-final"><td>⑮ 店利益（⑥−⑭+⑪）</td><td id="cn-tenrieki" class="text-right">¥0</td><td id="cn-tenrieki-note">支援込みの最終利益</td></tr>
+              <tr><td colspan="3" class="cn-section-mini">─── 参考：支援なしのケース ───</td></tr>
+              <tr><td>店利益（雑益＝0で再計算）</td><td id="cn-tenrieki-nosupp" class="text-right">¥0</td><td>支援を含まない場合</td></tr>
+              <tr class="cn-row-key"><td>支援による利益増（⑮−左）</td><td id="cn-tenrieki-diff" class="text-right">¥0</td><td>本部支援の効果額</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- ===== Tab 2: 日販・客数 ===== -->
@@ -816,58 +992,7 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
     </div>
 
     <!-- ===== Tab 3: カテゴリ別計画 ===== -->
-    <div class="tab-panel" id="tab3">
-      <div class="card">
-        <div class="flex justify-between items-center mb-2">
-          <div class="section-title" style="margin:0">カテゴリ別計画</div>
-          <div class="flex gap-2">
-            <button class="btn-secondary btn-sm" onclick="switchCatView('sales')">売上</button>
-            <button class="btn-secondary btn-sm" onclick="switchCatView('arari')">粗利</button>
-            <button class="btn-secondary btn-sm" onclick="switchCatView('aico')">AICO</button>
-          </div>
-        </div>
-        <div id="cat-view-sales" class="overflow-auto">
-          <table class="cat-table">
-            <thead>
-              <tr>
-                <th style="width:100px;position:sticky;left:0;z-index:1">カテゴリ</th>
-                <th>前月実績</th><th>当月計画</th><th>前週実績</th>
-                <th class="konshu">当週計画</th>
-                <th>当週売変高</th><th>当週売変率</th>
-              </tr>
-            </thead>
-            <tbody id="cat-sales-body"></tbody>
-          </table>
-        </div>
-        <div id="cat-view-arari" class="overflow-auto" style="display:none">
-          <table class="cat-table">
-            <thead>
-              <tr>
-                <th style="width:100px;position:sticky;left:0;z-index:1">カテゴリ</th>
-                <th>前月粗利</th><th>当月計画粗利</th><th>前週粗利</th>
-                <th class="konshu">当週計画粗利</th>
-                <th>当週利益率</th>
-              </tr>
-            </thead>
-            <tbody id="cat-arari-body"></tbody>
-          </table>
-        </div>
-        <div id="cat-view-aico" class="overflow-auto" style="display:none">
-          <table class="cat-table">
-            <thead>
-              <tr>
-                <th style="width:100px;position:sticky;left:0;z-index:1">カテゴリ</th>
-                <th>当月販売高</th><th>当月粗利</th><th>値引高</th><th>廃棄高</th>
-                <th class="konshu">処方箋（平日）</th>
-                <th class="konshu">処方箋（土日）</th>
-                <th>判定</th>
-              </tr>
-            </thead>
-            <tbody id="cat-aico-body"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    <div class="tab-panel" id="tab3" style="display:none"></div>
 
     <!-- ===== Tab 4: 施策計画 ===== -->
     <div class="tab-panel" id="tab4">
@@ -1232,6 +1357,7 @@ let state={
   seisan:(()=>{const base={month:'',eigyo_nissu:0,min_rieki:0};SEISAN_KEYS.forEach(k=>base[k]=0);return base;})(),
   seisan_prev:(()=>{const o={};SEISAN_KEYS.forEach(k=>o[k]=0);return o;})(),
   seisan_lastyear:(()=>{const o={};SEISAN_KEYS.forEach(k=>o[k]=0);return o;})(),
+  cnPlan:{type:'cn',h24:1,nissu:30,koyomi:30,firstYear:0,uriage:0,sonota:0,cr:72,mikiri:0,tanaloss:0,konetsu:0,eigyoOther:0,zatsuOther:0},
   monthly:{target_uriage:0,target_riekiritsu:0,target_urihen:0,target_kyakusu:0,juten_sessaku:'',week_jisseki:[0,0,0,0],
     eigyo_nissu:26,target_arari_rate:0,jikyu_tanka:0,jinken_rate:0,haiki_rate:0,kyaku_tanka_base:0,
     target_profit:0,keihi_gensaku:0,
@@ -1314,10 +1440,12 @@ const dispConv=(id,v)=>{const el=document.getElementById(id);if(el)el.textConten
 
 // ===== TAB =====
 function showTab(n){
-  document.querySelectorAll('.tab-panel').forEach((p,i)=>p.classList.toggle('active',i===n));
-  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===n));
-  if(n===1)renderPuzzleTable();
-  if(n===3)renderCategoryTab();
+  // パネルとボタンを ID/属性ベースで切替（DOM順に依存しない）
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab'+n)?.classList.add('active');
+  document.querySelector('.tab-btn[data-tab="'+n+'"]')?.classList.add('active');
+  if(n===1){renderPuzzleTable();renderCategoryTab();calcCnSupport();}
   if(n===4){renderSessaku();renderLayout();renderFFface();renderBookletList();}
   if(n===5){renderKensho();renderGaibuin();}
   if(n===6)renderQSC();
@@ -1490,6 +1618,150 @@ function calcSeisan(){
   calcMonthly();
   updateROI();
   saveAll();
+}
+
+// ===== FC-Cn 契約 支援算出システム =====
+// 出典：FC-Cn契約PDF（24P）／フランチャイズ契約内容の要約PDF
+//
+// 【本部チャージ（スライド3段階・月次）】
+//   FC-Cn:  〜300万 45% / 300〜450万 70% / 450万〜 60%
+//   FC-5Cn: 〜300万 46% / 300〜450万 71% / 450万〜 61%
+//   ※24時間営業未満は各レート+3%
+//
+// 【加盟店サポート①：見切・処分の一部負担】
+//   見切率 r = 売変高(売価)÷商品売上高 として、
+//   ・2.0%超〜3.0%以下の部分：商品売上高に対する該当幅 × 20%
+//   ・3.0%超〜4.0%以下の部分：商品売上高に対する該当幅 × 30%
+//   ・4.0%超の部分          ：商品売上高に対する該当幅 × 55%
+//   合計（売価ベース）× 純原価率 = 本部負担額（円・原価相当額）
+//
+// 【加盟店サポート②：光熱費の一部負担】
+//   水道光熱費 × 50%（上限：月25万円）
+//
+// 【経営助成金】
+//   FC-5Cn 契約の初年度のみ：5万円 × 12ヶ月（月額5万円を雑益に加算）
+//   FC-Cn にはなし
+//
+// 【最低保証フランチャイジー収入】
+//   24h営業：年1,860万円  → 月次概算 1,550,000 × (営業日÷暦日)
+//   24h未満：年1,560万円  → 月次概算 1,300,000 × (営業日÷暦日)
+//   月のフランチャイジー収入が下回った場合、チャージ減額により最低保証額まで補填
+function calcCnSupport(){
+  const type=document.getElementById('cn-type')?.value||'cn';
+  const h24=(document.getElementById('cn-h24')?.value||'1')==='1';
+  const nissu=Math.max(1,parseFloat(document.getElementById('cn-nissu')?.value)||30);
+  const koyomi=Math.max(1,parseFloat(document.getElementById('cn-koyomi')?.value)||30);
+  const firstYear=(document.getElementById('cn-firstyear')?.value||'0')==='1';
+  const U=parseNum(document.getElementById('cn-uriage')?.value)||0;
+  const sonota=parseNum(document.getElementById('cn-sonota')?.value)||0;
+  const cr=Math.max(0,Math.min(100,parseFloat(document.getElementById('cn-genkaritsu')?.value)||0))/100;
+  const M=parseNum(document.getElementById('cn-mikiri')?.value)||0;
+  const L=parseNum(document.getElementById('cn-tanaloss')?.value)||0;
+  const konetsu=parseNum(document.getElementById('cn-konetsu')?.value)||0;
+  const eigyoOther=parseNum(document.getElementById('cn-eigyo-other')?.value)||0;
+  const zatsuOther=parseNum(document.getElementById('cn-zatsu-other')?.value)||0;
+
+  // ① 売上高合計（A）= 商品売上高 + その他営業収入
+  const A=U+sonota;
+  // ② 純売上原価（B）= 商品売上高 × 純原価率（見切・棚卸ロス控除前）
+  const B=U*cr;
+  // ③ 総荒利益高 = A − B（本部チャージ計算ベース）
+  const grossA=A-B;
+
+  // ④ 本部チャージ（スライド3段階）— 月次の閾値: 300万・450万
+  const baseRates=type==='5cn'?[0.46,0.71,0.61]:[0.45,0.70,0.60];
+  const rates=h24?baseRates:baseRates.map(r=>r+0.03);
+  const T1=3000000,T2=4500000;
+  const tier1Amt=Math.max(0,Math.min(grossA,T1));
+  const tier2Amt=Math.max(0,Math.min(grossA,T2)-T1);
+  const tier3Amt=Math.max(0,grossA-T2);
+  const charge1=tier1Amt*rates[0];
+  const charge2=tier2Amt*rates[1];
+  const charge3=tier3Amt*rates[2];
+  const charge=charge1+charge2+charge3;
+
+  // ⑤ フランチャイジー収入（最低保証適用前）
+  const fcin=grossA-charge;
+
+  // 月最低保証額 = 年保証 × (営業日÷暦日) ÷ 12
+  const annualGuarantee=h24?18600000:15600000;
+  const monthGuaranteeBase=annualGuarantee/12; // 月割り：155万 or 130万
+  const minGuarantee=monthGuaranteeBase*(nissu/koyomi);
+  // ⑥ フランチャイジー収入（最低保証適用後）
+  const fcinFinal=Math.max(fcin,minGuarantee);
+  const minApplied=fcinFinal>fcin;
+
+  // ⑦ 加盟店サポート：見切・処分支援
+  const r=U?M/U:0;  // 見切率
+  // 売価ベース支援額：商品売上高に対する各階層の幅 × 該当負担率
+  const pct=(lo,hi,rate)=>{
+    const top=Math.min(r,hi/100);
+    const bot=Math.max(0,Math.min(top-lo/100,(hi-lo)/100));
+    return Math.max(0,bot)*U*rate;
+  };
+  const supp_baikai = pct(2,3,0.20) + pct(3,4,0.30) + (r>0.04?(r-0.04)*U*0.55:0);
+  // 原価相当額 = 売価支援 × 純原価率
+  const suppMikiri=supp_baikai*cr;
+
+  // ⑧ 加盟店サポート：光熱費50%（上限25万円/月）
+  const suppKonetsu=Math.min(konetsu*0.5, 250000);
+
+  // ⑨ 経営助成金（FC-5Cn 初年度のみ 5万円/月）
+  const suppJosei=(type==='5cn'&&firstYear)?50000:0;
+
+  // ⑪ 雑益合計
+  const zatsuTotal=suppMikiri+suppKonetsu+suppJosei+zatsuOther;
+
+  // ⑭ 営業費計（水道光熱費＋その他営業費）
+  const eigyoTotal=konetsu+eigyoOther;
+
+  // ⑮ 店利益 = フランチャイジー収入（最低保証後）− 営業費計 + 雑益
+  const tenrieki=fcinFinal-eigyoTotal+zatsuTotal;
+  // 支援なしのケース（雑益＝その他のみ、最低保証なし）
+  const tenriekiNoSupp=fcin-eigyoTotal+zatsuOther;
+  const supportEffect=tenrieki-tenriekiNoSupp;
+
+  // ===== 表示 =====
+  const set=(id,v)=>setText(id,fmt(v));
+  set('cn-A',A);
+  set('cn-B',B);
+  set('cn-grossA',grossA);
+  set('cn-tier1',charge1);
+  set('cn-tier2',charge2);
+  set('cn-tier3',charge3);
+  setText('cn-tier1-rate',(rates[0]*100).toFixed(0)+'% × ¥'+Math.round(tier1Amt).toLocaleString());
+  setText('cn-tier2-rate',(rates[1]*100).toFixed(0)+'% × ¥'+Math.round(tier2Amt).toLocaleString());
+  setText('cn-tier3-rate',(rates[2]*100).toFixed(0)+'% × ¥'+Math.round(tier3Amt).toLocaleString());
+  set('cn-charge',charge);
+  setText('cn-charge-note',`実効率 ${grossA?(charge/grossA*100).toFixed(1):'0.0'}%（${type==='5cn'?'FC-5Cn':'FC-Cn'}・${h24?'24h':'非24h(+3%)'}）`);
+  set('cn-fcin',fcin);
+  setText('cn-fcin-note','＝総荒利 − チャージ');
+  set('cn-min-guarantee',minGuarantee);
+  setText('cn-min-note',`年${(annualGuarantee/10000).toFixed(0)}万 ÷12ヶ月 ×(${nissu}/${koyomi})`);
+  set('cn-fcin-final',fcinFinal);
+  setText('cn-min-applied',minApplied?'⚠ 最低保証適用（チャージ減額）':'通常通り');
+  set('cn-supp-mikiri',suppMikiri);
+  setText('cn-mikiri-tier',`見切率 ${(r*100).toFixed(2)}%（売価支援 ¥${Math.round(supp_baikai).toLocaleString()} × 原価率 ${(cr*100).toFixed(1)}%）`);
+  set('cn-supp-konetsu',suppKonetsu);
+  setText('cn-konetsu-note',konetsu*0.5>250000?'⚠ 上限25万円適用':`${konetsu?'光熱費の50%':'—'}`);
+  set('cn-supp-josei',suppJosei);
+  set('cn-zatsu-other-show',zatsuOther);
+  set('cn-zatsu-total',zatsuTotal);
+  set('cn-out-konetsu',konetsu);
+  set('cn-out-other',eigyoOther);
+  set('cn-eigyo-total',eigyoTotal);
+  set('cn-tenrieki',tenrieki);
+  setText('cn-tenrieki-note',tenrieki>=0?'✅ 黒字':'❌ 赤字');
+  set('cn-tenrieki-nosupp',tenriekiNoSupp);
+  set('cn-tenrieki-diff',supportEffect);
+
+  // 状態保存
+  if(state.cnPlan){
+    state.cnPlan.type=type;state.cnPlan.h24=h24?1:0;state.cnPlan.nissu=nissu;state.cnPlan.koyomi=koyomi;state.cnPlan.firstYear=firstYear?1:0;
+    state.cnPlan.uriage=U;state.cnPlan.sonota=sonota;state.cnPlan.cr=cr*100;
+    state.cnPlan.mikiri=M;state.cnPlan.tanaloss=L;state.cnPlan.konetsu=konetsu;
+    state.cnPlan.eigyoOther=eigyoOther;state.cnPlan.zatsuOther=zatsuOther;
+  }
 }
 
 // ===== MONTHLY =====
@@ -2649,6 +2921,7 @@ function loadAll(){
       if(implied>0)sz.shiire=implied;
     }
     if(s.monthly)Object.assign(state.monthly,s.monthly);
+    if(s.cnPlan)Object.assign(state.cnPlan,s.cnPlan);
     if(savedFactor!==1){
       const sc=v=>v?parseFloat((v*savedFactor).toFixed(4)):v;
       SEISAN_KEYS.concat(['min_rieki']).forEach(k=>{
@@ -2709,6 +2982,25 @@ function restoreForm(){
   ['t_asa_u','t_asa_k','t_asa_u_nen','t_asa_k_nen','t_hiru_u','t_hiru_k','t_hiru_u_nen','t_hiru_k_nen','t_yu_u','t_yu_k','t_yu_u_nen','t_yu_k_nen'].forEach(k=>{
     const el=document.getElementById(k.replace(/_/g,'-'));if(el&&state.daily[k])el.value=state.daily[k];
   });
+  // FC-Cn 支援算出システムの入力欄復元
+  if(state.cnPlan){
+    const cp=state.cnPlan;
+    const sv=(id,v)=>{const e=document.getElementById(id);if(e&&v!=null&&v!==''&&v!==0)e.value=v;};
+    const ssel=(id,v)=>{const e=document.getElementById(id);if(e)e.value=String(v);};
+    ssel('cn-type',cp.type||'cn');
+    ssel('cn-h24',cp.h24?'1':'0');
+    sv('cn-nissu',cp.nissu||30);
+    sv('cn-koyomi',cp.koyomi||30);
+    ssel('cn-firstyear',cp.firstYear?'1':'0');
+    sv('cn-uriage',cp.uriage);
+    sv('cn-sonota',cp.sonota);
+    sv('cn-genkaritsu',cp.cr||72);
+    sv('cn-mikiri',cp.mikiri);
+    sv('cn-tanaloss',cp.tanaloss);
+    sv('cn-konetsu',cp.konetsu);
+    sv('cn-eigyo-other',cp.eigyoOther);
+    sv('cn-zatsu-other',cp.zatsuOther);
+  }
   fmtYenInputs(document.getElementById('content'));
 }
 
