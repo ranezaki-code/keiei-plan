@@ -1165,19 +1165,20 @@ const SEISAN_ROWS=[
   {key:'hoso',code:'6060',name:'包装費'},
   {key:'shuzen',code:'6070',name:'修繕費'},
   {key:'genkin',code:'6080',name:'現金過不足'},
-  {key:'setsubi_lease',code:'6110',name:'電話料、設備修繕費'},
+  {key:'setsubi_lease',code:'6110',name:'電話料'},
+  {key:'setsubi_shuzen',name:'設備修繕費'},
   {key:'tsushin',code:'6120',name:'一般維持費'},
   {key:'konetsu',code:'6130',name:'水道光熱費'},
   {key:'shiharai_risoku',code:'6140',name:'支払利息'},
   {key:'songai',code:'6160',name:'損害保険料'},
   {key:'hieigyo',code:'6170',name:'非課税経費'},
   {key:'zappi',code:'6150',name:'雑費'},
-  {key:'_eigyokei',name:'営業費計',subtotal:true,calc:{kyuyo:1,houtei_fukuri:1,mikiri:1,loss:1,shomohin:1,hoso:1,shuzen:1,genkin:1,setsubi_lease:1,tsushin:1,konetsu:1,shiharai_risoku:1,songai:1,hieigyo:1,zappi:1}},
+  {key:'_eigyokei',name:'営業費計',subtotal:true,calc:{kyuyo:1,houtei_fukuri:1,mikiri:1,loss:1,shomohin:1,hoso:1,shuzen:1,genkin:1,setsubi_lease:1,setsubi_shuzen:1,tsushin:1,konetsu:1,shiharai_risoku:1,songai:1,hieigyo:1,zappi:1}},
   {section:'【雑益・店利益】'},
   {key:'zatsuyeki',code:'4030',name:'雑益'},
   {key:'mikiri_shien',name:'見切・処分本部負担額'},
   {key:'denki_shien',name:'光熱費本部負担額'},
-  {key:'_tenrieki',name:'店利益',subtotal:true,highlight:true,final:true,calc:{uriage:1,sonotauriage:1,tanaoroshi_hatsu:-1,shiire:-1,shiire_nebiki:1,tanaoroshi_sue:1,urihen:-1,tanagen:-1,chaji:-1,kyuyo:-1,houtei_fukuri:-1,mikiri:-1,loss:-1,shomohin:-1,hoso:-1,shuzen:-1,genkin:-1,setsubi_lease:-1,tsushin:-1,konetsu:-1,shiharai_risoku:-1,songai:-1,hieigyo:-1,zappi:-1,zatsuyeki:1,mikiri_shien:1,denki_shien:1}},
+  {key:'_tenrieki',name:'店利益',subtotal:true,highlight:true,final:true,calc:{uriage:1,sonotauriage:1,tanaoroshi_hatsu:-1,shiire:-1,shiire_nebiki:1,tanaoroshi_sue:1,urihen:-1,tanagen:-1,chaji:-1,kyuyo:-1,houtei_fukuri:-1,mikiri:-1,loss:-1,shomohin:-1,hoso:-1,shuzen:-1,genkin:-1,setsubi_lease:-1,setsubi_shuzen:-1,tsushin:-1,konetsu:-1,shiharai_risoku:-1,songai:-1,hieigyo:-1,zappi:-1,zatsuyeki:1,mikiri_shien:1,denki_shien:1}},
 ];
 const SEISAN_KEYS=SEISAN_ROWS.filter(r=>r.key&&!r.subtotal&&!r.section).map(r=>r.key);
 
