@@ -142,6 +142,7 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
 .seisan-table td.s-ratio{color:#546e7a;font-size:11px;background:#fafafa}
 .seisan-table td.s-pos{color:var(--green);font-weight:600}
 .seisan-table td.s-neg{color:var(--red);font-weight:600}
+.seisan-table .s-auto-tag{display:inline-block;font-size:9px;background:#1976d2;color:#fff;padding:0 4px;border-radius:8px;font-weight:600}
 .qsc-row{display:grid;grid-template-columns:1fr 90px 1fr 1fr;gap:6px;align-items:start;padding:6px 0;border-bottom:1px solid var(--border)}
 .qsc-row:last-child{border-bottom:none}
 .qsc-group-head{margin:10px 0 4px;padding:4px 10px;background:#f1f5f9;border-left:4px solid var(--accent);font-size:12px;font-weight:700;color:#334155;border-radius:4px}
@@ -302,8 +303,7 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
             <input type="month" id="seisan-month" style="max-width:140px" onchange="saveAll()">
             <label class="unit-hint" style="margin-left:8px">営業日数</label>
             <input type="text" id="s-eigyo-nissu" inputmode="numeric" data-nounit placeholder="30" style="max-width:60px;text-align:right" oninput="syncNishinUriage('nissu')">
-            <label class="unit-hint" style="margin-left:8px">平均日販</label>
-            <input type="text" id="s-nishin-in" inputmode="decimal" placeholder="例: 270000" style="max-width:120px;text-align:right" oninput="syncNishinUriage('nishin')">
+            <span class="unit-hint" style="margin-left:8px;color:var(--gray)">※平均日販は表内で自動算出</span>
           </div>
         </div>
         <div class="alert alert-info mb-2" style="font-size:12px;line-height:1.6">
@@ -335,7 +335,7 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
           </table>
         </div>
         <div class="mt-1" style="font-size:11px;color:var(--gray)">
-          入力のヒント<button class="help-btn" data-help-title="入力の便利機能" data-help="・平均日販 or 売上のどちらを入力してもOK（自動連動）<br>・全角数字は自動で半角に変換<br>・Enterキーで次の項目に移動<br>・『当月→先月に複製』は月が変わった時に1クリックで比較準備">?</button>
+          入力のヒント<button class="help-btn" data-help-title="入力の便利機能" data-help="・平均日販＝商品売上高 ÷ 営業日数（自動算出）<br>・全角数字は自動で半角に変換<br>・Enterキーで次の項目に移動<br>・『当月→先月に複製』は月が変わった時に1クリックで比較準備">?</button>
         </div>
       </div>
       <div class="card">
@@ -1140,17 +1140,18 @@ const LAYOUT_AREAS=['FF売場','エンド1','エンド2','エンド3','レジ前
 // 通常行は入力欄（当月/先月/前年同月）。subtotal=計算行。
 const SEISAN_ROWS=[
   {section:'【売上高】'},
+  {key:'_nichihan',name:'平均日販',auto:'nichihan',subtotal:true,highlight:true},
   {key:'uriage',code:'4010',name:'商品売上高'},
   {key:'sonotauriage',code:'4020',name:'その他営業収入'},
   {key:'_uriage_total',name:'売上高合計',subtotal:true,calc:{uriage:1,sonotauriage:1}},
   {section:'【売上原価】'},
   {key:'tanaoroshi_hatsu',code:'5050',name:'期(月)首在庫高'},
   {key:'shiire',code:'5010',name:'商品仕入高'},
-  {key:'shiire_nebiki',code:'5020',name:'仕入値引高'},
+  {key:'shiire_nebiki',code:'5020',name:'仕入割戻高'},
   {key:'tanaoroshi_sue',code:'5060',name:'期(月)末在庫高'},
   {key:'_baijogenka',name:'売上原価',subtotal:true,calc:{tanaoroshi_hatsu:1,shiire:1,shiire_nebiki:-1,tanaoroshi_sue:-1}},
   {key:'urihen',code:'5030',name:'見切・処分'},
-  {key:'tanagen',code:'5040',name:'棚卸減'},
+  {key:'tanagen',code:'5040',name:'棚卸ロス'},
   {key:'_sougenka',name:'総売上原価',subtotal:true,calc:{tanaoroshi_hatsu:1,shiire:1,shiire_nebiki:-1,tanaoroshi_sue:-1,urihen:1,tanagen:1}},
   {key:'arari',name:'総売上利益高（粗利）',subtotal:true,highlight:true,calc:{uriage:1,sonotauriage:1,tanaoroshi_hatsu:-1,shiire:-1,shiire_nebiki:1,tanaoroshi_sue:1,urihen:-1,tanagen:-1}},
   {section:'【チャージ・営業費】'},
@@ -1164,13 +1165,13 @@ const SEISAN_ROWS=[
   {key:'hoso',code:'6060',name:'包装費'},
   {key:'shuzen',code:'6070',name:'修繕費'},
   {key:'genkin',code:'6080',name:'現金過不足'},
-  {key:'setsubi_lease',code:'6110',name:'設備リース料'},
-  {key:'tsushin',code:'6120',name:'一般通信費'},
+  {key:'setsubi_lease',code:'6110',name:'電話料、設備修繕費'},
+  {key:'tsushin',code:'6120',name:'一般維持費'},
   {key:'konetsu',code:'6130',name:'水道光熱費'},
   {key:'shiharai_risoku',code:'6140',name:'支払利息'},
   {key:'songai',code:'6160',name:'損害保険料'},
-  {key:'hieigyo',code:'6170',name:'非営業費'},
-  {key:'zappi',code:'6150',name:'諸税・雑費'},
+  {key:'hieigyo',code:'6170',name:'非課税経費'},
+  {key:'zappi',code:'6150',name:'雑費'},
   {key:'_eigyokei',name:'営業費計',subtotal:true,calc:{kyuyo:1,houtei_fukuri:1,mikiri:1,loss:1,shomohin:1,hoso:1,shuzen:1,genkin:1,setsubi_lease:1,tsushin:1,konetsu:1,shiharai_risoku:1,songai:1,hieigyo:1,zappi:1}},
   {section:'【雑益・店利益】'},
   {key:'zatsuyeki',code:'4030',name:'雑益'},
@@ -1326,30 +1327,8 @@ function showTab(n){
 
 // ===== SEISAN =====
 function syncNishinUriage(src){
-  const nissu=parseNum(document.getElementById('s-eigyo-nissu')?.value)||30;
-  const nIn=document.getElementById('s-nishin-in');
-  const uIn=document.getElementById('s-uriage');
-  if(!nIn||!uIn){if(src==='nissu')calcSeisan();return;}
-  const active=document.activeElement;
-  if(src==='nishin'){
-    const n=parseFloat((nIn.value||'').replace(/,/g,''))||0;
-    if(n){
-      const uYen=Math.round(n*nissu);
-      uIn.value=uYen.toLocaleString('ja-JP');
-      state.seisan.uriage=uYen/UNIT.factor;
-    }else if(!nIn.value){uIn.value='';state.seisan.uriage=0;}
-  }else if(src==='uriage'){
-    const u=parseNum(uIn.value)||0;
-    if(u&&nissu)nIn.value=(u/nissu).toFixed(0);
-    else if(!uIn.value)nIn.value='';
-  }else if(src==='nissu'){
-    const n=parseFloat((nIn.value||'').replace(/,/g,''))||0;
-    if(n&&active!==uIn){
-      const uYen=Math.round(n*nissu);
-      uIn.value=uYen.toLocaleString('ja-JP');
-      state.seisan.uriage=uYen/UNIT.factor;
-    }
-  }
+  // 平均日販入力を廃止し、商品売上高 ÷ 営業日数で自動算出する仕様に変更。
+  // 残るのは営業日数変更時の再計算と、商品売上高更新時の再計算のみ。
   calcSeisan();
 }
 
@@ -1362,7 +1341,9 @@ function renderSeisanTable(){
     const k=r.key, cls=(r.subtotal?'s-subtotal ':'')+(r.highlight?'s-highlight ':'')+(r.final?'s-final ':'');
     const nameCell=`<td class="s-name">${escapeHtml(r.name)}</td><td class="s-code">${r.code||''}</td>`;
     if(r.subtotal){
-      return `<tr class="${cls.trim()}">${nameCell}
+      const codeOrAuto=r.auto?'<span class="s-auto-tag">自動</span>':(r.code||'');
+      const nameCellSub=`<td class="s-name">${escapeHtml(r.name)}</td><td class="s-code">${codeOrAuto}</td>`;
+      return `<tr class="${cls.trim()}">${nameCellSub}
         <td id="s-${k}-curr-v" class="text-right">¥—</td><td id="s-${k}-curr-r" class="s-ratio">—</td>
         <td id="s-${k}-prev-v" class="text-right">¥—</td><td id="s-${k}-mm-r" class="s-ratio">—</td>
         <td id="s-${k}-ly-v" class="text-right">¥—</td><td id="s-${k}-yy-r" class="s-ratio">—</td></tr>`;
@@ -1434,13 +1415,26 @@ function calcSeisan(){
     prev:(buckets.prev.uriage||0)+(buckets.prev.sonotauriage||0),
     ly:(buckets.ly.uriage||0)+(buckets.ly.sonotauriage||0)
   };
+  const nissu=parseNum(document.getElementById('s-eigyo-nissu')?.value)||30;
   SEISAN_ROWS.forEach(r=>{
     if(r.section)return;
     const k=r.key;
-    // 値（subtotalは計算、通常行は入力値）
-    const vCurr=r.subtotal?sumCalc(r,buckets.curr):(buckets.curr[k]||0);
-    const vPrev=r.subtotal?sumCalc(r,buckets.prev):(buckets.prev[k]||0);
-    const vLy=r.subtotal?sumCalc(r,buckets.ly):(buckets.ly[k]||0);
+    // 値（auto は専用算出、subtotalは計算、通常行は入力値）
+    let vCurr,vPrev,vLy;
+    if(r.auto==='nichihan'){
+      // 平均日販＝商品売上高 ÷ 営業日数（営業日数は当月入力値を3列共通で使用）
+      vCurr=nissu?(buckets.curr.uriage||0)/nissu:0;
+      vPrev=nissu?(buckets.prev.uriage||0)/nissu:0;
+      vLy=nissu?(buckets.ly.uriage||0)/nissu:0;
+    }else if(r.subtotal){
+      vCurr=sumCalc(r,buckets.curr);
+      vPrev=sumCalc(r,buckets.prev);
+      vLy=sumCalc(r,buckets.ly);
+    }else{
+      vCurr=buckets.curr[k]||0;
+      vPrev=buckets.prev[k]||0;
+      vLy=buckets.ly[k]||0;
+    }
     // subtotal行は値を表示
     if(r.subtotal){
       const elC=document.getElementById('s-'+k+'-curr-v');
@@ -1450,8 +1444,11 @@ function calcSeisan(){
       if(elP)elP.textContent=vPrev?fmt(vPrev*UNIT.factor):'¥—';
       if(elL)elL.textContent=vLy?fmt(vLy*UNIT.factor):'¥—';
     }
-    // 売上比% = 値 ÷ 当月売上高合計 × 100（売上高行自体は100%固定）
-    const ratioCurr=uriageTotal.curr?(vCurr/uriageTotal.curr)*100:null;
+    // 売上比% = 値 ÷ 当月売上高合計 × 100（平均日販は意味がないので非表示）
+    let ratioCurr=null;
+    if(!r.auto){
+      ratioCurr=uriageTotal.curr?(vCurr/uriageTotal.curr)*100:null;
+    }
     setText('s-'+k+'-curr-r',ratioCurr===null?'—':ratioCurr.toFixed(1)+'%');
     // 先月比% = 当月 ÷ 先月 × 100
     const mm=vPrev?(vCurr/vPrev)*100:null;
@@ -1476,7 +1473,6 @@ function calcSeisan(){
   const rieki=sumCalc(SEISAN_ROWS.find(r=>r.key==='_tenrieki'),s);
   const minR=s.min_rieki||0;
   const toshi=rieki-minR;
-  const nissu=parseNum(document.getElementById('s-eigyo-nissu')?.value)||30;
   const nishin=u?u/nissu:0;
   const urihenR=u?((s.urihen||0)/u*100).toFixed(2):'0.00';
   setText('r-eigyo',fmt(eigyo*UNIT.factor));
@@ -1487,12 +1483,6 @@ function calcSeisan(){
   setText('r-nishin-sub',nissu+'日換算');
   // 旧フィールド arari / kyuyo 等は state.seisan に直接入力されているので、arari は派生値も互換用に書き戻し
   s.arari=arari;
-  // 平均日販表示の同期
-  const nIn=document.getElementById('s-nishin-in');
-  if(nIn&&document.activeElement!==nIn){
-    if(u&&nissu)nIn.value=(u*UNIT.factor/nissu).toFixed(0);
-    else if(!u)nIn.value='';
-  }
   const invCard=document.getElementById('box-invest');
   if(invCard)invCard.className='stat-card '+(toshi>=0?'good':'bad');
   setText('inv-available',fmt(toshi*UNIT.factor));
