@@ -76,6 +76,89 @@ td select:focus{background:#f0f7ff}
 .sidebar-btn:hover{background:var(--gray-lt)}
 .sidebar-btn.active{background:var(--accent-lt);color:var(--accent);font-weight:700;border-left-color:var(--accent)}
 .sidebar-pane{flex:1;min-width:0}
+/* ===== スナップショット 2ペイン ===== */
+.snap-layout{display:flex;gap:12px;align-items:flex-start;min-height:280px}
+.snap-list-pane{flex:0 0 280px;display:flex;flex-direction:column;gap:6px}
+.snap-compare-pane{flex:1;min-width:0;border:1px solid var(--border);border-radius:8px;background:#fff;padding:14px;min-height:280px;overflow-x:auto}
+.snap-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;color:#9ca3af;height:100%}
+.snap-item{border:1px solid var(--border);border-radius:8px;padding:10px;background:#fff;cursor:pointer;transition:all .12s;display:flex;flex-direction:column;gap:4px;position:relative}
+.snap-item:hover{border-color:var(--accent);background:#f0f9ff}
+.snap-item.selected{border-color:var(--accent);background:#dbeafe;box-shadow:0 0 0 2px rgba(59,130,246,.2)}
+.snap-item .snap-month{font-weight:700;font-size:14px;color:#1e3a5f}
+.snap-item .snap-meta{font-size:10px;color:#6b7280;display:flex;gap:8px;flex-wrap:wrap}
+.snap-item .snap-pl{font-size:11px;color:#475569;margin-top:2px}
+.snap-item .snap-del{position:absolute;top:6px;right:6px;background:#fff;border:1px solid #fecaca;color:#dc2626;border-radius:4px;padding:1px 6px;font-size:10px;cursor:pointer;opacity:0;transition:opacity .12s}
+.snap-item:hover .snap-del{opacity:1}
+.snap-item .snap-del:hover{background:#fee2e2}
+.snap-empty-list{padding:14px;text-align:center;color:#9ca3af;font-size:12px;border:1px dashed var(--border);border-radius:8px;background:#fafafa}
+@media (max-width:760px){
+  .snap-layout{flex-direction:column}
+  .snap-list-pane{flex:1 1 auto;width:100%}
+  .snap-compare-pane{width:100%}
+}
+/* ===== マニュアルタブ ===== */
+.manual-card{padding:0!important;overflow:hidden}
+.manual-hero{background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);color:#fff;padding:32px 28px}
+.manual-hero h2{margin:0 0 8px 0;font-size:24px;font-weight:700}
+.manual-lead{margin:0;font-size:14px;line-height:1.7;opacity:.95}
+.manual-h{font-size:17px;color:#1e3a5f;margin:28px 28px 14px 28px;padding-bottom:8px;border-bottom:2px solid #e0f2fe;font-weight:700}
+.manual-grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;padding:0 28px}
+.manual-block{border:1px solid var(--border);border-radius:10px;padding:16px;background:linear-gradient(180deg,#f0f9ff 0%,#fff 100%);text-align:center}
+.manual-icon{width:44px;height:44px;background:#3b82f6;color:#fff;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;margin-bottom:8px}
+.manual-title{font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:6px}
+.manual-desc{font-size:12px;color:#475569;line-height:1.6}
+/* 月次サイクル */
+.manual-cycle{display:flex;gap:8px;align-items:stretch;padding:0 28px;flex-wrap:wrap}
+.cycle-step{flex:1 1 200px;border-radius:10px;padding:14px;color:#fff;display:flex;flex-direction:column;gap:6px;min-width:200px}
+.cycle-1{background:linear-gradient(135deg,#0ea5e9,#0284c7)}
+.cycle-2{background:linear-gradient(135deg,#10b981,#059669)}
+.cycle-3{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.cycle-4{background:linear-gradient(135deg,#8b5cf6,#7c3aed)}
+.cycle-day{font-size:11px;opacity:.9;font-weight:600}
+.cycle-name{font-size:18px;font-weight:700}
+.cycle-detail{font-size:12px;line-height:1.6;opacity:.95;flex:1}
+.cycle-action{font-size:11px;background:rgba(255,255,255,.15);padding:6px 8px;border-radius:6px;border-left:3px solid rgba(255,255,255,.5);line-height:1.5}
+.cycle-arrow{display:flex;align-items:center;justify-content:center;font-size:24px;color:#94a3b8;font-weight:700}
+@media (max-width:880px){
+  .manual-cycle{flex-direction:column}
+  .cycle-arrow{transform:rotate(90deg);padding:4px 0}
+}
+/* なぜ最適計画 */
+.manual-why{padding:0 28px;display:flex;flex-direction:column;gap:14px}
+.why-row{display:flex;gap:14px;align-items:flex-start;padding:14px;border:1px solid var(--border);border-radius:10px;background:#fff}
+.why-num{flex:none;width:36px;height:36px;background:linear-gradient(135deg,#3b82f6,#1e40af);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700}
+.why-content{flex:1}
+.why-title{font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px}
+.why-desc{font-size:12px;line-height:1.7;color:#475569}
+/* タブマップ */
+.manual-tabmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;padding:0 28px}
+.tabmap-group{border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff}
+.tabmap-head{background:#f1f5f9;padding:10px 14px;font-weight:700;color:#1e3a5f;border-bottom:1px solid var(--border);font-size:13px}
+.tabmap-row{padding:8px 14px;border-bottom:1px solid #f1f5f9;font-size:12px;display:flex;flex-direction:column;gap:2px}
+.tabmap-row:last-child{border-bottom:none}
+.tabmap-row b{color:#1e3a5f;font-size:13px}
+.tabmap-row span{color:#64748b;line-height:1.6}
+/* 5分ルート */
+.manual-quick{padding:0 28px}
+.manual-quick ol{margin:0;padding-left:24px;line-height:2;font-size:13px}
+.manual-quick ol li{padding:4px 0;color:#334155}
+.manual-quick b{color:#1e3a5f}
+/* FAQ */
+.manual-faq{padding:0 28px;display:flex;flex-direction:column;gap:6px}
+.manual-faq details{border:1px solid var(--border);border-radius:8px;background:#fff}
+.manual-faq summary{padding:10px 14px;cursor:pointer;font-weight:600;color:#1e3a5f;font-size:13px;list-style:none}
+.manual-faq summary::-webkit-details-marker{display:none}
+.manual-faq summary:before{content:'▶ ';color:#94a3b8;font-size:10px;margin-right:6px}
+.manual-faq details[open] summary:before{content:'▼ ';color:#3b82f6}
+.manual-faq details>div{padding:0 14px 12px 14px;font-size:12px;color:#475569;line-height:1.7}
+.manual-foot{display:flex;justify-content:space-between;align-items:center;padding:24px 28px 28px 28px;margin-top:14px;border-top:1px solid var(--border);background:#f8fafc;font-size:12px;color:#6b7280;flex-wrap:wrap;gap:8px}
+.manual-version{font-family:monospace;background:#fff;border:1px solid var(--border);border-radius:4px;padding:3px 8px}
+@media (max-width:600px){
+  .manual-hero{padding:22px 18px}
+  .manual-hero h2{font-size:20px}
+  .manual-h{margin:22px 18px 12px 18px;font-size:15px}
+  .manual-grid3,.manual-cycle,.manual-why,.manual-tabmap,.manual-quick,.manual-faq,.manual-foot{padding-left:18px;padding-right:18px}
+}
 @media(max-width:780px){
   .layout-sidebar{flex-direction:column;gap:6px}
   .sidebar-rail{position:static;width:100%;flex-direction:row;overflow-x:auto;padding:3px;gap:2px;scrollbar-width:none}
@@ -385,20 +468,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   }
 })();
 </script>
-<!-- ===== 予実比較モーダル ===== -->
-<div id="history-compare-modal" class="ocr-modal-bg" onclick="if(event.target===this)closeCompareModal()">
-  <div class="ocr-modal">
-    <div class="ocr-modal-head">
-      <h3>📊 計画 vs 実績 比較</h3>
-      <button onclick="closeCompareModal()" style="background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:6px;padding:4px 12px;cursor:pointer">✕</button>
-    </div>
-    <div class="ocr-modal-body" id="history-compare-body"></div>
-    <div class="ocr-modal-foot">
-      <div></div>
-      <div><button class="btn-secondary btn-sm" onclick="closeCompareModal()">閉じる</button></div>
-    </div>
-  </div>
-</div>
+<!-- 予実比較モーダルは v17 で 2ペイン化により削除 -->
 <!-- ===== 精算書OCR取込モーダル ===== -->
 <div id="ocr-modal" class="ocr-modal-bg" onclick="if(event.target===this)ocrCloseModal()">
   <div class="ocr-modal">
@@ -430,7 +500,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v16.6</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v17.0</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -439,6 +509,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
     <button class="tab-btn active" data-group="jisseki" onclick="showGroup('jisseki')">⓪ 実績</button>
     <button class="tab-btn" data-group="plan" onclick="showGroup('plan')">① 当月計画</button>
     <button class="tab-btn" data-group="other" onclick="showGroup('other')">② その他</button>
+    <button class="tab-btn" data-group="manual" onclick="showGroup('manual')">📖 マニュアル</button>
   </div>
   <div id="period-bar">
     <label>📅 対象月</label>
@@ -472,10 +543,9 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
         </div>
         <div class="flex gap-2 mb-2" style="flex-wrap:wrap;align-items:center">
           <label class="btn-primary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px">📄 精算書PDFを取り込む<input type="file" id="seisan-pdf-input" accept="application/pdf" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="handleSeisanPDF(event)"></label>
-          <button class="btn-secondary btn-sm" onclick="copyCurrToPrev()" title="当月の値を『先月』欄にコピー（翌月の比較準備）">📋 当月→先月に複製</button>
-          <button class="btn-secondary btn-sm" onclick="clearSeisanCol('curr')" title="当月の入力値をすべて 0 にリセット">🔢 当月を全て0</button>
-          <button class="btn-secondary btn-sm" onclick="clearSeisanCol('prev')">🗑️ 先月をクリア</button>
-          <button class="btn-secondary btn-sm" onclick="clearSeisanCol('ly')">🗑️ 前年をクリア</button>
+          <button class="btn-secondary btn-sm" onclick="clearSeisanCol('curr')" title="当月の入力値をすべて 0 にリセット">🔢 当月をリセット</button>
+          <button class="btn-secondary btn-sm" onclick="clearSeisanCol('prev')" title="先月の入力値をすべて 0 にリセット">🔢 先月をリセット</button>
+          <button class="btn-secondary btn-sm" onclick="clearSeisanCol('ly')" title="前年同月の入力値をすべて 0 にリセット">🔢 前年をリセット</button>
           <span style="flex:1"></span>
           <button class="btn-secondary btn-sm" onclick="claudeKeyOpen()" id="claude-key-status" title="Claude APIキー設定">🔑 Claude API: 未設定</button>
         </div>
@@ -541,16 +611,26 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
         </div>
       </div>
 
-      <!-- ===== 計画スナップショット & 予実比較 ===== -->
+      <!-- ===== 月次計画の保存と比較（旧：計画スナップショット） ===== -->
       <div class="card">
         <div class="flex justify-between items-center mb-2" style="flex-wrap:wrap;gap:6px">
-          <div class="section-title" style="margin:0">📸 計画スナップショット & 予実比較<button class="help-btn" data-help-title="計画スナップショットの使い方" data-help="<b>使い方</b><br>1. 月初に当月計画を立てたら「📸 現在の計画を保存」<br>2. 月末に精算書PDFを取込んで実績を反映<br>3. 一覧の「📊 実績比較」で計画 vs 実績の差分を表示<br><br><b>記録される内容</b><br>・精算書（計画値）<br>・月次目標（売上・粗利・経費等）<br>・FC-Cn 契約条件と入力値<br>・全施策（投資額・期待効果含む）<br><br><b>予実比較で表示される項目</b><br>・主要科目の差額・達成率<br>・施策別の計画ROI vs 実効ROI（按分推計）">?</button></div>
-          <div class="flex gap-2">
-            <button class="btn-primary btn-sm" onclick="snapshotPlan()">📸 現在の計画を保存</button>
+          <div class="section-title" style="margin:0">📊 月次計画の保存と比較<button class="help-btn" data-help-title="月次計画の保存と比較" data-help="<b>サイクル</b><br>① 月初：当月計画を立てたら「＋この計画を保存」<br>② 月末：精算書PDFを取込んで当月の実績を反映<br>③ 一覧から保存した計画をクリック → 右側に自動で計画 vs 実績の比較表示<br><br><b>記録される内容</b><br>・精算書（計画値）／ 月次目標 ／ FC-Cn条件 ／ 全施策（投資・効果）<br><br><b>右側に表示される項目</b><br>・主要科目の計画 vs 実績 vs 達成率<br>・施策別の計画ROI vs 実効ROI">?</button></div>
+        </div>
+        <div id="snap-layout" class="snap-layout">
+          <div class="snap-list-pane">
+            <div class="flex gap-2 mb-2">
+              <button class="btn-primary btn-sm" onclick="snapshotPlan()" style="flex:1">＋ この計画を保存</button>
+            </div>
+            <div id="snap-list"></div>
+          </div>
+          <div class="snap-compare-pane" id="snap-compare">
+            <div class="snap-empty">
+              <div style="font-size:32px;margin-bottom:8px">👈</div>
+              <div style="font-weight:600;color:#475569;margin-bottom:4px">左から計画を選んでください</div>
+              <div style="font-size:11px;color:#94a3b8;line-height:1.6">保存した計画をクリックすると、<br>「計画 vs 現在の実績」がここに表示されます</div>
+            </div>
           </div>
         </div>
-        <div class="input-hint mb-2">月初に計画を保存→月末に実績PDFを取込→実績比較で達成率を確認、というサイクルで使います。</div>
-        <div id="history-list"></div>
       </div>
     </div>
 
@@ -1417,6 +1497,157 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
     </div><!-- /group-other -->
 
+    <!-- ============================================================ -->
+    <!-- ===== グループ 📖 マニュアル ============================== -->
+    <!-- ============================================================ -->
+    <div class="group" id="group-manual">
+      <div class="card manual-card">
+        <div class="manual-hero">
+          <h2>📖 経営計画管理システム 完全ガイド</h2>
+          <p class="manual-lead">月初に計画を立て、月末に実績を比較。これを毎月続けることで、店舗が <b>「勘」ではなく「数字」で動く</b> ようになります。</p>
+        </div>
+
+        <h3 class="manual-h">🎯 このシステムで何ができるか</h3>
+        <div class="manual-grid3">
+          <div class="manual-block">
+            <div class="manual-icon">①</div>
+            <div class="manual-title">計画を立てる</div>
+            <div class="manual-desc">売上・粗利・経費の目標を入力 → 必要な日販・施策ROIが自動算出</div>
+          </div>
+          <div class="manual-block">
+            <div class="manual-icon">②</div>
+            <div class="manual-title">実績を記録</div>
+            <div class="manual-desc">精算書の数字を入力するだけ。先月比・前年比は自動計算</div>
+          </div>
+          <div class="manual-block">
+            <div class="manual-icon">③</div>
+            <div class="manual-title">差を見て改善</div>
+            <div class="manual-desc">計画 vs 実績 の達成率を見て、次月の計画に反映</div>
+          </div>
+        </div>
+
+        <h3 class="manual-h">🔄 月次サイクル（これを繰り返す）</h3>
+        <div class="manual-cycle">
+          <div class="cycle-step cycle-1">
+            <div class="cycle-day">📅 月初</div>
+            <div class="cycle-name">計画</div>
+            <div class="cycle-detail">「① 当月計画」タブで売上・粗利・経費の目標を入力。FC-Cn 契約のチャージも自動計算。施策（販促・売場改善）を登録して計画ROIを確認。</div>
+            <div class="cycle-action">▶ 「📊 月次計画の保存と比較」で<br><b>＋ この計画を保存</b></div>
+          </div>
+          <div class="cycle-arrow">→</div>
+          <div class="cycle-step cycle-2">
+            <div class="cycle-day">📅 月中</div>
+            <div class="cycle-name">調整</div>
+            <div class="cycle-detail">日販・客数の進捗を「📊 日販・客数」で記録。先週の達成度を「先週検証」で振り返り、必要なら施策を追加。</div>
+            <div class="cycle-action">▶ 進捗が遅れていれば施策を強化</div>
+          </div>
+          <div class="cycle-arrow">→</div>
+          <div class="cycle-step cycle-3">
+            <div class="cycle-day">📅 月末</div>
+            <div class="cycle-name">実績反映</div>
+            <div class="cycle-detail">本部から届いた精算書PDFを「📄 精算書PDFを取り込む」でアップロード。サイドバイサイドで PDF を見ながら数値を入力。</div>
+            <div class="cycle-action">▶ 入力後、自動で粗利・店利益が算出</div>
+          </div>
+          <div class="cycle-arrow">→</div>
+          <div class="cycle-step cycle-4">
+            <div class="cycle-day">📅 翌月初</div>
+            <div class="cycle-name">予実比較</div>
+            <div class="cycle-detail">「📊 月次計画の保存と比較」で先月保存した計画をクリック → 計画 vs 実績 の達成率と科目別の差額が一目で見える。</div>
+            <div class="cycle-action">▶ 達成率の悪い項目を翌月の重点に</div>
+          </div>
+        </div>
+
+        <h3 class="manual-h">💡 なぜ「最適な計画」が立てられるのか</h3>
+        <div class="manual-why">
+          <div class="why-row">
+            <div class="why-num">1</div>
+            <div class="why-content">
+              <div class="why-title">📐 ローソン精算書のロジックを完全再現</div>
+              <div class="why-desc">勘定科目コード・チャージ計算（FC-Cn / FC-5Cn のスライド率）・最低保証額・本部支援（見切処分・光熱費）まで、契約書通りに自動計算。「数値を入れれば店利益が一瞬で出る」状態にしています。</div>
+            </div>
+          </div>
+          <div class="why-row">
+            <div class="why-num">2</div>
+            <div class="why-content">
+              <div class="why-title">🎯 目標利益から逆算</div>
+              <div class="why-desc">「今月いくら稼ぎたいか」を入れれば、必要な売上・粗利率・経費上限が逆算されます。「達成可能な数字か？」を最初に確認できる。</div>
+            </div>
+          </div>
+          <div class="why-row">
+            <div class="why-num">3</div>
+            <div class="why-content">
+              <div class="why-title">📈 施策ごとに ROI を可視化</div>
+              <div class="why-desc">販促や売場改善を「投資額」と「期待効果」で登録すると、ROI（投資対効果）が出ます。実績反映後は <b>計画ROI vs 実効ROI</b> も自動比較。「やった意味があったか」が数字でわかる。</div>
+            </div>
+          </div>
+          <div class="why-row">
+            <div class="why-num">4</div>
+            <div class="why-content">
+              <div class="why-title">🔍 先週検証 + QSC で改善ループ</div>
+              <div class="why-desc">「先週の振り返りメモ」と「QSCスコア」を毎週記録。改善が回り続けるので、計画精度が月を追うごとに上がります。</div>
+            </div>
+          </div>
+          <div class="why-row">
+            <div class="why-num">5</div>
+            <div class="why-content">
+              <div class="why-title">☁️ 端末間自動同期</div>
+              <div class="why-desc">PC で計画を立て、店頭ではスマホで実績入力。GitHub Gist 経由で全端末がリアルタイム同期。</div>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="manual-h">🗺️ 各タブの役割</h3>
+        <div class="manual-tabmap">
+          <div class="tabmap-group">
+            <div class="tabmap-head">⓪ 実績</div>
+            <div class="tabmap-row"><b>📒 精算書</b><span>本部精算書を入力。粗利・店利益・支援額が自動算出。当月／先月／前年同月の3列比較。</span></div>
+            <div class="tabmap-row"><b>📊 日販・客数</b><span>日販・客単価・時間帯別の実績を記録。前年比とトレンドを把握。</span></div>
+          </div>
+          <div class="tabmap-group">
+            <div class="tabmap-head">① 当月計画</div>
+            <div class="tabmap-row"><b>📊 計画ダッシュボード</b><span>売上・粗利・経費の目標を入力。週別配分も自動。</span></div>
+            <div class="tabmap-row"><b>📦 カテゴリ別計画</b><span>商品カテゴリ別の売上・粗利目標。</span></div>
+            <div class="tabmap-row"><b>💴 FC-Cn 支援算出</b><span>FC-Cn / FC-5Cn のチャージ・最低保証・本部支援を契約条件通りにシミュレート。</span></div>
+            <div class="tabmap-row"><b>🎯 施策・売場</b><span>販促・売場改善を登録。投資額と期待効果から ROI を算出。</span></div>
+            <div class="tabmap-row"><b>🔍 先週検証</b><span>先週の振り返り・改善メモ。</span></div>
+            <div class="tabmap-row"><b>✨ QSC</b><span>Quality / Service / Cleanliness のスコア管理。</span></div>
+            <div class="tabmap-row"><b>🌸 シーズン計画</b><span>季節商戦の計画とリファレンス。</span></div>
+            <div class="tabmap-row"><b>🧾 発注リスト</b><span>発注アイテムの管理。</span></div>
+          </div>
+          <div class="tabmap-group">
+            <div class="tabmap-head">② その他</div>
+            <div class="tabmap-row"><b>☁️ クラウド同期</b><span>GitHub Gist 経由で端末間同期。</span></div>
+            <div class="tabmap-row"><b>📋 その他計画</b><span>定型外のメモ・計画。</span></div>
+          </div>
+        </div>
+
+        <h3 class="manual-h">🚀 はじめての方の最短ルート（5分）</h3>
+        <div class="manual-quick">
+          <ol>
+            <li><b>「📒 精算書」</b>を開く → 先月の精算書PDFを「📄 精算書PDFを取り込む」でアップロード → 数値を入力（PDF を見ながら）</li>
+            <li>当月の数値も同様に入力。粗利・店利益が自動表示される</li>
+            <li><b>「📊 計画ダッシュボード」</b>で当月目標利益を入力 → 必要な売上・粗利が逆算される</li>
+            <li><b>「🎯 施策・売場」</b>で今月予定の施策を1〜2件登録 → 計画ROI を確認</li>
+            <li><b>「📒 精算書」に戻り「📊 月次計画の保存と比較」で「＋ この計画を保存」</b> → 月末に達成率を見る</li>
+          </ol>
+        </div>
+
+        <h3 class="manual-h">⚙️ よくある質問</h3>
+        <div class="manual-faq">
+          <details><summary>Q. 計画を保存し忘れた月があります</summary><div>そのまま当月の精算書を入力しても問題ありません。比較対象がないだけで、来月以降の計画と比較できます。</div></details>
+          <details><summary>Q. 同じ月で複数案を比較したい</summary><div>「＋ この計画を保存」を再度押すと、上書き or 別バージョンとして追加するか選べます。「キャンセル」を押せば別バージョンとして保存されます。</div></details>
+          <details><summary>Q. 数値を間違えて入力した</summary><div>各項目の隣にある「🔢 当月をリセット」「🔢 先月をリセット」で列ごとに 0 に戻せます。Cmd+Z（Ctrl+Z）でも個別に戻せます。</div></details>
+          <details><summary>Q. パスワードを変更したい</summary><div>現状はソースコード内に固定。変更が必要な場合は管理者に依頼してください。</div></details>
+          <details><summary>Q. データはどこに保存されている？</summary><div>① ブラウザの localStorage（端末内）／② GitHub Gist（クラウド設定済みの場合）。「② その他」タブでクラウド同期を設定すると、全端末で自動同期されます。</div></details>
+        </div>
+
+        <div class="manual-foot">
+          <div>💬 不明点や追加してほしい機能があれば管理者まで</div>
+          <div class="manual-version" id="manual-version-line"></div>
+        </div>
+      </div>
+    </div><!-- /group-manual -->
+
   </div><!-- /content -->
 
   <div id="bottom-bar">
@@ -1432,7 +1663,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v16.6';
+const APP_VERSION='v17.0';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -2269,11 +2500,12 @@ const SUB_MAP={
     'plan-season':'tab7',
     'plan-order':'tab8'
   },
-  other:{}
+  other:{},
+  manual:{}
 };
 // グループ単位で初期表示するサブタブを記憶（戻ったときに復元）
-const GROUP_DEFAULT={jisseki:'seisan',plan:'plan-main',other:''};
-const groupSubState={jisseki:'seisan',plan:'plan-main',other:''};
+const GROUP_DEFAULT={jisseki:'seisan',plan:'plan-main',other:'',manual:''};
+const groupSubState={jisseki:'seisan',plan:'plan-main',other:'',manual:''};
 
 function showGroup(g){
   document.querySelectorAll('.group').forEach(p=>p.classList.remove('active'));
@@ -2313,6 +2545,9 @@ function triggerSubRender(panelId){
   if(panelId==='tab7')renderSeason();
   if(panelId==='tab8')renderOrderList();
   if(panelId==='tab9')renderOtherPlans();
+  // マニュアルタブ表示時にバージョンを差し込む
+  const mvl = document.getElementById('manual-version-line');
+  if(mvl && typeof APP_VERSION !== 'undefined')mvl.textContent = APP_VERSION;
 }
 
 // 後方互換: 既存コードや古い共有リンクでshowTab(n)が呼ばれた場合にマップ
@@ -2410,11 +2645,7 @@ function clearSeisanCol(col){
   restoreSeisanInputs();calcSeisan();saveAll();
 }
 
-function copyCurrToPrev(){
-  if(!confirm('当月の値をすべて『先月』欄にコピーしますか？（既存の先月データは上書きされます）'))return;
-  SEISAN_KEYS.forEach(k=>{state.seisan_prev[k]=state.seisan[k]||0;});
-  restoreSeisanInputs();calcSeisan();saveAll();
-}
+// copyCurrToPrev は v17 で廃止（スナップショット機能で代替）
 
 function restoreSeisanInputs(){
   SEISAN_KEYS.forEach(k=>{
@@ -2495,6 +2726,7 @@ function calcSeisan(){
   const arari=sumCalc(SEISAN_ROWS.find(r=>r.key==='arari'),s);
   const eigyo=sumCalc(SEISAN_ROWS.find(r=>r.key==='_eigyokei'),s);
   const rieki=sumCalc(SEISAN_ROWS.find(r=>r.key==='_tenrieki'),s);
+  window._lastTenrieki = rieki; // スナップショット比較用
   const minR=s.min_rieki||0;
   const toshi=rieki-minR;
   const nishin=u?u/nissu:0;
@@ -2859,13 +3091,25 @@ function updateSessakuSim(id, key, val){
   saveAll();
 }
 
-// ===== PHASE 4: 計画スナップショット & 計画vs実績比較 =====
+// ===== 月次計画の保存と比較（2ペイン版） =====
+let _selectedSnapId = null;
+
 function snapshotPlan(){
   if(!state.history)state.history=[];
+  const label = state.seisan.month || (new Date()).toISOString().slice(0,7);
+  // 同じ月のスナップショットが既にあれば上書き確認
+  const existing = state.history.find(h => h.label === label);
+  if(existing){
+    if(!confirm(`「${label}」の計画は既に保存されています。\n上書きしますか？\n（OK = 上書き／キャンセル = 別バージョンとして追加）`)){
+      // 上書きせず別バージョンで追加（id だけユニークになる）
+    }else{
+      state.history = state.history.filter(h => h.id !== existing.id);
+    }
+  }
   const snap = {
     id: Date.now(),
     timestamp: new Date().toISOString(),
-    label: state.seisan.month || (new Date()).toISOString().slice(0,7),
+    label,
     note: '',
     seisan_planned: JSON.parse(JSON.stringify(state.seisan||{})),
     monthly: JSON.parse(JSON.stringify(state.monthly||{})),
@@ -2874,15 +3118,21 @@ function snapshotPlan(){
   };
   state.history.push(snap);
   saveAll(true);
-  renderHistoryList();
-  alert(`📸 計画スナップショットを保存しました\n${snap.label} / ${snap.sessaku.length}施策`);
+  _selectedSnapId = snap.id;
+  renderSnapList();
+  renderSnapCompare(snap.id);
+  showToast(`✅ ${label} の計画を保存しました（${snap.sessaku.length}施策）`);
 }
 
-function deleteSnapshot(id){
-  if(!confirm('スナップショットを削除しますか？'))return;
+function deleteSnapshot(id, ev){
+  if(ev)ev.stopPropagation();
+  if(!confirm('この保存計画を削除しますか？'))return;
   state.history = (state.history||[]).filter(h=>h.id!==id);
+  if(_selectedSnapId === id)_selectedSnapId = null;
   saveAll(true);
-  renderHistoryList();
+  renderSnapList();
+  if(_selectedSnapId)renderSnapCompare(_selectedSnapId);
+  else clearSnapCompare();
 }
 
 function updateSnapshotNote(id, note){
@@ -2890,56 +3140,106 @@ function updateSnapshotNote(id, note){
   if(h){h.note=note;saveAll();}
 }
 
-function renderHistoryList(){
-  const wrap = document.getElementById('history-list');
+function selectSnap(id){
+  _selectedSnapId = id;
+  renderSnapList();
+  renderSnapCompare(id);
+}
+
+// 後方互換（古いコード/テンプレ用）
+function renderHistoryList(){ renderSnapList(); }
+function compareSnapshot(id){ selectSnap(id); }
+function closeCompareModal(){ /* no-op (旧モーダルは廃止) */ }
+
+function renderSnapList(){
+  const wrap = document.getElementById('snap-list');
   if(!wrap)return;
-  const arr = state.history||[];
+  const arr = (state.history||[]).slice().sort((a,b)=>(b.timestamp||'').localeCompare(a.timestamp||''));
   if(!arr.length){
-    wrap.innerHTML = '<div class="input-hint" style="padding:12px;text-align:center;color:#9ca3af">スナップショットがまだありません。「📸 現在の計画を保存」ボタンで現時点の計画を記録できます。</div>';
+    wrap.innerHTML = '<div class="snap-empty-list">まだ保存された計画はありません。<br>左上の「＋ この計画を保存」を押すと、<br>今表示中の計画が記録されます。</div>';
     return;
   }
-  let html = '<div class="overflow-auto"><table style="width:100%;font-size:12px"><thead><tr>'
-    +'<th style="width:32px">#</th><th>対象月</th><th>取得日時</th><th>施策数</th><th>計画売上</th><th>計画店利益</th><th>メモ</th><th style="width:160px">操作</th>'
-    +'</tr></thead><tbody>';
-  arr.slice().reverse().forEach((h,idx)=>{
-    const dt = new Date(h.timestamp).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  let html = '';
+  arr.forEach(h=>{
+    const dt = new Date(h.timestamp).toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit'});
     const planU = (h.seisan_planned&&h.seisan_planned.uriage)||0;
-    // 計画店利益: シミュレータで再計算
     const cn = simCn({type:h.cnPlan?.type||'cn',h24:h.cnPlan?.h24||1,nissu:h.cnPlan?.nissu||30,koyomi:h.cnPlan?.koyomi||30,firstYear:h.cnPlan?.firstYear||0,uriage:h.cnPlan?.uriage||0,sonota:h.cnPlan?.sonota||0,cr:h.cnPlan?.cr||72,mikiri:h.cnPlan?.mikiri||0,tanaloss:h.cnPlan?.tanaloss||0,konetsu:h.cnPlan?.konetsu||0,eigyoOther:h.cnPlan?.eigyoOther||0,zatsuOther:h.cnPlan?.zatsuOther||0});
-    html += `<tr>`;
-    html += `<td>${arr.length-idx}</td>`;
-    html += `<td>${escHtml(h.label||'—')}</td>`;
-    html += `<td>${dt}</td>`;
-    html += `<td>${(h.sessaku||[]).length}</td>`;
-    html += `<td class="text-right">¥${planU.toLocaleString()}</td>`;
-    html += `<td class="text-right">¥${Math.round(cn.tenrieki).toLocaleString()}</td>`;
-    html += `<td><input type="text" value="${escHtml(h.note||'')}" placeholder="メモ" oninput="updateSnapshotNote(${h.id},this.value)" style="width:100%"></td>`;
-    html += `<td>`;
-    html += `<button class="btn-secondary btn-sm" onclick="compareSnapshot(${h.id})" style="padding:3px 8px">📊 実績比較</button> `;
-    html += `<button class="btn-danger btn-sm" onclick="deleteSnapshot(${h.id})" style="padding:3px 8px;background:#fee2e2;color:#dc2626">削除</button>`;
-    html += `</td>`;
-    html += `</tr>`;
+    const sel = h.id === _selectedSnapId ? ' selected' : '';
+    html += `<div class="snap-item${sel}" onclick="selectSnap(${h.id})">`;
+    html += `<button class="snap-del" onclick="deleteSnapshot(${h.id},event)" title="削除">削除</button>`;
+    html += `<div class="snap-month">${escHtml(h.label||'—')}</div>`;
+    html += `<div class="snap-meta"><span>📅 ${dt}</span><span>📋 ${(h.sessaku||[]).length}施策</span></div>`;
+    html += `<div class="snap-pl">計画売上 ¥${planU.toLocaleString()} ／ 計画店利益 ¥${Math.round(cn.tenrieki).toLocaleString()}</div>`;
+    html += `</div>`;
   });
-  html += '</tbody></table></div>';
   wrap.innerHTML = html;
 }
 
-function compareSnapshot(id){
+function clearSnapCompare(){
+  const pane = document.getElementById('snap-compare');
+  if(!pane)return;
+  pane.innerHTML = '<div class="snap-empty"><div style="font-size:32px;margin-bottom:8px">👈</div><div style="font-weight:600;color:#475569;margin-bottom:4px">左から計画を選んでください</div><div style="font-size:11px;color:#94a3b8;line-height:1.6">保存した計画をクリックすると、<br>「計画 vs 現在の実績」がここに表示されます</div></div>';
+}
+
+function renderSnapCompare(id){
+  const pane = document.getElementById('snap-compare');
+  if(!pane)return;
   const h = (state.history||[]).find(x=>x.id===id);
-  if(!h){alert('スナップショットが見つかりません');return;}
+  if(!h){clearSnapCompare();return;}
   const planned = h.seisan_planned||{};
   const actual = state.seisan||{};
-  const m = document.getElementById('history-compare-modal');
-  if(!m)return;
-  m.classList.add('active');
 
   const fmt0 = v => '¥'+Math.round(v||0).toLocaleString();
   const sign = v => v>=0?'+':'';
-  let html = `<div style="margin-bottom:8px"><b>スナップショット：</b> ${escHtml(h.label)} (取得 ${new Date(h.timestamp).toLocaleString('ja-JP')})</div>`;
-  html += `<div style="margin-bottom:12px"><b>現在の精算書（実績）と比較：</b></div>`;
-  html += '<div class="overflow-auto"><table class="ocr-table"><thead><tr><th>科目</th><th style="text-align:right">計画</th><th style="text-align:right">実績</th><th style="text-align:right">差額</th><th style="text-align:right">達成率</th></tr></thead><tbody>';
+  const dt = new Date(h.timestamp).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
 
-  // SEISAN_KEYSの主要項目に絞って表示
+  let html = `<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+    <div>
+      <div style="font-size:16px;font-weight:700;color:#1e3a5f">📊 ${escHtml(h.label)} の計画 vs 現在の実績</div>
+      <div style="font-size:11px;color:#6b7280;margin-top:2px">保存日時：${dt}</div>
+    </div>
+    <input type="text" value="${escHtml(h.note||'')}" placeholder="📝 メモ" oninput="updateSnapshotNote(${h.id},this.value)" style="max-width:200px;font-size:12px">
+  </div>`;
+
+  // 達成率サマリー（4つの主要KPI）
+  const summaryKeys = [
+    {k:'uriage', label:'売上高'},
+    {k:'arari', label:'粗利益'},
+    {k:'__tenrieki', label:'店利益'},
+    {k:'__tasseiritu', label:'計画達成率'}
+  ];
+  // 計画店利益と実績店利益を計算
+  const cnP = simCn({type:h.cnPlan?.type||'cn',h24:h.cnPlan?.h24||1,nissu:h.cnPlan?.nissu||30,koyomi:h.cnPlan?.koyomi||30,firstYear:h.cnPlan?.firstYear||0,uriage:planned.uriage||0,sonota:planned.sonotauriage||0,cr:h.cnPlan?.cr||72,mikiri:h.cnPlan?.mikiri||0,tanaloss:h.cnPlan?.tanaloss||0,konetsu:h.cnPlan?.konetsu||0,eigyoOther:h.cnPlan?.eigyoOther||0,zatsuOther:h.cnPlan?.zatsuOther||0});
+  const planTenrieki = cnP.tenrieki;
+
+  html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px">`;
+  ['uriage','arari'].forEach(k=>{
+    const row = SEISAN_ROWS.find(r=>r.key===k);
+    if(!row)return;
+    const p = planned[k]||0;
+    const a = actual[k]||0;
+    const pct = p>0 ? (a/p*100) : null;
+    const color = pct==null?'#6b7280':(pct>=100?'#059669':pct>=80?'#d97706':'#dc2626');
+    html += `<div style="border:1px solid var(--border);border-radius:8px;padding:10px;background:#f8fafc">
+      <div style="font-size:11px;color:#6b7280">${row.name}</div>
+      <div style="font-size:18px;font-weight:700;color:${color};margin:2px 0">${pct==null?'—':pct.toFixed(0)+'%'}</div>
+      <div style="font-size:10px;color:#475569">計画 ${fmt0(p)}<br>実績 ${fmt0(a)}</div>
+    </div>`;
+  });
+  // 店利益カード（特別計算）
+  const planTen = planTenrieki;
+  // 実績の店利益は state.seisan の calcSeisan が出した値があるならそれを使う。なければ簡易計算
+  const actTen = (typeof window._lastTenrieki === 'number') ? window._lastTenrieki : null;
+  html += `<div style="border:1px solid var(--border);border-radius:8px;padding:10px;background:#fffbeb">
+    <div style="font-size:11px;color:#6b7280">店利益 (推計)</div>
+    <div style="font-size:18px;font-weight:700;color:#d97706;margin:2px 0">${actTen==null?'—':((actTen/planTen*100).toFixed(0)+'%')}</div>
+    <div style="font-size:10px;color:#475569">計画 ${fmt0(planTen)}<br>実績 ${actTen==null?'未確定':fmt0(actTen)}</div>
+  </div>`;
+  html += `</div>`;
+
+  // 詳細：科目別比較
+  html += '<details open style="margin-bottom:14px"><summary style="cursor:pointer;font-weight:700;color:#1e3a5f;margin-bottom:6px">📋 科目別の計画 vs 実績</summary>';
+  html += '<div class="overflow-auto"><table class="ocr-table" style="font-size:12px"><thead><tr><th>科目</th><th style="text-align:right">計画</th><th style="text-align:right">実績</th><th style="text-align:right">差額</th><th style="text-align:right">達成率</th></tr></thead><tbody>';
   const focusKeys = ['uriage','sonotauriage','arari','chaji','kyuyo','konetsu','mikiri','urihen','zappi','mikiri_shien','denki_shien'];
   focusKeys.forEach(k=>{
     const row = SEISAN_ROWS.find(r=>r.key===k);
@@ -2955,12 +3255,12 @@ function compareSnapshot(id){
     html += `<td style="text-align:right;color:${cls}">${sign(diff)}${fmt0(diff)}</td>`;
     html += `<td style="text-align:right;font-weight:700">${pct==null?'—':pct.toFixed(0)+'%'}</td></tr>`;
   });
-  html += '</tbody></table></div>';
+  html += '</tbody></table></div></details>';
 
   // 施策の実効ROI
   if(h.sessaku && h.sessaku.length){
-    html += `<div style="margin-top:14px;margin-bottom:8px"><b>📈 施策別の予実比較：</b></div>`;
-    html += '<div class="overflow-auto"><table class="ocr-table"><thead><tr><th>施策</th><th style="text-align:right">計画売上増</th><th style="text-align:right">投資額</th><th style="text-align:right">計画ROI</th><th style="text-align:right">実績売上増</th><th style="text-align:right">実効ROI</th><th>達成評価</th></tr></thead><tbody>';
+    html += '<details style="margin-bottom:6px"><summary style="cursor:pointer;font-weight:700;color:#1e3a5f;margin-bottom:6px">📈 施策別の予実比較</summary>';
+    html += '<div class="overflow-auto"><table class="ocr-table" style="font-size:12px"><thead><tr><th>施策</th><th style="text-align:right">計画売上増</th><th style="text-align:right">投資額</th><th style="text-align:right">計画ROI</th><th style="text-align:right">実績売上増</th><th style="text-align:right">実効ROI</th><th>達成評価</th></tr></thead><tbody>';
     const planUriage = planned.uriage||0;
     const actUriage = actual.uriage||0;
     const totalPlanEffect = h.sessaku.reduce((s,x)=>s+(x.effect||0),0);
@@ -2968,8 +3268,7 @@ function compareSnapshot(id){
       const planEffect = s.effect||0;
       const inv = s.invest||0;
       const planRoi = inv>0 ? (planEffect/inv*100) : null;
-      // 実績シェア: 全体実売上増のうち、計画effect比率で按分
-      const totalActDiff = actUriage - (planUriage - totalPlanEffect);  // ベース売上 = 計画売上 - 計画施策効果合計
+      const totalActDiff = actUriage - (planUriage - totalPlanEffect);
       const actEffect = totalPlanEffect>0 ? totalActDiff * (planEffect/totalPlanEffect) : 0;
       const actRoi = inv>0 ? (actEffect/inv*100) : null;
       const eval_ = (planRoi&&actRoi)?(actRoi>=planRoi*0.8?'✅ 達成':actRoi>=planRoi*0.5?'△ 未達':'❌ 大幅未達'):'—';
@@ -2982,15 +3281,26 @@ function compareSnapshot(id){
       html += `<td>${eval_}</td></tr>`;
     });
     html += '</tbody></table></div>';
-    html += '<div class="input-hint" style="margin-top:6px">※ 実績売上増は、全施策の計画効果比で按分した推計値です（個別実績の追跡には施策ごとの実績入力が必要）。</div>';
+    html += '<div class="input-hint" style="margin-top:6px">※ 実績売上増は、全施策の計画効果比で按分した推計値です。</div>';
+    html += '</details>';
   }
-
-  document.getElementById('history-compare-body').innerHTML = html;
+  pane.innerHTML = html;
 }
 
-function closeCompareModal(){
-  const m = document.getElementById('history-compare-modal');
-  if(m)m.classList.remove('active');
+// 軽量トースト通知
+function showToast(msg, dur){
+  let el = document.getElementById('app-toast');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'app-toast';
+    el.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1e3a5f;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:9500;opacity:0;transition:opacity .2s,bottom .2s;pointer-events:none;max-width:90vw;text-align:center';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.opacity = '1';
+  el.style.bottom = '90px';
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>{el.style.opacity='0';el.style.bottom='80px';}, dur||2400);
 }
 
 // ===== CN 本部支援ルール（リファレンスPDF/画像） =====
@@ -3268,7 +3578,7 @@ async function showManualSeisanInput(pageIdx){
       <button class="btn-secondary btn-sm" onclick="ocrCloseModal()">キャンセル</button>
       <button class="btn-secondary btn-sm" onclick="manualPrefillFrom('prev')" title="先月（state.seisan）の値で埋める">📋 先月をコピー</button>
       <button class="btn-secondary btn-sm" onclick="manualPrefillFrom('lastyear')" title="前年同月の値で埋める">📋 前年をコピー</button>
-      <button class="btn-secondary btn-sm" onclick="manualPrefillFrom('zero')" title="全項目を 0 にする">🔢 全て0</button>
+      <button class="btn-secondary btn-sm" onclick="manualPrefillFrom('zero')" title="全項目を 0 にリセット">🔢 全項目リセット</button>
     </div>
     <div>
       <button class="btn-primary btn-sm" onclick="manualSeisanApply()">✓ この内容で反映</button>
