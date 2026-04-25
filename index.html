@@ -412,7 +412,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v15.1</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v15.2</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -1413,7 +1413,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v15.1';
+const APP_VERSION='v15.2';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -3206,79 +3206,38 @@ async function ocrProcessPage(pageIdx){
 
     if(useClaude){
       // === Claude モード ===
-      // 優先順位:
-      //   1. PDF直送モード（Anthropic APIの document content block）= サーバ側でテキスト+画像抽出
-      //   2. PDFテキストレイヤー（PDF.js getTextContent）
-      //   3. Vision OCR（最後の砦）
-      const fullPdfMB = (ocrCtx.pdfBuf?.byteLength||0)/1024/1024;
-      console.log('[claude] full PDF size:',fullPdfMB.toFixed(2),'MB');
+      // PDFが横向き(90°回転)で保存されているケースが多発するので、
+      // まず Tesseract で正しい向きを自動検出してから、その向きの高解像度画像を
+      // Claude Vision に送る。PDF直送モードは rotation を制御できないので使わない。
 
-      let result=null;
-      let imgCanvas=null;
-
-      // 表示用に画像も作る（モーダル表示用）
-      const vp = page.getViewport({scale:2});
-      imgCanvas = document.createElement('canvas');
-      imgCanvas.width=vp.width;imgCanvas.height=vp.height;
-      await page.render({canvasContext:imgCanvas.getContext('2d'),viewport:vp}).promise;
-      ocrCtx.canvas = imgCanvas;
-
-      // ① PDF 直送モード（選択ページだけを抽出してサイズを抑える）
-      if(ocrCtx.pdfBuf && window.PDFLib){
+      // ① 向き自動検出（無料・端末ローカル）
+      const userOverrideRot = ocrCtx.userRotation;
+      let bestRot = 0;
+      if(userOverrideRot != null){
+        bestRot = userOverrideRot;
+        console.log('[claude] using user-specified rotation:',bestRot,'°');
+        ocrSetStep('向き手動指定',`${bestRot}° で処理`,15);
+      }else{
+        ocrSetStep('PDF向き自動検出中...','低解像度で4方向プレ判定',8);
         try{
-          ocrSetStep('PDF単一ページ抽出中...','選択ページだけを切り出し',12);
-          const targetPageNum = ocrCtx.pages[pageIdx].pageNum;
-          const singleBuf = await extractSinglePagePdf(ocrCtx.pdfBuf, targetPageNum);
-          const singleMB = singleBuf.byteLength/1024/1024;
-          console.log('[claude] single-page PDF size:',singleMB.toFixed(2),'MB (page',targetPageNum,')');
-          if(singleMB > 23){
-            console.warn('[claude] 単一ページでもサイズ超過 → スキップ');
-            throw new Error('単一ページでも 23MB 超え');
-          }
-          const singleB64 = await arrayBufferToBase64(singleBuf);
-          ocrSetStep('📄 PDF直送モード','Anthropic API に単一ページPDFを送信中',20);
-          // 単一ページ PDF なのでページ番号は 1 を指定
-          result = await claudeParseFromPDF(singleB64, 1, ocrSetStep);
-          console.log('[claude] PDF direct mode succeeded');
+          const rotInfo = await detectPageRotation(page, ocrSetStep);
+          bestRot = rotInfo.rotation;
         }catch(e){
-          console.warn('[claude] PDF直送 失敗、フォールバック:',e.message);
+          console.warn('[claude] rotation detect failed, using 0°:',e.message);
         }
       }
+      ocrCtx.detectedRotation = bestRot;
 
-      // ② テキストレイヤー
-      if(!result){
-        ocrSetStep('PDFテキストレイヤー確認中...','...',12);
-        let structuredText=null;
-        let tcInfo={items:0,nonEmpty:0};
-        try{
-          const tc=await page.getTextContent();
-          tcInfo.items=tc?.items?.length||0;
-          tcInfo.nonEmpty=(tc?.items||[]).filter(it=>it && typeof it.str==='string' && it.str.trim()).length;
-          structuredText=buildStructuredTextFromTC(tc);
-        }catch(e){console.warn('[claude] getTextContent failed:',e);}
-        const textLen=structuredText?structuredText.length:0;
-        const hasDigit=structuredText?/\d/.test(structuredText):false;
-        const hasTextLayer=structuredText && textLen>50 && hasDigit;
-        console.log('[claude] textLayer items:',tcInfo.items,'non-empty:',tcInfo.nonEmpty,'len:',textLen);
-        if(hasTextLayer){
-          try{
-            ocrSetStep('テキスト解析モード','OCR不要',25);
-            result = await claudeParseFromText(structuredText, imgCanvas, ocrSetStep);
-          }catch(e){console.warn('[claude] テキストモード 失敗、Vision OCRへ:',e.message);}
-        }
-      }
+      // ② 高解像度レンダリング
+      ocrSetStep('PDFを高解像度で画像化中',`scale=4, rotation=${bestRot}°`,25);
+      const vp = page.getViewport({scale:4, rotation:bestRot});
+      const cv = document.createElement('canvas');
+      cv.width = vp.width; cv.height = vp.height;
+      await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+      ocrCtx.canvas = cv;
 
-      // ③ Vision OCR フォールバック
-      if(!result){
-        ocrSetStep('Vision OCR モード','PDFを高解像度で画像化中',15);
-        const vp4 = page.getViewport({scale:4});
-        const cv4 = document.createElement('canvas');
-        cv4.width=vp4.width;cv4.height=vp4.height;
-        await page.render({canvasContext:cv4.getContext('2d'),viewport:vp4}).promise;
-        ocrCtx.canvas = cv4;
-        result = await claudeOcrSeisan(cv4, ocrSetStep);
-      }
-
+      // ③ Claude Vision OCR
+      const result = await claudeOcrSeisan(cv, ocrSetStep);
       const {parsed,raw,usage,timeSec,mode} = result;
 
       ocrSetStep('結果を整形中...','JSON → state 変換',85);
@@ -3375,6 +3334,34 @@ async function ocrProcessPage(pageIdx){
     console.error(e);
     ocrSetStep('❌ エラー',e.message+'\n\n精算書PDFの形式・APIキー・通信を確認してください。',0);
   }
+}
+
+// PDFページの正しい向きを Tesseract の低解像度4方向プレOCRで自動検出する
+// scanned-PDF（テキスト層なし）が90°横向きで保存されている問題への対策
+async function detectPageRotation(page, onProgress){
+  const Tess = await ocrLoadTesseract();
+  const lowVp = page.getViewport({scale:1});
+  const lowCv = document.createElement('canvas');
+  lowCv.width=lowVp.width;lowCv.height=lowVp.height;
+  await page.render({canvasContext:lowCv.getContext('2d'),viewport:lowVp}).promise;
+  const rotations=[0,90,180,270];
+  let bestRot=0,bestScore=-1;
+  for(let i=0;i<rotations.length;i++){
+    const rot=rotations[i];
+    onProgress&&onProgress(`向き判定中: ${rot}° (${i+1}/4)`,5+(i+1)*4);
+    const rotCv = ocrRotateCanvas(lowCv, rot);
+    const r = await Tess.recognize(rotCv,'jpn',{logger:()=>{}});
+    const text = r.data.text;
+    let score = 0;
+    OCR_LABEL_MAP.forEach(m=>{
+      m.aliases.forEach(a=>{ if(text.includes(a))score++; });
+      if(m.code && text.includes(m.code))score+=2;
+    });
+    console.log(`[rotation-detect] ${rot}° → score=${score}`);
+    if(score>bestScore){bestScore=score;bestRot=rot;}
+  }
+  console.log(`[rotation-detect] best: ${bestRot}° (score ${bestScore})`);
+  return {rotation:bestRot,score:bestScore};
 }
 
 function ocrRotateCanvas(src, deg){
@@ -3521,6 +3508,18 @@ function ocrVerifyInvariants(e){
   return {issues, calculated:{baijoCalc, arariCalc, eigyoSum}};
 }
 
+// ユーザが手動で角度を指定して再OCRする
+async function ocrRetryWithRotation(deg){
+  if(!ocrCtx.pdf || ocrCtx.selectedPageIdx==null)return;
+  ocrCtx.userRotation = deg;
+  document.getElementById('ocr-modal-loading').style.display='block';
+  document.getElementById('ocr-modal-result').style.display='none';
+  document.getElementById('ocr-modal-foot').style.display='none';
+  await ocrProcessPage(ocrCtx.selectedPageIdx);
+  // 1回使ったらリセット（次回PDF読込時は自動検出に戻す）
+  ocrCtx.userRotation = null;
+}
+
 function ocrShowConfirmation(){
   document.getElementById('ocr-modal-loading').style.display='none';
   const result = document.getElementById('ocr-modal-result');
@@ -3545,7 +3544,16 @@ function ocrShowConfirmation(){
   if(ext._mode==='pdf')html += `<span class="pill" style="background:#d1fae5;color:#065f46">📄 PDF直送（高精度）</span>`;
   else if(ext._mode==='text')html += `<span class="pill" style="background:#dbeafe;color:#1e40af">📄 テキスト解析</span>`;
   else if(ext._mode==='vision')html += `<span class="pill" style="background:#fef3c7;color:#92400e">👁 Vision OCR</span>`;
+  if(ocrCtx.detectedRotation!=null)html += `<span class="pill" style="background:#e5e7eb;color:#374151">🔄 ${ocrCtx.detectedRotation}°</span>`;
   html += '</div>';
+  // 向き手動切替（自動検出が間違ったとき用）
+  html += `<div style="margin-bottom:10px;padding:8px;background:#f9fafb;border-radius:6px;font-size:12px">
+    <b>向きが違う？</b> 別の角度で再OCR：
+    <button class="btn-secondary btn-sm" style="margin-left:6px" onclick="ocrRetryWithRotation(0)">0°</button>
+    <button class="btn-secondary btn-sm" onclick="ocrRetryWithRotation(90)">90°</button>
+    <button class="btn-secondary btn-sm" onclick="ocrRetryWithRotation(180)">180°</button>
+    <button class="btn-secondary btn-sm" onclick="ocrRetryWithRotation(270)">270°</button>
+  </div>`;
 
   if(ext._notes){
     const confColor=ext._confidence==='high'?'#16a34a':ext._confidence==='medium'?'#d97706':ext._confidence==='low'?'#dc2626':'#6b7280';
