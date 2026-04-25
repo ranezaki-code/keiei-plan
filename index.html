@@ -251,6 +251,21 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .ocr-modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9000;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
 .ocr-modal-bg.active{display:flex}
 .ocr-modal{background:#fff;border-radius:12px;max-width:980px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;display:flex;flex-direction:column;max-height:90vh}
+.ocr-modal.wide{max-width:1500px}
+.manual-pane{display:flex;gap:10px;height:74vh;min-height:520px}
+.manual-pdf-pane{flex:1.1;border:1px solid var(--border);border-radius:8px;background:#f3f4f6;overflow:auto;position:relative}
+.manual-pdf-pane canvas{display:block;margin:0 auto}
+.manual-form-pane{flex:1;border:1px solid var(--border);border-radius:8px;overflow-y:auto;padding:10px;background:#fff}
+.manual-form-pane h4{margin:8px 0 4px 0;font-size:12px;color:#1e3a5f;border-bottom:1px solid #e5e7eb;padding-bottom:2px;position:sticky;top:0;background:#fff;z-index:1}
+.manual-row{display:grid;grid-template-columns:1.6fr 60px 1fr;gap:6px;align-items:center;padding:3px 0;font-size:12px}
+.manual-row label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.manual-row .code{font-size:10px;color:#6b7280;font-family:monospace}
+.manual-row input{padding:4px 6px;text-align:right;border:1px solid var(--border);border-radius:4px;font-size:12px;font-variant-numeric:tabular-nums}
+.manual-row input.changed{border-color:#3b82f6;background:#eff6ff}
+.manual-row input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(59,130,246,.2);outline:none}
+.manual-pdf-toolbar{position:sticky;top:0;background:rgba(255,255,255,.95);backdrop-filter:blur(4px);border-bottom:1px solid var(--border);padding:6px;display:flex;gap:6px;align-items:center;z-index:2;flex-wrap:wrap}
+.manual-pdf-toolbar button{padding:3px 8px;font-size:11px;border:1px solid var(--border);background:#fff;border-radius:4px;cursor:pointer}
+.manual-pdf-toolbar button:hover{background:#f3f4f6}
 .ocr-modal-head{padding:14px 20px;background:linear-gradient(135deg,#1e3a5f 0%,#152c47 100%);color:#fff;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
 .ocr-modal-head h3{margin:0;font-size:15px}
 .ocr-modal-body{padding:14px 20px;overflow-y:auto;flex:1}
@@ -396,6 +411,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
         <div id="ocr-step-detail" style="font-size:11px;color:#6b7280;margin-top:6px"></div>
       </div>
       <div id="ocr-modal-result" style="display:none"></div>
+      <div id="ocr-modal-manual" style="display:none"></div>
     </div>
     <div class="ocr-modal-foot" id="ocr-modal-foot" style="display:none">
       <div>
@@ -412,7 +428,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v15.2</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v16.0</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -1413,7 +1429,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v15.2';
+const APP_VERSION='v16.0';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -3123,6 +3139,8 @@ function ocrSetStep(text,detail,pct){
 }
 function ocrCloseModal(){
   const m=document.getElementById('ocr-modal');if(m)m.classList.remove('active');
+  const inner=document.querySelector('#ocr-modal .ocr-modal');if(inner)inner.classList.remove('wide');
+  const manual=document.getElementById('ocr-modal-manual');if(manual){manual.style.display='none';manual.innerHTML='';}
   ocrCtx={pdf:null,pages:[],selectedPageIdx:0,extracted:{},ranges:{},col:'curr',issues:[],canvas:null};
 }
 function ocrShowModal(){
@@ -3164,10 +3182,9 @@ async function handleSeisanPDF(ev){
     }
 
     if(pdf.numPages > 1){
-      // ページ選択UI
       ocrShowPageSelector();
     }else{
-      await ocrProcessPage(0);
+      await showManualSeisanInput(0);
     }
   }catch(e){
     console.error(e);
@@ -3186,11 +3203,194 @@ function ocrShowPageSelector(){
   ocrCtx.pages.forEach((p,i)=>{
     const div = document.createElement('div');
     div.className = 'ocr-page-thumb';
-    div.onclick = ()=>ocrProcessPage(i);
+    div.onclick = ()=>showManualSeisanInput(i);
     div.innerHTML = `<div>ページ ${p.pageNum}</div>`;
     div.appendChild(p.thumbCanvas);
     thumbsEl.appendChild(div);
   });
+}
+
+// =========================================
+// 手動入力モード（PDFを横で見ながら直接入力）
+// OCR が精算書PDF（横向き・スキャン画像）で精度を出せないため、
+// 「PDF プレビュー」＋「フォーム」の side-by-side で手動入力する
+// =========================================
+
+// フィールドをセクション別に整理（フォーム表示順）
+const MANUAL_SECTIONS = [
+  {title:'【売上高】', keys:['uriage','sonotauriage']},
+  {title:'【売上原価】', keys:['tanaoroshi_hatsu','shiire','shiire_nebiki','tanaoroshi_sue','urihen','tanagen']},
+  {title:'【チャージ・営業費】', keys:['chaji','kyuyo','houtei_fukuri','mikiri','loss','shomohin','hoso','shuzen','genkin','setsubi_lease','setsubi_shuzen','tsushin','konetsu','shiharai_risoku','songai','hieigyo','zappi']},
+  {title:'【雑益】', keys:['zatsuyeki']},
+  {title:'【本部負担】', keys:['mikiri_shien','denki_shien']},
+];
+
+const MANUAL_LABEL = {
+  uriage:'商品売上高', sonotauriage:'その他営業収入',
+  tanaoroshi_hatsu:'期(月)首在庫高', shiire:'商品仕入高', shiire_nebiki:'仕入割戻高',
+  tanaoroshi_sue:'期(月)末在庫高', urihen:'見切・処分(売上原価)', tanagen:'棚卸ロス(売上原価)',
+  chaji:'ローソンチャージ', kyuyo:'パートタイマー給与', houtei_fukuri:'法定福利費',
+  mikiri:'見切・処分(営業費)', loss:'棚卸ロス(営業費)', shomohin:'消耗品費',
+  hoso:'包装資材費', shuzen:'清掃費', genkin:'現金過不足', setsubi_lease:'電話料',
+  setsubi_shuzen:'設備修繕料', tsushin:'一般維持費', konetsu:'水道光熱費',
+  shiharai_risoku:'支払利息', songai:'損害保険料', hieigyo:'非課税経費', zappi:'雑費',
+  zatsuyeki:'雑益', mikiri_shien:'見切・処分本部負担額', denki_shien:'光熱費本部負担額'
+};
+
+let manualCtx = {pageIdx:0, scale:1.5, rotation:0, page:null};
+
+async function showManualSeisanInput(pageIdx){
+  ocrCtx.selectedPageIdx = pageIdx;
+  manualCtx.pageIdx = pageIdx;
+  manualCtx.scale = 1.5;
+  manualCtx.rotation = 0;
+
+  // モーダルを wide にして side-by-side を入れる
+  document.querySelector('#ocr-modal .ocr-modal').classList.add('wide');
+  document.getElementById('ocr-modal-title').textContent = '✏️ 精算書を入力（PDFを見ながら）';
+  document.getElementById('ocr-modal-loading').style.display='none';
+  document.getElementById('ocr-modal-result').style.display='none';
+  const manual = document.getElementById('ocr-modal-manual');
+  manual.style.display='block';
+  document.getElementById('ocr-modal-foot').style.display='flex';
+  // フッターボタンを切替
+  const foot = document.getElementById('ocr-modal-foot');
+  foot.innerHTML = `
+    <div>
+      <button class="btn-secondary btn-sm" onclick="ocrCloseModal()">キャンセル</button>
+      <button class="btn-secondary btn-sm" onclick="manualPrefillFrom('prev')" title="先月（state.seisan）の値で埋める">📋 先月をコピー</button>
+      <button class="btn-secondary btn-sm" onclick="manualPrefillFrom('lastyear')" title="前年同月の値で埋める">📋 前年をコピー</button>
+      <button class="btn-secondary btn-sm" onclick="manualPrefillFrom('zero')">🗑 全クリア</button>
+    </div>
+    <div>
+      <button class="btn-primary btn-sm" onclick="manualSeisanApply()">✓ この内容で反映</button>
+    </div>`;
+
+  // PDFページを取得して描画
+  const page = await ocrCtx.pdf.getPage(ocrCtx.pages[pageIdx].pageNum);
+  manualCtx.page = page;
+  // 自動向き検出
+  try{
+    const rotInfo = await detectPageRotation(page, ()=>{});
+    manualCtx.rotation = rotInfo.rotation;
+    console.log('[manual] auto-detected rotation:',rotInfo.rotation,'°');
+  }catch(e){console.warn('[manual] rotation detect failed:',e.message);}
+
+  // 当月 month / 営業日数 のデフォルト
+  const defaultMonth = state.seisan?.month || new Date().toISOString().slice(0,7);
+
+  // HTML を組み立て
+  let html = `<div class="manual-pane">
+    <div class="manual-pdf-pane" id="manual-pdf-pane">
+      <div class="manual-pdf-toolbar">
+        <button onclick="manualPdfRotate()">↻ 90°回転</button>
+        <button onclick="manualPdfZoom(1.25)">🔍+</button>
+        <button onclick="manualPdfZoom(0.8)">🔍−</button>
+        <button onclick="manualPdfZoomFit()">↔ 横幅</button>
+        <span style="margin-left:auto;font-size:11px;color:#6b7280" id="manual-pdf-info"></span>
+      </div>
+      <div id="manual-pdf-canvas-wrap" style="padding:10px"></div>
+    </div>
+    <div class="manual-form-pane">
+      <div style="margin-bottom:8px;padding:6px;background:#fffbeb;border-radius:4px;font-size:11px;color:#78350f">
+        💡 PDFを見ながら値を入力。Tabキーで次のフィールドへ。先月の値で初期化してあるので、変わった項目だけ修正でOK。
+      </div>
+      <h4>【ヘッダー】</h4>
+      <div class="manual-row"><label>対象月</label><span class="code"></span><input type="month" id="manual-month" value="${defaultMonth}"></div>
+      <div class="manual-row"><label>営業日数</label><span class="code">日</span><input type="number" id="manual-eigyo-nissu" value="${state.seisan?.eigyo_nissu||30}"></div>
+  `;
+  MANUAL_SECTIONS.forEach(sec=>{
+    html += `<h4>${sec.title}</h4>`;
+    sec.keys.forEach(k=>{
+      const meta = OCR_LABEL_MAP.find(m=>m.key===k);
+      const code = meta?.code || '';
+      const label = MANUAL_LABEL[k] || k;
+      const init = state.seisan?.[k] ?? state.seisan_prev?.[k] ?? 0;
+      html += `<div class="manual-row"><label title="${label}">${label}</label><span class="code">${code}</span><input type="number" id="manual-f-${k}" data-key="${k}" data-init="${init}" value="${init||''}"></div>`;
+    });
+  });
+  html += `</div></div>`;
+  manual.innerHTML = html;
+
+  // 変更検知（青ハイライト）
+  manual.querySelectorAll('input[data-key]').forEach(inp=>{
+    inp.addEventListener('input',()=>{
+      const init = inp.dataset.init;
+      if(String(inp.value)!==String(init))inp.classList.add('changed');
+      else inp.classList.remove('changed');
+    });
+  });
+
+  // PDF を描画
+  await renderManualPdf();
+}
+
+async function renderManualPdf(){
+  const wrap = document.getElementById('manual-pdf-canvas-wrap');
+  if(!wrap || !manualCtx.page)return;
+  const vp = manualCtx.page.getViewport({scale:manualCtx.scale, rotation:manualCtx.rotation});
+  const cv = document.createElement('canvas');
+  cv.width=vp.width; cv.height=vp.height;
+  await manualCtx.page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+  wrap.innerHTML='';
+  wrap.appendChild(cv);
+  const info=document.getElementById('manual-pdf-info');
+  if(info)info.textContent=`${manualCtx.rotation}° / ${(manualCtx.scale*100).toFixed(0)}% / ${cv.width}×${cv.height}`;
+}
+
+function manualPdfRotate(){
+  manualCtx.rotation = (manualCtx.rotation + 90) % 360;
+  renderManualPdf();
+}
+function manualPdfZoom(factor){
+  manualCtx.scale = Math.max(0.4, Math.min(4, manualCtx.scale*factor));
+  renderManualPdf();
+}
+function manualPdfZoomFit(){
+  const pane = document.getElementById('manual-pdf-pane');
+  if(!pane || !manualCtx.page)return;
+  const w = pane.clientWidth - 30;
+  const baseVp = manualCtx.page.getViewport({scale:1, rotation:manualCtx.rotation});
+  manualCtx.scale = w / baseVp.width;
+  renderManualPdf();
+}
+
+function manualPrefillFrom(src){
+  let source;
+  if(src==='prev')source = state.seisan_prev || {};
+  else if(src==='lastyear')source = state.seisan_lastyear || {};
+  else source = {};
+  document.querySelectorAll('#ocr-modal-manual input[data-key]').forEach(inp=>{
+    const k = inp.dataset.key;
+    const v = src==='zero' ? 0 : (source[k] ?? 0);
+    inp.value = v || '';
+    inp.dataset.init = v;
+    inp.classList.remove('changed');
+  });
+}
+
+function manualSeisanApply(){
+  const monthEl = document.getElementById('manual-month');
+  const nisshuEl = document.getElementById('manual-eigyo-nissu');
+  const target = state.seisan;
+  if(monthEl?.value)target.month = monthEl.value;
+  if(nisshuEl?.value)target.eigyo_nissu = parseInt(nisshuEl.value,10) || 0;
+  document.querySelectorAll('#ocr-modal-manual input[data-key]').forEach(inp=>{
+    const k = inp.dataset.key;
+    const v = inp.value.trim();
+    if(v==='')delete target[k];
+    else{
+      const n = parseInt(v.replace(/[^\d-]/g,''),10);
+      if(!isNaN(n))target[k]=n;
+    }
+  });
+  if(typeof restoreSeisanInputs==='function')restoreSeisanInputs();
+  if(typeof calcSeisan==='function')calcSeisan();
+  saveAll(true);
+  // wide 解除
+  document.querySelector('#ocr-modal .ocr-modal').classList.remove('wide');
+  ocrCloseModal();
+  alert(`✅ ${target.month||''} の精算書を反映しました`);
 }
 
 async function ocrProcessPage(pageIdx){
