@@ -40,12 +40,32 @@ td select:focus{background:#f0f7ff}
 #header h1{font-size:16px;flex:1}
 #tabs{display:flex;overflow-x:auto;background:var(--main-dk);border-bottom:2px solid var(--accent);scrollbar-width:none}
 #tabs::-webkit-scrollbar{display:none}
-.tab-btn{flex:none;padding:10px 14px;color:#fff;background:transparent;border:none;border-radius:0;font-size:13px;opacity:.7;white-space:nowrap;border-bottom:3px solid transparent;cursor:pointer}
+.tab-btn{flex:none;padding:10px 18px;color:#fff;background:transparent;border:none;border-radius:0;font-size:13px;opacity:.7;white-space:nowrap;border-bottom:3px solid transparent;cursor:pointer;font-weight:600}
 .tab-btn.active{opacity:1;border-bottom:3px solid var(--accent);background:rgba(33,150,243,.15)}
-#content{flex:1;padding:12px;overflow-x:hidden;padding-bottom:80px}
+/* グローバル月セレクタ */
+#period-bar{display:flex;align-items:center;gap:10px;padding:6px 14px;background:#fff;border-bottom:1px solid var(--border);font-size:12px;flex-wrap:wrap}
+#period-bar label{font-weight:600;color:var(--main);font-size:12px}
+#period-bar input[type=month]{max-width:130px;padding:4px 6px;font-size:12px}
+#period-bar .pb-info{color:var(--gray);font-size:11px}
+#content{flex:1;padding:10px;overflow-x:hidden;padding-bottom:72px}
+.group{display:none}.group.active{display:block}
 .tab-panel{display:none}.tab-panel.active{display:block}
-.card{background:#fff;border-radius:10px;border:1px solid var(--border);padding:12px;margin-bottom:12px}
-.section-title{font-size:14px;font-weight:700;color:var(--main);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--main-lt)}
+/* サイドバー付きレイアウト */
+.layout-sidebar{display:flex;gap:10px;align-items:flex-start}
+.sidebar-rail{position:sticky;top:8px;width:170px;flex:none;background:#fff;border:1px solid var(--border);border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:2px;align-self:flex-start}
+.sidebar-btn{padding:8px 10px;border:none;background:transparent;text-align:left;border-radius:6px;font-size:12px;cursor:pointer;color:#374151;font-weight:500;transition:all .12s;border-left:3px solid transparent}
+.sidebar-btn:hover{background:var(--gray-lt)}
+.sidebar-btn.active{background:var(--accent-lt);color:var(--accent);font-weight:700;border-left-color:var(--accent)}
+.sidebar-pane{flex:1;min-width:0}
+@media(max-width:780px){
+  .layout-sidebar{flex-direction:column}
+  .sidebar-rail{position:static;width:100%;flex-direction:row;overflow-x:auto;padding:4px;gap:2px;scrollbar-width:none}
+  .sidebar-rail::-webkit-scrollbar{display:none}
+  .sidebar-btn{flex:none;white-space:nowrap;border-left:none;border-bottom:3px solid transparent;padding:6px 10px}
+  .sidebar-btn.active{border-left:none;border-bottom-color:var(--accent)}
+}
+.card{background:#fff;border-radius:10px;border:1px solid var(--border);padding:10px 12px;margin-bottom:10px}
+.section-title{font-size:14px;font-weight:700;color:var(--main);margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid var(--main-lt)}
 .row{display:flex;flex-wrap:wrap;gap:8px}.col{flex:1;min-width:120px}
 .summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:12px}
 .summary-box{background:var(--main-lt);border-radius:8px;padding:10px;text-align:center}
@@ -286,39 +306,44 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
-      <span style="font-size:11px;opacity:.6">金額はすべて円で入力</span>
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
   </div>
   <div id="tabs">
-    <button class="tab-btn active" data-tab="0" onclick="showTab(0)">⓪精算書</button>
-    <button class="tab-btn" data-tab="2" onclick="showTab(2)">①日販・客数</button>
-    <button class="tab-btn" data-tab="1" onclick="showTab(1)">②次月計画</button>
-    <button class="tab-btn" data-tab="4" onclick="showTab(4)">③施策計画</button>
-    <button class="tab-btn" data-tab="5" onclick="showTab(5)">④先週検証</button>
-    <button class="tab-btn" data-tab="6" onclick="showTab(6)">⑤QSC</button>
-    <button class="tab-btn" data-tab="7" onclick="showTab(7)">⑥シーズン</button>
-    <button class="tab-btn" data-tab="8" onclick="showTab(8)">⑦発注リスト</button>
-    <button class="tab-btn" data-tab="9" onclick="showTab(9)">⑧その他</button>
+    <button class="tab-btn active" data-group="jisseki" onclick="showGroup('jisseki')">⓪ 実績</button>
+    <button class="tab-btn" data-group="plan" onclick="showGroup('plan')">① 当月計画</button>
+    <button class="tab-btn" data-group="other" onclick="showGroup('other')">② その他</button>
+  </div>
+  <div id="period-bar">
+    <label>📅 対象月</label>
+    <input type="month" id="global-month" onchange="onGlobalMonthChange()">
+    <span class="pb-info" id="global-month-info">— 全タブ共通の対象月 —</span>
+    <span style="flex:1"></span>
+    <span class="pb-info">金額はすべて円で入力</span>
   </div>
   <div id="content">
+
+    <!-- ============================================================ -->
+    <!-- ===== グループ ⓪ 実績（精算書 + 日販・客数） ============== -->
+    <!-- ============================================================ -->
+    <div class="group active" id="group-jisseki">
+      <div class="layout-sidebar">
+        <nav class="sidebar-rail">
+          <button class="sidebar-btn active" data-sub="seisan" onclick="showSub('jisseki','seisan')">📒 精算書</button>
+          <button class="sidebar-btn" data-sub="daily" onclick="showSub('jisseki','daily')">📊 日販・客数</button>
+        </nav>
+        <div class="sidebar-pane">
 
     <!-- ===== Tab 0: 精算書 ===== -->
     <div class="tab-panel active" id="tab0">
       <div class="card">
         <div class="flex justify-between items-center mb-2" style="flex-wrap:wrap;gap:8px">
-          <div class="section-title" style="margin:0">損益計算書（精算書）</div>
+          <div class="section-title" style="margin:0">損益計算書（精算書）<button class="help-btn" data-help-title="精算書の使い方" data-help="ローソン精算書（損益計算書）フォーマット準拠。<br><br><b>当月</b>：精算書の数値を入力（必須）<br><b>先月</b>：前月の数値（任意）→ 先月比% が自動表示<br><b>前年同月</b>：去年同じ月の数値（任意）→ 前年比% が自動表示<br><br><b>売上比</b>：各項目 ÷ 売上高 × 100<br><b>コード</b>：ローソン勘定科目コード<br><br>灰色行は自動計算（売上高合計・売上原価・粗利・営業費計・店利益）">?</button></div>
           <div class="flex items-center gap-2" style="flex-wrap:wrap">
-            <span class="unit-hint">単位：円</span>
-            <input type="month" id="seisan-month" style="max-width:140px" onchange="saveAll()">
-            <label class="unit-hint" style="margin-left:8px">営業日数</label>
+            <label class="unit-hint">営業日数</label>
             <input type="text" id="s-eigyo-nissu" inputmode="numeric" data-nounit placeholder="30" style="max-width:60px;text-align:right" oninput="syncNishinUriage('nissu')">
-            <span class="unit-hint" style="margin-left:8px;color:var(--gray)">※平均日販は表内で自動算出</span>
+            <input type="month" id="seisan-month" style="display:none">
           </div>
-        </div>
-        <div class="alert alert-info mb-2" style="font-size:12px;line-height:1.6">
-          📘 <b>ローソン精算書（損益計算書）フォーマット</b>に準拠。<b>当月</b>欄に今月の数値を入力すると、<b>先月比 / 前年比 / 売上比</b>が自動計算されます。
-          <br>先月・前年同月欄にも本部から届いた精算書の数値を入れると比較が有効化します。<button class="help-btn" data-help-title="各欄の使い方" data-help="<b>当月</b>：今月の精算書の数値を入力（必須）<br><b>先月</b>：前月の精算書数値（任意）→ <b>先月比%</b> が自動表示<br><b>前年同月</b>：去年同じ月の数値（任意）→ <b>前年比%</b> が自動表示<br><br><b>売上比</b>：各項目 ÷ 売上高 × 100（収益構造の指標）<br><b>コード</b>：ローソン勘定科目コード（精算書右欄と一致）<br><br>灰色の行は自動計算（売上高合計・売上原価・総売上利益高・営業費計・店利益）">?</button>
         </div>
         <div class="flex gap-2 mb-2" style="flex-wrap:wrap">
           <button class="btn-secondary btn-sm" onclick="copyCurrToPrev()" title="当月の値を『先月』欄にコピー（翌月の比較準備）">📋 当月→先月に複製</button>
@@ -384,12 +409,104 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
       </div>
     </div>
 
-    <!-- ===== Tab 1: 次月計画（旧 月次目標 + カテゴリ + Cn支援） ===== -->
-    <div class="tab-panel" id="tab1">
+    <!-- ===== Tab 2: 日販・客数（実績グループの2枚目） ===== -->
+    <div class="tab-panel" id="tab2">
+      <div class="card">
+        <div class="section-title">月累計・先週実績</div>
+        <div class="overflow-auto">
+        <table>
+          <thead><tr><th>区分</th><th>売上</th><th>前年比%</th><th>客数（人）</th><th>前年比%</th><th>客単価</th></tr></thead>
+          <tbody>
+            <tr><td class="font-bold">月累計</td>
+              <td><input type="text" id="d-tsuki-uriage" inputmode="numeric" placeholder="0" oninput="calcDailyStats()"></td>
+              <td><input type="text" id="d-tsuki-uriage-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
+              <td><input type="text" id="d-tsuki-kyaku" inputmode="numeric" data-nounit placeholder="0" oninput="calcDailyStats()"></td>
+              <td><input type="text" id="d-tsuki-kyaku-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
+              <td id="d-tsuki-tanka" class="font-bold">¥—</td>
+            </tr>
+            <tr><td class="font-bold">先週実績</td>
+              <td><input type="text" id="d-sen-uriage" inputmode="numeric" placeholder="0" oninput="calcDailyStats()"></td>
+              <td><input type="text" id="d-sen-uriage-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
+              <td><input type="text" id="d-sen-kyaku" inputmode="numeric" data-nounit placeholder="0" oninput="calcDailyStats()"></td>
+              <td><input type="text" id="d-sen-kyaku-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
+              <td id="d-sen-tanka" class="font-bold">¥—</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">時間帯別実績</div>
+        <div class="overflow-auto">
+        <table>
+          <thead><tr><th>時間帯</th><th>売上</th><th>前年比%</th><th>構成比</th><th>客数</th><th>前年比%</th><th>構成比</th></tr></thead>
+          <tbody>
+            <tr><td class="font-bold">朝（0〜9時）</td>
+              <td><input type="text" id="t-asa-u" inputmode="numeric" placeholder="0" oninput="calcTimeStats()"></td>
+              <td><input type="text" id="t-asa-u-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
+              <td id="t-asa-u-rate" class="font-bold">—%</td>
+              <td><input type="text" id="t-asa-k" inputmode="numeric" data-nounit placeholder="0" oninput="calcTimeStats()"></td>
+              <td><input type="text" id="t-asa-k-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
+              <td id="t-asa-k-rate" class="font-bold">—%</td>
+            </tr>
+            <tr><td class="font-bold">昼（9〜16時）</td>
+              <td><input type="text" id="t-hiru-u" inputmode="numeric" placeholder="0" oninput="calcTimeStats()"></td>
+              <td><input type="text" id="t-hiru-u-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
+              <td id="t-hiru-u-rate" class="font-bold">—%</td>
+              <td><input type="text" id="t-hiru-k" inputmode="numeric" data-nounit placeholder="0" oninput="calcTimeStats()"></td>
+              <td><input type="text" id="t-hiru-k-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
+              <td id="t-hiru-k-rate" class="font-bold">—%</td>
+            </tr>
+            <tr><td class="font-bold">夕（16〜24時）</td>
+              <td><input type="text" id="t-yu-u" inputmode="numeric" placeholder="0" oninput="calcTimeStats()"></td>
+              <td><input type="text" id="t-yu-u-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
+              <td id="t-yu-u-rate" class="font-bold">—%</td>
+              <td><input type="text" id="t-yu-k" inputmode="numeric" data-nounit placeholder="0" oninput="calcTimeStats()"></td>
+              <td><input type="text" id="t-yu-k-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
+              <td id="t-yu-k-rate" class="font-bold">—%</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">曜日別4週平均実績</div>
+        <div class="overflow-auto">
+        <table id="youbi-grid">
+          <thead><tr><th>曜日</th><th>日販</th><th>先週差</th><th>客数</th><th>先週差</th><th>客単価</th><th>先週差</th></tr></thead>
+          <tbody id="youbi-body"></tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+
+        </div><!-- /sidebar-pane (実績) -->
+      </div><!-- /layout-sidebar (実績) -->
+    </div><!-- /group-jisseki -->
+
+    <!-- ============================================================ -->
+    <!-- ===== グループ ① 当月計画（計画＋施策＋検証＋QSC等） ====== -->
+    <!-- ============================================================ -->
+    <div class="group" id="group-plan">
+      <div class="layout-sidebar">
+        <nav class="sidebar-rail">
+          <button class="sidebar-btn active" data-sub="plan-main" onclick="showSub('plan','plan-main')">📊 計画ダッシュボード</button>
+          <button class="sidebar-btn" data-sub="plan-cat" onclick="showSub('plan','plan-cat')">📦 カテゴリ別計画</button>
+          <button class="sidebar-btn" data-sub="plan-cn" onclick="showSub('plan','plan-cn')">💴 FC-Cn 支援算出</button>
+          <button class="sidebar-btn" data-sub="plan-sessaku" onclick="showSub('plan','plan-sessaku')">🎯 施策・売場</button>
+          <button class="sidebar-btn" data-sub="plan-kensho" onclick="showSub('plan','plan-kensho')">🔍 先週検証</button>
+          <button class="sidebar-btn" data-sub="plan-qsc" onclick="showSub('plan','plan-qsc')">✨ QSC</button>
+          <button class="sidebar-btn" data-sub="plan-season" onclick="showSub('plan','plan-season')">🌸 シーズン計画</button>
+          <button class="sidebar-btn" data-sub="plan-order" onclick="showSub('plan','plan-order')">🧾 発注リスト</button>
+        </nav>
+        <div class="sidebar-pane">
+
+    <!-- ===== Tab 1: 当月計画（旧 月次目標） ===== -->
+    <div class="tab-panel active" id="tab1">
 
       <!-- トップバナー: 日販メイン → 利益（コンパクト版） -->
       <div class="card hero-banner">
-        <div class="hero-title">🎯 次月のゴール</div>
+        <div class="hero-title">🎯 当月のゴール</div>
         <div class="hero-flow">
           <div class="hero-cell"><div class="hero-k">前月日販</div><div class="hero-v" id="hero-prev-nishin">¥—</div></div>
           <span class="hero-sep">→</span>
@@ -753,6 +870,10 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
         </div>
       </div>
 
+    </div><!-- /tab1 (計画ダッシュボード) -->
+
+    <!-- ===== カテゴリ別計画 ===== -->
+    <div class="tab-panel" id="tab1-cat">
       <!-- ===== カテゴリ別計画（旧Tab3を統合） ===== -->
       <div class="card">
         <div class="flex justify-between items-center mb-2">
@@ -805,11 +926,14 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
         </div>
       </div>
 
+    </div><!-- /tab1-cat -->
+
+    <!-- ===== FC-Cn 契約 支援算出 ===== -->
+    <div class="tab-panel" id="tab1-cn">
       <!-- ===== FC-Cn 契約 支援算出システム ===== -->
       <div class="card cn-card">
-        <div class="section-title">💴 FC-Cn 契約 支援算出システム<button class="help-btn" data-help-title="FC-Cn 契約 支援算出システム" data-help="ローソン FC-Cn / FC-5Cn 契約の本部支援を組み込み、計画売上に対する<b>店利益（最適化後）</b>を自動計算します。<br><br><b>対象支援</b><br>① 加盟店サポート（見切・処分の一部負担）<br>② 加盟店サポート（光熱費の半額・上限25万円/月）<br>③ 経営助成金（FC-5Cn 初年度のみ 5万円/月）<br>④ 最低保証フランチャイジー収入（24h:1860万/年、非24h:1560万/年）<br><br><b>本部チャージ（スライド）</b><br>FC-Cn: 〜300万 45% / 〜450万 70% / 450万超 60%<br>FC-5Cn: 〜300万 46% / 〜450万 71% / 450万超 61%<br>※24時間営業未満は各レート+3%">?</button></div>
-        <div class="alert alert-info mb-2" style="font-size:12px;line-height:1.6">
-          📘 <b>次月の計画値を入力</b>すると、本部チャージ（スライド3段階）・見切処分支援・光熱費支援・経営助成金・最低保証を自動算出。<b>支援込みで利益最大化</b>される店利益が見えます。
+        <div class="flex justify-between items-center mb-2" style="flex-wrap:wrap;gap:6px">
+          <div class="section-title" style="margin:0">💴 FC-Cn 契約 支援算出システム<button class="help-btn" data-help-title="FC-Cn 契約 支援算出の仕組み" data-help="<b>当月の計画値</b>を入力すると、本部チャージ（スライド3段階）・見切処分支援・光熱費支援・経営助成金・最低保証を自動算出し、<b>支援込みで利益最大化</b>される店利益を表示します。<br><br><b>対象支援</b><br>① 加盟店サポート（見切・処分の一部負担）<br>② 加盟店サポート（光熱費の半額・上限25万円/月）<br>③ 経営助成金（FC-5Cn 初年度のみ 5万円/月）<br>④ 最低保証フランチャイジー収入（24h:1860万/年、非24h:1560万/年）<br><br><b>本部チャージ（スライド）</b><br>FC-Cn: 〜300万 45% / 〜450万 70% / 450万超 60%<br>FC-5Cn: 〜300万 46% / 〜450万 71% / 450万超 61%<br>※24時間営業未満は各レート+3%">?</button></div>
         </div>
 
         <!-- Cn契約条件 -->
@@ -846,7 +970,7 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
         </div>
 
         <!-- 計画入力 -->
-        <div class="cn-section-title">📝 次月の計画値を入力</div>
+        <div class="cn-section-title">📝 当月の計画値を入力</div>
         <div class="cn-grid">
           <div class="form-group">
             <label>商品売上高（円）<button class="help-btn" data-help-title="商品売上高" data-help="月の商品売上高（4010）。日販×営業日数 などから計画値を入力。">?</button></label>
@@ -919,80 +1043,6 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
         </div>
       </div>
     </div>
-
-    <!-- ===== Tab 2: 日販・客数 ===== -->
-    <div class="tab-panel" id="tab2">
-      <div class="card">
-        <div class="section-title">月累計・先週実績</div>
-        <div class="overflow-auto">
-        <table>
-          <thead><tr><th>区分</th><th>売上</th><th>前年比%</th><th>客数（人）</th><th>前年比%</th><th>客単価</th></tr></thead>
-          <tbody>
-            <tr><td class="font-bold">月累計</td>
-              <td><input type="text" id="d-tsuki-uriage" inputmode="numeric" placeholder="0" oninput="calcDailyStats()"></td>
-              <td><input type="text" id="d-tsuki-uriage-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
-              <td><input type="text" id="d-tsuki-kyaku" inputmode="numeric" data-nounit placeholder="0" oninput="calcDailyStats()"></td>
-              <td><input type="text" id="d-tsuki-kyaku-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
-              <td id="d-tsuki-tanka" class="font-bold">¥—</td>
-            </tr>
-            <tr><td class="font-bold">先週実績</td>
-              <td><input type="text" id="d-sen-uriage" inputmode="numeric" placeholder="0" oninput="calcDailyStats()"></td>
-              <td><input type="text" id="d-sen-uriage-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
-              <td><input type="text" id="d-sen-kyaku" inputmode="numeric" data-nounit placeholder="0" oninput="calcDailyStats()"></td>
-              <td><input type="text" id="d-sen-kyaku-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
-              <td id="d-sen-tanka" class="font-bold">¥—</td>
-            </tr>
-          </tbody>
-        </table>
-        </div>
-      </div>
-      <div class="card">
-        <div class="section-title">時間帯別実績</div>
-        <div class="overflow-auto">
-        <table>
-          <thead><tr><th>時間帯</th><th>売上</th><th>前年比%</th><th>構成比</th><th>客数</th><th>前年比%</th><th>構成比</th></tr></thead>
-          <tbody>
-            <tr><td class="font-bold">朝（0〜9時）</td>
-              <td><input type="text" id="t-asa-u" inputmode="numeric" placeholder="0" oninput="calcTimeStats()"></td>
-              <td><input type="text" id="t-asa-u-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
-              <td id="t-asa-u-rate" class="font-bold">—%</td>
-              <td><input type="text" id="t-asa-k" inputmode="numeric" data-nounit placeholder="0" oninput="calcTimeStats()"></td>
-              <td><input type="text" id="t-asa-k-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
-              <td id="t-asa-k-rate" class="font-bold">—%</td>
-            </tr>
-            <tr><td class="font-bold">昼（9〜16時）</td>
-              <td><input type="text" id="t-hiru-u" inputmode="numeric" placeholder="0" oninput="calcTimeStats()"></td>
-              <td><input type="text" id="t-hiru-u-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
-              <td id="t-hiru-u-rate" class="font-bold">—%</td>
-              <td><input type="text" id="t-hiru-k" inputmode="numeric" data-nounit placeholder="0" oninput="calcTimeStats()"></td>
-              <td><input type="text" id="t-hiru-k-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
-              <td id="t-hiru-k-rate" class="font-bold">—%</td>
-            </tr>
-            <tr><td class="font-bold">夕（16〜24時）</td>
-              <td><input type="text" id="t-yu-u" inputmode="numeric" placeholder="0" oninput="calcTimeStats()"></td>
-              <td><input type="text" id="t-yu-u-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
-              <td id="t-yu-u-rate" class="font-bold">—%</td>
-              <td><input type="text" id="t-yu-k" inputmode="numeric" data-nounit placeholder="0" oninput="calcTimeStats()"></td>
-              <td><input type="text" id="t-yu-k-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
-              <td id="t-yu-k-rate" class="font-bold">—%</td>
-            </tr>
-          </tbody>
-        </table>
-        </div>
-      </div>
-      <div class="card">
-        <div class="section-title">曜日別4週平均実績</div>
-        <div class="overflow-auto">
-        <table id="youbi-grid">
-          <thead><tr><th>曜日</th><th>日販</th><th>先週差</th><th>客数</th><th>先週差</th><th>客単価</th><th>先週差</th></tr></thead>
-          <tbody id="youbi-body"></tbody>
-        </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== Tab 3: カテゴリ別計画 ===== -->
-    <div class="tab-panel" id="tab3" style="display:none"></div>
 
     <!-- ===== Tab 4: 施策計画 ===== -->
     <div class="tab-panel" id="tab4">
@@ -1078,12 +1128,7 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
 
     <!-- ===== Tab 6: QSC（3つの徹底） ===== -->
     <div class="tab-panel" id="tab6">
-      <div class="alert alert-info mb-2" style="font-size:12px;line-height:1.6">
-        📘 ローソン「3つの徹底」基準書（2026年2月改訂版 全33項目）をQSC観点で整理。<br>
-        ・<b>Q：クオリティ</b>＝コンプライアンス3＋売場づくり10（計13項目）<br>
-        ・<b>S：サービス</b>＝接客6項目　<b>C：クリーンリネス</b>＝清掃14項目<br>
-        各項目の <span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#e3f2fd;color:var(--accent);border:1px solid #bbdefb;font-size:10px;font-weight:700;vertical-align:middle">?</span> をクリックすると具体的な評価基準・ポイントが表示されます。
-      </div>
+      <div class="input-hint mb-2" style="font-size:11px">📘 ローソン「3つの徹底」基準書（2026年2月改訂版・全33項目）<button class="help-btn" data-help-title="QSCの構成" data-help="<b>Q：クオリティ</b>＝コンプライアンス3＋売場づくり10（計13項目）<br><b>S：サービス</b>＝接客6項目<br><b>C：クリーンリネス</b>＝清掃14項目<br><br>各項目の <b>?</b> をクリックすると具体的な評価基準・ポイントが表示されます。">?</button></div>
       <div id="qsc-priority-alert" class="alert alert-info" style="display:none"></div>
       <div class="card">
         <div class="flex justify-between items-center mb-2">
@@ -1140,7 +1185,7 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
           </div>
         </div>
         <div id="order-copy-alert" class="alert alert-ok" style="display:none;margin-bottom:8px">コピーしました！</div>
-        <div class="alert alert-info mb-2" style="font-size:12px">最終行でEnterを押すと行を追加できます</div>
+        <div class="input-hint mb-2">※最終行でEnterキーを押すと行を追加できます</div>
         <div class="overflow-auto">
         <table>
           <thead><tr><th>商品名</th><th style="width:90px">カテゴリ</th><th style="width:50px">在庫</th><th style="width:50px">発注数</th><th style="width:80px">発注日</th><th style="width:55px">担当</th><th style="width:44px">完了</th><th style="width:32px"></th></tr></thead>
@@ -1150,8 +1195,17 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
       </div>
     </div>
 
+        </div><!-- /sidebar-pane (当月計画) -->
+      </div><!-- /layout-sidebar (当月計画) -->
+    </div><!-- /group-plan -->
+
+    <!-- ============================================================ -->
+    <!-- ===== グループ ② その他（クラウド同期＋その他計画） ======= -->
+    <!-- ============================================================ -->
+    <div class="group" id="group-other">
+
     <!-- ===== Tab 9: その他 ===== -->
-    <div class="tab-panel" id="tab9">
+    <div class="tab-panel active" id="tab9">
       <div class="card">
         <div class="section-title">☁️ クラウド同期（端末間で自動共有）</div>
         <div class="input-hint" style="background:#fff8e1;border-left:3px solid #ff9800;padding:8px 12px;margin:8px 0;line-height:1.6">
@@ -1196,6 +1250,8 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
       </div>
     </div>
 
+    </div><!-- /group-other -->
+
   </div><!-- /content -->
 
   <div id="bottom-bar">
@@ -1203,7 +1259,7 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
     <button class="btn-secondary btn-sm" onclick="document.getElementById('import-file').click()">↑ インポート</button>
     <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
     <div style="flex:1"></div>
-    <span id="gist-status" style="font-size:11px;color:var(--gray);align-self:center;cursor:pointer" onclick="showTab(9)" title="クリックで設定画面へ"></span>
+    <span id="gist-status" style="font-size:11px;color:var(--gray);align-self:center;cursor:pointer" onclick="showGroup('other')" title="クリックで設定画面へ"></span>
     <span id="save-indicator" style="font-size:11px;color:var(--gray);align-self:center"></span>
     <button class="btn-primary btn-sm" onclick="saveAll(true)">💾 保存</button>
   </div>
@@ -1438,20 +1494,93 @@ const pct=(a,b)=>b?((a/b)*100).toFixed(1)+'%':'—%';
 const setText=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
 const dispConv=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v?fmt(v):'';};
 
-// ===== TAB =====
-function showTab(n){
-  // パネルとボタンを ID/属性ベースで切替（DOM順に依存しない）
-  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+// ===== TAB / GROUP / SUBTAB =====
+// グループ → サブタブ → 実体パネルID のマップ
+const SUB_MAP={
+  jisseki:{seisan:'tab0',daily:'tab2'},
+  plan:{
+    'plan-main':'tab1',
+    'plan-cat':'tab1-cat',
+    'plan-cn':'tab1-cn',
+    'plan-sessaku':'tab4',
+    'plan-kensho':'tab5',
+    'plan-qsc':'tab6',
+    'plan-season':'tab7',
+    'plan-order':'tab8'
+  },
+  other:{}
+};
+// グループ単位で初期表示するサブタブを記憶（戻ったときに復元）
+const GROUP_DEFAULT={jisseki:'seisan',plan:'plan-main',other:''};
+const groupSubState={jisseki:'seisan',plan:'plan-main',other:''};
+
+function showGroup(g){
+  document.querySelectorAll('.group').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('tab'+n)?.classList.add('active');
-  document.querySelector('.tab-btn[data-tab="'+n+'"]')?.classList.add('active');
-  if(n===1){renderPuzzleTable();renderCategoryTab();calcCnSupport();}
-  if(n===4){renderSessaku();renderLayout();renderFFface();renderBookletList();}
-  if(n===5){renderKensho();renderGaibuin();}
-  if(n===6)renderQSC();
-  if(n===7)renderSeason();
-  if(n===8)renderOrderList();
-  if(n===9)renderOtherPlans();
+  document.getElementById('group-'+g)?.classList.add('active');
+  document.querySelector('.tab-btn[data-group="'+g+'"]')?.classList.add('active');
+  // 復元: そのグループ最後に開いていたサブを再表示
+  const sub=groupSubState[g]||GROUP_DEFAULT[g];
+  if(sub)showSub(g,sub);
+  else triggerSubRender(null);
+}
+
+function showSub(g,sub){
+  groupSubState[g]=sub;
+  const panelId=SUB_MAP[g]?.[sub];
+  // 同グループ内の全パネルをdeactivate
+  if(SUB_MAP[g]){
+    Object.values(SUB_MAP[g]).forEach(pid=>document.getElementById(pid)?.classList.remove('active'));
+  }
+  if(panelId)document.getElementById(panelId)?.classList.add('active');
+  // サイドバーのactive
+  const rail=document.getElementById('group-'+g)?.querySelector('.sidebar-rail');
+  if(rail){
+    rail.querySelectorAll('.sidebar-btn').forEach(b=>b.classList.toggle('active',b.dataset.sub===sub));
+  }
+  triggerSubRender(panelId);
+}
+
+function triggerSubRender(panelId){
+  // 旧showTab(n)で呼んでいた初期化を、新ID対応で再現
+  if(panelId==='tab1')renderPuzzleTable();
+  if(panelId==='tab1-cat')renderCategoryTab();
+  if(panelId==='tab1-cn')calcCnSupport();
+  if(panelId==='tab4'){renderSessaku();renderLayout();renderFFface();renderBookletList();}
+  if(panelId==='tab5'){renderKensho();renderGaibuin();}
+  if(panelId==='tab6')renderQSC();
+  if(panelId==='tab7')renderSeason();
+  if(panelId==='tab8')renderOrderList();
+  if(panelId==='tab9')renderOtherPlans();
+}
+
+// 後方互換: 既存コードや古い共有リンクでshowTab(n)が呼ばれた場合にマップ
+function showTab(n){
+  const map={0:['jisseki','seisan'],1:['plan','plan-main'],2:['jisseki','daily'],
+    3:['plan','plan-cat'],4:['plan','plan-sessaku'],5:['plan','plan-kensho'],
+    6:['plan','plan-qsc'],7:['plan','plan-season'],8:['plan','plan-order'],9:['other','']};
+  const [g,s]=map[n]||['jisseki','seisan'];
+  showGroup(g);if(s)showSub(g,s);
+}
+
+// グローバル月セレクタ
+function onGlobalMonthChange(){
+  const v=document.getElementById('global-month')?.value||'';
+  state.seisan.month=v;
+  // 旧seisan-month（hidden）にも反映（互換）
+  const sm=document.getElementById('seisan-month');if(sm)sm.value=v;
+  updateGlobalMonthInfo();
+  saveAll();
+}
+
+function updateGlobalMonthInfo(){
+  const v=document.getElementById('global-month')?.value||'';
+  const info=document.getElementById('global-month-info');
+  if(!info)return;
+  if(!v){info.textContent='— 全タブ共通の対象月（精算書・計画・実績すべてが連動） —';info.style.color='var(--gray)';return;}
+  const [y,m]=v.split('-');
+  info.textContent=`${y}年${parseInt(m,10)}月｜全タブ共通`;
+  info.style.color='var(--main)';
 }
 
 // ===== SEISAN =====
@@ -2959,6 +3088,8 @@ function restoreForm(){
   // 精算書：テーブルを描画してから値を流し込む
   renderSeisanTable();
   const mEl=document.getElementById('seisan-month');if(mEl&&state.seisan.month)mEl.value=state.seisan.month;
+  const gEl=document.getElementById('global-month');if(gEl&&state.seisan.month)gEl.value=state.seisan.month;
+  updateGlobalMonthInfo();
   const nEl=document.getElementById('s-eigyo-nissu');if(nEl&&state.seisan.eigyo_nissu)nEl.value=state.seisan.eigyo_nissu;
   const minEl=document.getElementById('s-min-rieki');if(minEl&&state.seisan.min_rieki)minEl.value=state.seisan.min_rieki;
   restoreSeisanInputs();
