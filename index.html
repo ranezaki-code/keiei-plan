@@ -430,7 +430,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v16.3</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v16.4</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -1431,7 +1431,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v16.3';
+const APP_VERSION='v16.4';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -3288,12 +3288,12 @@ async function showManualSeisanInput(pageIdx){
       </div>
     </div>
     <div class="manual-form-pane">
-      <div style="margin-bottom:8px;padding:6px;background:#fffbeb;border-radius:4px;font-size:11px;color:#78350f">
-        💡 PDFを見ながら値を入力。Tabキーで次のフィールドへ。先月の値で初期化してあるので、変わった項目だけ修正でOK。
+      <div style="margin-bottom:8px;padding:6px;background:#fffbeb;border-radius:4px;font-size:11px;color:#78350f;line-height:1.5">
+        💡 <b>Enter / Tab</b>=次の項目へ ／ <b>↑↓</b>=±1000円（Shift+↑↓=±10000）／ 全角数字も自動で半角に変換／フォーカス時は全選択されるのでそのまま上書き入力OK
       </div>
       <h4>【ヘッダー】</h4>
       <div class="manual-row"><label>対象月</label><span class="code"></span><input type="month" id="manual-month" value="${defaultMonth}"></div>
-      <div class="manual-row"><label>営業日数</label><span class="code">日</span><input type="number" id="manual-eigyo-nissu" value="${state.seisan?.eigyo_nissu||30}"></div>
+      <div class="manual-row"><label>営業日数</label><span class="code">日</span><input type="text" inputmode="numeric" id="manual-eigyo-nissu" data-key="__eigyo_nissu" data-init="${state.seisan?.eigyo_nissu||30}" value="${state.seisan?.eigyo_nissu||30}"></div>
   `;
   MANUAL_SECTIONS.forEach(sec=>{
     html += `<h4>${sec.title}</h4>`;
@@ -3302,20 +3302,95 @@ async function showManualSeisanInput(pageIdx){
       const code = meta?.code || '';
       const label = MANUAL_LABEL[k] || k;
       const init = state.seisan?.[k] ?? state.seisan_prev?.[k] ?? 0;
-      html += `<div class="manual-row"><label title="${label}">${label}</label><span class="code">${code}</span><input type="number" id="manual-f-${k}" data-key="${k}" data-init="${init}" value="${init||''}"></div>`;
+      html += `<div class="manual-row"><label title="${label}">${label}</label><span class="code">${code}</span><input type="text" inputmode="numeric" id="manual-f-${k}" data-key="${k}" data-init="${init}" value="${init||''}"></div>`;
     });
   });
   html += `</div></div>`;
   manual.innerHTML = html;
 
-  // 変更検知（青ハイライト）
-  manual.querySelectorAll('input[data-key]').forEach(inp=>{
-    inp.addEventListener('input',()=>{
-      const init = inp.dataset.init;
-      if(String(inp.value)!==String(init))inp.classList.add('changed');
-      else inp.classList.remove('changed');
+  // ===== 効率入力ハンドラ =====
+  // 全角→半角変換 + 数字以外を除去（先頭マイナスのみ許可）
+  const toHalfNum = s => {
+    if(!s)return '';
+    // 全角数字・記号 → 半角
+    s = s.replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
+         .replace(/[，、]/g, ',')
+         .replace(/[ー－−]/g, '-')
+         .replace(/．/g, '.');
+    // 数字とマイナスとカンマだけ残す（カンマは後で除去）
+    s = s.replace(/[^\d\-]/g, '');
+    // マイナスは先頭のみ
+    s = s.replace(/(?!^)-/g, '');
+    return s;
+  };
+
+  const inputs = Array.from(manual.querySelectorAll('input[data-key], #manual-month'));
+
+  inputs.forEach((inp, idx)=>{
+    // フォーカス時に全選択（即座に上書き入力できる）
+    inp.addEventListener('focus', ()=>{
+      setTimeout(()=>inp.select && inp.select(), 0);
+    });
+
+    if(inp.type === 'text'){
+      // 入力時：全角→半角変換
+      inp.addEventListener('input', ()=>{
+        const cur = inp.value;
+        const conv = toHalfNum(cur);
+        if(cur !== conv){
+          const pos = inp.selectionStart;
+          inp.value = conv;
+          try{ inp.setSelectionRange(pos, pos); }catch(e){}
+        }
+        // 変更検知（青ハイライト）
+        const init = inp.dataset.init || '';
+        if(String(inp.value) !== String(init))inp.classList.add('changed');
+        else inp.classList.remove('changed');
+      });
+      // ペースト時も即座に変換
+      inp.addEventListener('paste', (ev)=>{
+        ev.preventDefault();
+        const txt = (ev.clipboardData || window.clipboardData).getData('text');
+        const conv = toHalfNum(txt);
+        document.execCommand('insertText', false, conv);
+      });
+      // IME 確定時に変換（Safari 対策）
+      inp.addEventListener('compositionend', ()=>{
+        inp.value = toHalfNum(inp.value);
+      });
+    }
+
+    // Enter キーで次のフィールドへ
+    inp.addEventListener('keydown', (ev)=>{
+      if(ev.key === 'Enter'){
+        ev.preventDefault();
+        const next = inputs[idx + 1];
+        if(next){
+          next.focus();
+        }else{
+          // 最後のフィールドなら反映ボタンにフォーカス
+          inp.blur();
+          const applyBtn = document.querySelector('#ocr-modal-foot .btn-primary');
+          if(applyBtn)applyBtn.focus();
+        }
+      }
+      // ↑↓で 1000 単位調整（金額入力の効率化）
+      else if((ev.key === 'ArrowUp' || ev.key === 'ArrowDown') && inp.type === 'text' && inp.dataset.key){
+        ev.preventDefault();
+        const step = ev.shiftKey ? 10000 : 1000;
+        const cur = parseInt((inp.value || '0').replace(/[^\d-]/g, ''), 10) || 0;
+        const next = cur + (ev.key === 'ArrowUp' ? step : -step);
+        inp.value = String(next);
+        inp.dispatchEvent(new Event('input'));
+      }
     });
   });
+
+  // 最初の金額入力欄にフォーカス（uriage = 商品売上高）
+  setTimeout(()=>{
+    const first = manual.querySelector('#manual-f-uriage');
+    if(first)first.focus();
+  }, 100);
 
   // ★ PDFページを取得し、まず rotation=0 で即描画（ユーザーは見える状態）
   try{
@@ -3419,6 +3494,7 @@ function manualPrefillFrom(src){
   else source = {};
   document.querySelectorAll('#ocr-modal-manual input[data-key]').forEach(inp=>{
     const k = inp.dataset.key;
+    if(k === '__eigyo_nissu')return; // 営業日数は対象外
     const v = src==='zero' ? 0 : (source[k] ?? 0);
     inp.value = v || '';
     inp.dataset.init = v;
@@ -3431,9 +3507,13 @@ function manualSeisanApply(){
   const nisshuEl = document.getElementById('manual-eigyo-nissu');
   const target = state.seisan;
   if(monthEl?.value)target.month = monthEl.value;
-  if(nisshuEl?.value)target.eigyo_nissu = parseInt(nisshuEl.value,10) || 0;
+  if(nisshuEl?.value){
+    const nv = parseInt(nisshuEl.value.replace(/[^\d-]/g,''),10);
+    if(!isNaN(nv))target.eigyo_nissu = nv;
+  }
   document.querySelectorAll('#ocr-modal-manual input[data-key]').forEach(inp=>{
     const k = inp.dataset.key;
+    if(k === '__eigyo_nissu')return;
     const v = inp.value.trim();
     if(v==='')delete target[k];
     else{
