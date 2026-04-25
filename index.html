@@ -353,6 +353,20 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   }
 })();
 </script>
+<!-- ===== 予実比較モーダル ===== -->
+<div id="history-compare-modal" class="ocr-modal-bg" onclick="if(event.target===this)closeCompareModal()">
+  <div class="ocr-modal">
+    <div class="ocr-modal-head">
+      <h3>📊 計画 vs 実績 比較</h3>
+      <button onclick="closeCompareModal()" style="background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:6px;padding:4px 12px;cursor:pointer">✕</button>
+    </div>
+    <div class="ocr-modal-body" id="history-compare-body"></div>
+    <div class="ocr-modal-foot">
+      <div></div>
+      <div><button class="btn-secondary btn-sm" onclick="closeCompareModal()">閉じる</button></div>
+    </div>
+  </div>
+</div>
 <!-- ===== 精算書OCR取込モーダル ===== -->
 <div id="ocr-modal" class="ocr-modal-bg" onclick="if(event.target===this)ocrCloseModal()">
   <div class="ocr-modal">
@@ -488,6 +502,18 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- ===== 計画スナップショット & 予実比較 ===== -->
+      <div class="card">
+        <div class="flex justify-between items-center mb-2" style="flex-wrap:wrap;gap:6px">
+          <div class="section-title" style="margin:0">📸 計画スナップショット & 予実比較<button class="help-btn" data-help-title="計画スナップショットの使い方" data-help="<b>使い方</b><br>1. 月初に当月計画を立てたら「📸 現在の計画を保存」<br>2. 月末に精算書PDFを取込んで実績を反映<br>3. 一覧の「📊 実績比較」で計画 vs 実績の差分を表示<br><br><b>記録される内容</b><br>・精算書（計画値）<br>・月次目標（売上・粗利・経費等）<br>・FC-Cn 契約条件と入力値<br>・全施策（投資額・期待効果含む）<br><br><b>予実比較で表示される項目</b><br>・主要科目の差額・達成率<br>・施策別の計画ROI vs 実効ROI（按分推計）">?</button></div>
+          <div class="flex gap-2">
+            <button class="btn-primary btn-sm" onclick="snapshotPlan()">📸 現在の計画を保存</button>
+          </div>
+        </div>
+        <div class="input-hint mb-2">月初に計画を保存→月末に実績PDFを取込→実績比較で達成率を確認、というサイクルで使います。</div>
+        <div id="history-list"></div>
       </div>
     </div>
 
@@ -1125,6 +1151,15 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
         </div>
       </div>
 
+      <!-- ===== 施策インパクト試算 & 投資最適化 ===== -->
+      <div class="card cn-card">
+        <div class="flex justify-between items-center mb-2" style="flex-wrap:wrap;gap:6px">
+          <div class="section-title" style="margin:0">📈 施策インパクト試算 & 🎯 投資最適化<button class="help-btn" data-help-title="施策インパクト試算" data-help="④施策計画タブで登録した各施策が、契約条件下でどれだけ店利益を増やすかを自動計算します。<br><br><b>計算ロジック</b><br>1. 各施策の「期待効果」を売上増として加算<br>2. スライドチャージを再計算（300万/450万境界）<br>3. 見切支援の階層率を再評価<br>4. 想定原価率と追加費用を反映<br>5. ベースラインとの差分（Δ店利益）を表示<br><br><b>最適化</b><br>ROI（Δ店利益÷投資額）の高い順にグリーディに選択し、投資可能枠（精算書ベース）の範囲で推奨組合せを提案します。<br><br>⭐マークが推奨施策、緑背景は採算プラス、赤背景は採算マイナス。">?</button></div>
+        </div>
+        <div class="input-hint mb-2">④施策計画タブで登録した施策の「期待効果」を売上増として、契約のスライドチャージや見切支援への影響まで含めた限界利益を計算します。</div>
+        <div id="shisaku-impact-list"></div>
+      </div>
+
       <!-- ===== 本部支援ルール（リファレンス） ===== -->
       <div class="card cn-card">
         <div class="flex justify-between items-center mb-2" style="flex-wrap:wrap;gap:6px">
@@ -1529,7 +1564,9 @@ let state={
   qsc:{q:QSC_Q.map(x=>({item:x.item,desc:x.desc,group:x.group||'',status:'',kadai:'',torikumi:''})),s:QSC_S.map(x=>({item:x.item,desc:x.desc,group:x.group||'',status:'',kadai:'',torikumi:''})),c:QSC_C.map(x=>({item:x.item,desc:x.desc,group:x.group||'',status:'',kadai:'',torikumi:''}))},
   season:[],season_show_archive:false,
   orders:[],
-  other_plans:[]
+  other_plans:[],
+  history:[],
+  shisaku_sim:{budget_source:'auto',manual_budget:0}
 };
 
 // ===== GLOBAL INPUT EFFICIENCY =====
@@ -1989,6 +2026,340 @@ function calcCnSupport(){
     state.cnPlan.mikiri=M;state.cnPlan.tanaloss=L;state.cnPlan.konetsu=konetsu;
     state.cnPlan.eigyoOther=eigyoOther;state.cnPlan.zatsuOther=zatsuOther;
   }
+  // Phase 2/3: 施策インパクト & 最適化を再描画
+  if(typeof renderShisakuImpact==='function')renderShisakuImpact();
+}
+
+// ===== PHASE 2: 純粋関数版シミュレータ（施策インパクト計算用） =====
+// inputs.cr は %（0〜100）で受ける
+function simCn(inputs){
+  const i = inputs || {};
+  const type = i.type||'cn';
+  const h24 = i.h24 ? true : false;
+  const nissu = Math.max(1, parseFloat(i.nissu)||30);
+  const koyomi = Math.max(1, parseFloat(i.koyomi)||30);
+  const firstYear = i.firstYear ? true : false;
+  const U = parseFloat(i.uriage)||0;
+  const sonota = parseFloat(i.sonota)||0;
+  const cr = Math.max(0,Math.min(100,parseFloat(i.cr)||0))/100;
+  const M = parseFloat(i.mikiri)||0;
+  const konetsu = parseFloat(i.konetsu)||0;
+  const eigyoOther = parseFloat(i.eigyoOther)||0;
+  const zatsuOther = parseFloat(i.zatsuOther)||0;
+
+  const A = U + sonota;
+  const B = U * cr;
+  const grossA = A - B;
+
+  const baseRates = type==='5cn'?[0.46,0.71,0.61]:[0.45,0.70,0.60];
+  const rates = h24 ? baseRates : baseRates.map(r=>r+0.03);
+  const T1 = 3000000, T2 = 4500000;
+  const tier1 = Math.max(0, Math.min(grossA, T1));
+  const tier2 = Math.max(0, Math.min(grossA, T2) - T1);
+  const tier3 = Math.max(0, grossA - T2);
+  const charge = tier1*rates[0] + tier2*rates[1] + tier3*rates[2];
+
+  const fcin = grossA - charge;
+  const annualGuarantee = h24?18600000:15600000;
+  const minGuarantee = (annualGuarantee/12) * (nissu/koyomi);
+  const fcinFinal = Math.max(fcin, minGuarantee);
+
+  // 見切支援
+  const r = U ? M/U : 0;
+  const pctFn = (lo,hi,rate)=>{
+    const top = Math.min(r, hi/100);
+    const bot = Math.max(0, Math.min(top - lo/100, (hi-lo)/100));
+    return Math.max(0, bot) * U * rate;
+  };
+  const supp_baikai = pctFn(2,3,0.20) + pctFn(3,4,0.30) + (r>0.04?(r-0.04)*U*0.55:0);
+  const suppMikiri = supp_baikai * cr;
+  const suppKonetsu = Math.min(konetsu*0.5, 250000);
+  const suppJosei = (type==='5cn' && firstYear) ? 50000 : 0;
+  const zatsuTotal = suppMikiri + suppKonetsu + suppJosei + zatsuOther;
+  const eigyoTotal = konetsu + eigyoOther;
+  const tenrieki = fcinFinal - eigyoTotal + zatsuTotal;
+
+  return {A, B, grossA, charge, fcin, fcinFinal, minGuarantee, suppMikiri, suppKonetsu, suppJosei, zatsuTotal, eigyoTotal, tenrieki, mikiritsu:r};
+}
+
+function getCnBaseline(){
+  const cp = state.cnPlan||{};
+  return {
+    type: cp.type||'cn',
+    h24: cp.h24 ? 1 : 0,
+    nissu: cp.nissu||30,
+    koyomi: cp.koyomi||30,
+    firstYear: cp.firstYear ? 1 : 0,
+    uriage: cp.uriage||0,
+    sonota: cp.sonota||0,
+    cr: cp.cr||72,
+    mikiri: cp.mikiri||0,
+    tanaloss: cp.tanaloss||0,
+    konetsu: cp.konetsu||0,
+    eigyoOther: cp.eigyoOther||0,
+    zatsuOther: cp.zatsuOther||0
+  };
+}
+
+// 施策ごとの限界店利益・ROIを計算
+function calcShisakuImpact(){
+  const baselineInputs = getCnBaseline();
+  const baseline = simCn(baselineInputs);
+  const baseU = baselineInputs.uriage;
+  const baseCr = baselineInputs.cr/100;
+
+  const results = (state.sessaku||[]).map(s=>{
+    const dU = parseFloat(s.effect)||0;          // 想定売上増
+    const simRate = parseFloat(s.sim_genka_rate);
+    const newGenkaRate = (isNaN(simRate)||simRate<=0)?(baselineInputs.cr):simRate; // %
+    const extraCost = parseFloat(s.sim_extra_cost)||0;     // 想定追加営業費
+
+    // 加重平均で新原価率を算出
+    let newCr;
+    const newU = baseU + dU;
+    if(newU <= 0){newCr = baselineInputs.cr;}
+    else{
+      const newGr = newGenkaRate/100;
+      newCr = ((baseU * baseCr) + (dU * newGr)) / newU * 100;
+    }
+
+    const inputs = {...baselineInputs, uriage:newU, cr:newCr, eigyoOther: baselineInputs.eigyoOther + extraCost};
+    const after = simCn(inputs);
+    const dTen = after.tenrieki - baseline.tenrieki;
+    const inv = parseFloat(s.invest)||0;
+    const roi = inv>0 ? (dTen/inv)*100 : null;
+    return {sessaku:s, dU, dTen, invest:inv, roi, dCharge: after.charge-baseline.charge, dArari: after.grossA-baseline.grossA, dSuppMikiri: after.suppMikiri-baseline.suppMikiri};
+  });
+  return {baseline, baselineInputs, results};
+}
+
+// 投資枠を取得（精算書の店利益−最低確保利益、または手動）
+function getInvestableLimit(){
+  const set = state.shisaku_sim||{};
+  if(set.budget_source==='manual') return parseFloat(set.manual_budget)||0;
+  // 自動: 精算書の投資可能額（店利益−最低確保利益）
+  const s = state.seisan||{};
+  const sEigyo = (s.kyuyo||0)+(s.mikiri||0)+(s.loss||0)+(s.hoso||0)+(s.konetsu||0)+(s.zappi||0)+(s.shomohin||0)+(s.shuzen||0)+(s.genkin||0)+(s.setsubi_lease||0)+(s.setsubi_shuzen||0)+(s.tsushin||0)+(s.shiharai_risoku||0)+(s.songai||0)+(s.hieigyo||0)+(s.houtei_fukuri||0);
+  const sZeki = (s.mikiri_shien||0)+(s.denki_shien||0)+(s.zatsuyeki||0);
+  const sRieki = (s.arari||0) - sEigyo + sZeki;
+  return Math.max(0, sRieki - (s.min_rieki||0));
+}
+
+// 投資枠内でΔ店利益を最大化する施策組合せを推奨（ROI降順グリーディ）
+function optimizeShisaku(){
+  const {baseline, results} = calcShisakuImpact();
+  const limit = getInvestableLimit();
+  const sorted = [...results].sort((a,b)=>{
+    // ROI > なし扱い、ROI同点なら dTen 降順
+    const ar = a.roi==null?-1:a.roi;
+    const br = b.roi==null?-1:b.roi;
+    if(br!==ar)return br-ar;
+    return b.dTen - a.dTen;
+  });
+  let cum = 0, cumDTen = 0;
+  sorted.forEach(r=>{
+    if(cum + r.invest <= limit && r.dTen > 0){
+      r.recommended = true;
+      cum += r.invest;
+      cumDTen += r.dTen;
+    }else{
+      r.recommended = false;
+    }
+  });
+  return {baseline, sorted, limit, cumInvest:cum, cumDTen};
+}
+
+function renderShisakuImpact(){
+  const wrap = document.getElementById('shisaku-impact-list');
+  if(!wrap)return;
+  if(!state.sessaku || !state.sessaku.length){
+    wrap.innerHTML = '<div class="input-hint" style="padding:12px;text-align:center;color:#9ca3af">④施策計画タブで施策を登録すると、ここに各施策の限界店利益・ROIが表示されます</div>';
+    return;
+  }
+  const opt = optimizeShisaku();
+  const fmt0 = v => '¥'+Math.round(v||0).toLocaleString();
+  const sign = v => v>=0?'+':'';
+  let html = '<div class="overflow-auto"><table style="width:100%;font-size:12px"><thead><tr>'
+    +'<th>推奨</th><th>施策</th><th>カテゴリ</th>'
+    +'<th>想定売上増</th><th>想定原価率</th><th>追加費用</th><th>投資額</th>'
+    +'<th>Δ粗利</th><th>Δチャージ</th><th>Δ見切支援</th>'
+    +'<th>Δ店利益</th><th>ROI</th>'
+    +'</tr></thead><tbody>';
+  opt.sorted.forEach(r=>{
+    const s = r.sessaku;
+    const cls = r.recommended?'style="background:#d1fae5"':(r.dTen<0?'style="background:#fee2e2"':'');
+    html += `<tr ${cls}>`;
+    html += `<td style="text-align:center">${r.recommended?'⭐':'—'}</td>`;
+    html += `<td style="text-align:left">${escHtml(s.name||'(無名)')}</td>`;
+    html += `<td style="text-align:left">${escHtml(s.cat||'—')}</td>`;
+    html += `<td style="text-align:right">${fmt0(r.dU)}</td>`;
+    html += `<td><input type="text" inputmode="decimal" value="${s.sim_genka_rate||''}" placeholder="${getCnBaseline().cr}" oninput="updateSessakuSim(${s.id},'sim_genka_rate',this.value)" style="width:60px;text-align:right">%</td>`;
+    html += `<td><input type="text" inputmode="numeric" value="${s.sim_extra_cost||''}" placeholder="0" oninput="updateSessakuSim(${s.id},'sim_extra_cost',this.value)" style="width:90px;text-align:right"></td>`;
+    html += `<td style="text-align:right">${fmt0(r.invest)}</td>`;
+    html += `<td style="text-align:right;color:${r.dArari>=0?'#059669':'#dc2626'}">${sign(r.dArari)}${fmt0(r.dArari)}</td>`;
+    html += `<td style="text-align:right;color:${r.dCharge<=0?'#059669':'#dc2626'}">${sign(r.dCharge)}${fmt0(r.dCharge)}</td>`;
+    html += `<td style="text-align:right;color:${r.dSuppMikiri>=0?'#059669':'#dc2626'}">${sign(r.dSuppMikiri)}${fmt0(r.dSuppMikiri)}</td>`;
+    html += `<td style="text-align:right;font-weight:700;color:${r.dTen>=0?'#059669':'#dc2626'}">${sign(r.dTen)}${fmt0(r.dTen)}</td>`;
+    html += `<td style="text-align:right;font-weight:700">${r.roi==null?'—':r.roi.toFixed(0)+'%'}</td>`;
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // サマリー
+  html += `<div class="cn-section-title" style="margin-top:14px">🎯 最適化サマリー</div>`;
+  html += '<div class="overflow-auto"><table class="cn-result-table"><tbody>';
+  html += `<tr><td>投資可能枠（精算書ベース）</td><td class="text-right">${fmt0(opt.limit)}</td><td>店利益 − 最低確保利益</td></tr>`;
+  html += `<tr><td>推奨施策の投資合計</td><td class="text-right">${fmt0(opt.cumInvest)}</td><td>${opt.sorted.filter(r=>r.recommended).length} 件</td></tr>`;
+  html += `<tr><td>残り投資余力</td><td class="text-right">${fmt0(opt.limit - opt.cumInvest)}</td><td>—</td></tr>`;
+  html += `<tr class="cn-row-final"><td>推奨施策によるΔ店利益合計</td><td class="text-right">${sign(opt.cumDTen)}${fmt0(opt.cumDTen)}</td><td>シミュレーション期待値</td></tr>`;
+  html += `<tr class="cn-row-key"><td>ベースライン店利益</td><td class="text-right">${fmt0(opt.baseline.tenrieki)}</td><td>施策なしの場合</td></tr>`;
+  html += `<tr class="cn-row-key"><td>推奨施策実施後の店利益</td><td class="text-right">${fmt0(opt.baseline.tenrieki + opt.cumDTen)}</td><td>ベースライン + Δ合計</td></tr>`;
+  html += '</tbody></table></div>';
+
+  wrap.innerHTML = html;
+}
+
+function updateSessakuSim(id, key, val){
+  const s = state.sessaku.find(x=>x.id===id);
+  if(!s)return;
+  const n = parseFloat(val);
+  s[key] = isNaN(n)?0:n;
+  renderShisakuImpact();
+  saveAll();
+}
+
+// ===== PHASE 4: 計画スナップショット & 計画vs実績比較 =====
+function snapshotPlan(){
+  if(!state.history)state.history=[];
+  const snap = {
+    id: Date.now(),
+    timestamp: new Date().toISOString(),
+    label: state.seisan.month || (new Date()).toISOString().slice(0,7),
+    note: '',
+    seisan_planned: JSON.parse(JSON.stringify(state.seisan||{})),
+    monthly: JSON.parse(JSON.stringify(state.monthly||{})),
+    cnPlan: JSON.parse(JSON.stringify(state.cnPlan||{})),
+    sessaku: JSON.parse(JSON.stringify(state.sessaku||[]))
+  };
+  state.history.push(snap);
+  saveAll(true);
+  renderHistoryList();
+  alert(`📸 計画スナップショットを保存しました\n${snap.label} / ${snap.sessaku.length}施策`);
+}
+
+function deleteSnapshot(id){
+  if(!confirm('スナップショットを削除しますか？'))return;
+  state.history = (state.history||[]).filter(h=>h.id!==id);
+  saveAll(true);
+  renderHistoryList();
+}
+
+function updateSnapshotNote(id, note){
+  const h = (state.history||[]).find(x=>x.id===id);
+  if(h){h.note=note;saveAll();}
+}
+
+function renderHistoryList(){
+  const wrap = document.getElementById('history-list');
+  if(!wrap)return;
+  const arr = state.history||[];
+  if(!arr.length){
+    wrap.innerHTML = '<div class="input-hint" style="padding:12px;text-align:center;color:#9ca3af">スナップショットがまだありません。「📸 現在の計画を保存」ボタンで現時点の計画を記録できます。</div>';
+    return;
+  }
+  let html = '<div class="overflow-auto"><table style="width:100%;font-size:12px"><thead><tr>'
+    +'<th style="width:32px">#</th><th>対象月</th><th>取得日時</th><th>施策数</th><th>計画売上</th><th>計画店利益</th><th>メモ</th><th style="width:160px">操作</th>'
+    +'</tr></thead><tbody>';
+  arr.slice().reverse().forEach((h,idx)=>{
+    const dt = new Date(h.timestamp).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    const planU = (h.seisan_planned&&h.seisan_planned.uriage)||0;
+    // 計画店利益: シミュレータで再計算
+    const cn = simCn({type:h.cnPlan?.type||'cn',h24:h.cnPlan?.h24||1,nissu:h.cnPlan?.nissu||30,koyomi:h.cnPlan?.koyomi||30,firstYear:h.cnPlan?.firstYear||0,uriage:h.cnPlan?.uriage||0,sonota:h.cnPlan?.sonota||0,cr:h.cnPlan?.cr||72,mikiri:h.cnPlan?.mikiri||0,tanaloss:h.cnPlan?.tanaloss||0,konetsu:h.cnPlan?.konetsu||0,eigyoOther:h.cnPlan?.eigyoOther||0,zatsuOther:h.cnPlan?.zatsuOther||0});
+    html += `<tr>`;
+    html += `<td>${arr.length-idx}</td>`;
+    html += `<td>${escHtml(h.label||'—')}</td>`;
+    html += `<td>${dt}</td>`;
+    html += `<td>${(h.sessaku||[]).length}</td>`;
+    html += `<td class="text-right">¥${planU.toLocaleString()}</td>`;
+    html += `<td class="text-right">¥${Math.round(cn.tenrieki).toLocaleString()}</td>`;
+    html += `<td><input type="text" value="${escHtml(h.note||'')}" placeholder="メモ" oninput="updateSnapshotNote(${h.id},this.value)" style="width:100%"></td>`;
+    html += `<td>`;
+    html += `<button class="btn-secondary btn-sm" onclick="compareSnapshot(${h.id})" style="padding:3px 8px">📊 実績比較</button> `;
+    html += `<button class="btn-danger btn-sm" onclick="deleteSnapshot(${h.id})" style="padding:3px 8px;background:#fee2e2;color:#dc2626">削除</button>`;
+    html += `</td>`;
+    html += `</tr>`;
+  });
+  html += '</tbody></table></div>';
+  wrap.innerHTML = html;
+}
+
+function compareSnapshot(id){
+  const h = (state.history||[]).find(x=>x.id===id);
+  if(!h){alert('スナップショットが見つかりません');return;}
+  const planned = h.seisan_planned||{};
+  const actual = state.seisan||{};
+  const m = document.getElementById('history-compare-modal');
+  if(!m)return;
+  m.classList.add('active');
+
+  const fmt0 = v => '¥'+Math.round(v||0).toLocaleString();
+  const sign = v => v>=0?'+':'';
+  let html = `<div style="margin-bottom:8px"><b>スナップショット：</b> ${escHtml(h.label)} (取得 ${new Date(h.timestamp).toLocaleString('ja-JP')})</div>`;
+  html += `<div style="margin-bottom:12px"><b>現在の精算書（実績）と比較：</b></div>`;
+  html += '<div class="overflow-auto"><table class="ocr-table"><thead><tr><th>科目</th><th style="text-align:right">計画</th><th style="text-align:right">実績</th><th style="text-align:right">差額</th><th style="text-align:right">達成率</th></tr></thead><tbody>';
+
+  // SEISAN_KEYSの主要項目に絞って表示
+  const focusKeys = ['uriage','sonotauriage','arari','chaji','kyuyo','konetsu','mikiri','urihen','zappi','mikiri_shien','denki_shien'];
+  focusKeys.forEach(k=>{
+    const row = SEISAN_ROWS.find(r=>r.key===k);
+    if(!row)return;
+    const p = planned[k]||0;
+    const a = actual[k]||0;
+    const diff = a - p;
+    const pct = p>0 ? (a/p*100) : null;
+    const cls = diff>=0?'#059669':'#dc2626';
+    html += `<tr><td>${escHtml(row.name)}</td>`;
+    html += `<td style="text-align:right">${fmt0(p)}</td>`;
+    html += `<td style="text-align:right">${fmt0(a)}</td>`;
+    html += `<td style="text-align:right;color:${cls}">${sign(diff)}${fmt0(diff)}</td>`;
+    html += `<td style="text-align:right;font-weight:700">${pct==null?'—':pct.toFixed(0)+'%'}</td></tr>`;
+  });
+  html += '</tbody></table></div>';
+
+  // 施策の実効ROI
+  if(h.sessaku && h.sessaku.length){
+    html += `<div style="margin-top:14px;margin-bottom:8px"><b>📈 施策別の予実比較：</b></div>`;
+    html += '<div class="overflow-auto"><table class="ocr-table"><thead><tr><th>施策</th><th style="text-align:right">計画売上増</th><th style="text-align:right">投資額</th><th style="text-align:right">計画ROI</th><th style="text-align:right">実績売上増</th><th style="text-align:right">実効ROI</th><th>達成評価</th></tr></thead><tbody>';
+    const planUriage = planned.uriage||0;
+    const actUriage = actual.uriage||0;
+    const totalPlanEffect = h.sessaku.reduce((s,x)=>s+(x.effect||0),0);
+    h.sessaku.forEach(s=>{
+      const planEffect = s.effect||0;
+      const inv = s.invest||0;
+      const planRoi = inv>0 ? (planEffect/inv*100) : null;
+      // 実績シェア: 全体実売上増のうち、計画effect比率で按分
+      const totalActDiff = actUriage - (planUriage - totalPlanEffect);  // ベース売上 = 計画売上 - 計画施策効果合計
+      const actEffect = totalPlanEffect>0 ? totalActDiff * (planEffect/totalPlanEffect) : 0;
+      const actRoi = inv>0 ? (actEffect/inv*100) : null;
+      const eval_ = (planRoi&&actRoi)?(actRoi>=planRoi*0.8?'✅ 達成':actRoi>=planRoi*0.5?'△ 未達':'❌ 大幅未達'):'—';
+      html += `<tr><td style="text-align:left">${escHtml(s.name||'(無名)')}</td>`;
+      html += `<td style="text-align:right">¥${planEffect.toLocaleString()}</td>`;
+      html += `<td style="text-align:right">¥${inv.toLocaleString()}</td>`;
+      html += `<td style="text-align:right">${planRoi==null?'—':planRoi.toFixed(0)+'%'}</td>`;
+      html += `<td style="text-align:right">¥${Math.round(actEffect).toLocaleString()}</td>`;
+      html += `<td style="text-align:right;font-weight:700">${actRoi==null?'—':actRoi.toFixed(0)+'%'}</td>`;
+      html += `<td>${eval_}</td></tr>`;
+    });
+    html += '</tbody></table></div>';
+    html += '<div class="input-hint" style="margin-top:6px">※ 実績売上増は、全施策の計画効果比で按分した推計値です（個別実績の追跡には施策ごとの実績入力が必要）。</div>';
+  }
+
+  document.getElementById('history-compare-body').innerHTML = html;
+}
+
+function closeCompareModal(){
+  const m = document.getElementById('history-compare-modal');
+  if(m)m.classList.remove('active');
 }
 
 // ===== CN 本部支援ルール（リファレンスPDF/画像） =====
@@ -3263,6 +3634,8 @@ function updateROI(){
   const invest=state.sessaku.reduce((s,x)=>s+(x.invest||0),0);
   const effect=state.sessaku.reduce((s,x)=>s+(x.effect||0),0);
   setText('inv-roi',invest?((effect/invest)*100).toFixed(0)+'%':'—%');
+  // 施策が変わったらインパクト試算も更新
+  if(typeof renderShisakuImpact==='function')renderShisakuImpact();
 }
 
 // ===== LAYOUT =====
@@ -3771,6 +4144,8 @@ function loadAll(){
     if(s.season_show_archive!==undefined)state.season_show_archive=s.season_show_archive;
     if(s.orders)state.orders=s.orders;
     if(s.other_plans)state.other_plans=s.other_plans;
+    if(Array.isArray(s.history))state.history=s.history;
+    if(s.shisaku_sim)Object.assign(state.shisaku_sim,s.shisaku_sim);
   }catch(e){console.warn('load error',e);}
 }
 function restoreForm(){
@@ -3822,6 +4197,8 @@ function restoreForm(){
     sv('cn-zatsu-other',cp.zatsuOther);
   }
   if(typeof cnRulesRender==='function')cnRulesRender();
+  if(typeof renderShisakuImpact==='function')renderShisakuImpact();
+  if(typeof renderHistoryList==='function')renderHistoryList();
   fmtYenInputs(document.getElementById('content'));
 }
 
