@@ -1044,6 +1044,20 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
           </table>
         </div>
       </div>
+
+      <!-- ===== 本部支援ルール（リファレンス） ===== -->
+      <div class="card cn-card">
+        <div class="flex justify-between items-center mb-2" style="flex-wrap:wrap;gap:6px">
+          <div class="section-title" style="margin:0">📋 本部支援ルール（リファレンス）<button class="help-btn" data-help-title="本部支援ルール（リファレンス）" data-help="時期によって変動する本部支援条件のPDFや画像をここに保存しておけます。<br><br>例：<br>・FC契約タイプ別の支援率<br>・AICOカテゴリ「世界一大作戦」の期間別支援条件<br>・見切処分支援の階層率<br>・光熱費支援の上限<br><br>※1ファイル2MB以下推奨（localStorageに保存）">?</button></div>
+          <div class="flex gap-2">
+            <label class="btn-secondary btn-sm" style="cursor:pointer;display:inline-block">📄 PDF/画像追加
+              <input type="file" id="cn-rule-file" accept="application/pdf,image/*" multiple style="display:none" onchange="cnRulesUpload(event)">
+            </label>
+          </div>
+        </div>
+        <div class="input-hint mb-2">本部から配布された支援条件PDFや画像をアップロード。期間・メモを付けて保管できます。アップロード後はプレビューで内容を確認できます。</div>
+        <div id="cn-rules-list"></div>
+      </div>
     </div>
 
     <!-- ===== Tab 4: 施策計画 ===== -->
@@ -1417,7 +1431,7 @@ let state={
   seisan:(()=>{const base={month:'',eigyo_nissu:0,min_rieki:0};SEISAN_KEYS.forEach(k=>base[k]=0);return base;})(),
   seisan_prev:(()=>{const o={};SEISAN_KEYS.forEach(k=>o[k]=0);return o;})(),
   seisan_lastyear:(()=>{const o={};SEISAN_KEYS.forEach(k=>o[k]=0);return o;})(),
-  cnPlan:{type:'cn',h24:1,nissu:30,koyomi:30,firstYear:0,uriage:0,sonota:0,cr:72,mikiri:0,tanaloss:0,konetsu:0,eigyoOther:0,zatsuOther:0},
+  cnPlan:{type:'cn',h24:1,nissu:30,koyomi:30,firstYear:0,uriage:0,sonota:0,cr:72,mikiri:0,tanaloss:0,konetsu:0,eigyoOther:0,zatsuOther:0,support_rules:[]},
   monthly:{target_uriage:0,target_riekiritsu:0,target_urihen:0,target_kyakusu:0,juten_sessaku:'',week_jisseki:[0,0,0,0],
     eigyo_nissu:26,target_arari_rate:0,jikyu_tanka:0,jinken_rate:0,haiki_rate:0,kyaku_tanka_base:0,
     target_profit:0,keihi_gensaku:0,
@@ -1896,6 +1910,111 @@ function calcCnSupport(){
     state.cnPlan.eigyoOther=eigyoOther;state.cnPlan.zatsuOther=zatsuOther;
   }
 }
+
+// ===== CN 本部支援ルール（リファレンスPDF/画像） =====
+const CN_RULE_MAX_BYTES=2*1024*1024; // 2MB/file 推奨上限
+function cnRulesEnsure(){
+  if(!state.cnPlan)state.cnPlan={};
+  if(!Array.isArray(state.cnPlan.support_rules))state.cnPlan.support_rules=[];
+  return state.cnPlan.support_rules;
+}
+function cnRulesUpload(ev){
+  const files=Array.from(ev.target.files||[]);
+  if(!files.length)return;
+  const arr=cnRulesEnsure();
+  let pending=files.length;
+  files.forEach(f=>{
+    if(f.size>CN_RULE_MAX_BYTES){
+      if(!confirm(`"${f.name}" は ${(f.size/1024/1024).toFixed(2)}MB です。localStorage が圧迫される可能性がありますが、続行しますか？`)){
+        if(--pending===0){cnRulesRender();saveAll(true);}
+        return;
+      }
+    }
+    const r=new FileReader();
+    r.onload=e=>{
+      arr.push({
+        id:Date.now()+Math.floor(Math.random()*1000),
+        name:f.name,
+        type:f.type||'',
+        size:f.size,
+        dataB64:e.target.result,
+        period:'',
+        notes:'',
+        uploaded_at:new Date().toISOString()
+      });
+      if(--pending===0){cnRulesRender();saveAll(true);}
+    };
+    r.onerror=()=>{alert('読み込み失敗: '+f.name);if(--pending===0){cnRulesRender();saveAll(true);}};
+    r.readAsDataURL(f);
+  });
+  ev.target.value='';
+}
+function cnRulesRender(){
+  const wrap=document.getElementById('cn-rules-list');if(!wrap)return;
+  const arr=cnRulesEnsure();
+  if(!arr.length){wrap.innerHTML='<div class="input-hint" style="padding:8px;text-align:center;color:#9ca3af">まだファイルがアップロードされていません</div>';return;}
+  let html='<div class="overflow-auto"><table style="width:100%"><thead><tr>'
+    +'<th style="width:32px">#</th>'
+    +'<th>ファイル名</th>'
+    +'<th style="width:140px">適用期間</th>'
+    +'<th>メモ</th>'
+    +'<th style="width:90px">サイズ</th>'
+    +'<th style="width:70px">登録</th>'
+    +'<th style="width:120px">操作</th>'
+    +'</tr></thead><tbody>';
+  arr.forEach((r,i)=>{
+    const sz=(r.size/1024).toFixed(0)+' KB';
+    const dt=r.uploaded_at?new Date(r.uploaded_at).toLocaleDateString('ja-JP',{year:'2-digit',month:'2-digit',day:'2-digit'}):'';
+    const isPdf=(r.type||'').includes('pdf');
+    const icon=isPdf?'📄':'🖼️';
+    html+=`<tr>
+      <td>${i+1}</td>
+      <td style="text-align:left">${icon} ${escHtml(r.name||'')}</td>
+      <td><input type="text" value="${escHtml(r.period||'')}" placeholder="例: 26/3/3-4/6" oninput="cnRulesUpdate(${r.id},'period',this.value)"></td>
+      <td><input type="text" value="${escHtml(r.notes||'')}" placeholder="例: AICO世界一大作戦" oninput="cnRulesUpdate(${r.id},'notes',this.value)"></td>
+      <td style="text-align:right">${sz}</td>
+      <td>${dt}</td>
+      <td>
+        <button class="btn-secondary btn-sm" onclick="cnRulesPreview(${r.id})" style="padding:4px 8px">表示</button>
+        <button class="btn-danger btn-sm" onclick="cnRulesDelete(${r.id})" style="padding:4px 8px;background:#fee2e2;color:#dc2626">削除</button>
+      </td>
+    </tr>`;
+  });
+  html+='</tbody></table></div>';
+  wrap.innerHTML=html;
+}
+function cnRulesUpdate(id,key,val){
+  const arr=cnRulesEnsure();
+  const r=arr.find(x=>x.id===id);
+  if(r){r[key]=val;saveAll();}
+}
+function cnRulesDelete(id){
+  const arr=cnRulesEnsure();
+  const r=arr.find(x=>x.id===id);
+  if(!r)return;
+  if(!confirm(`"${r.name}" を削除しますか？`))return;
+  state.cnPlan.support_rules=arr.filter(x=>x.id!==id);
+  cnRulesRender();saveAll(true);
+}
+function cnRulesPreview(id){
+  const arr=cnRulesEnsure();
+  const r=arr.find(x=>x.id===id);
+  if(!r||!r.dataB64)return;
+  try{
+    const m=r.dataB64.match(/^data:([^;]+);base64,(.+)$/);
+    if(!m){alert('データ形式エラー');return;}
+    const mime=m[1];
+    const bin=atob(m[2]);
+    const u8=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+    const blob=new Blob([u8],{type:mime});
+    const url=URL.createObjectURL(blob);
+    const w=window.open(url,'_blank');
+    if(!w){alert('ポップアップがブロックされています。ブラウザで許可してください。');return;}
+    setTimeout(()=>URL.revokeObjectURL(url),60000);
+  }catch(e){alert('プレビュー失敗: '+e.message);}
+}
+function escHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 // ===== MONTHLY =====
 function calcMonthly(){
@@ -3136,6 +3255,7 @@ function restoreForm(){
     sv('cn-eigyo-other',cp.eigyoOther);
     sv('cn-zatsu-other',cp.zatsuOther);
   }
+  if(typeof cnRulesRender==='function')cnRulesRender();
   fmtYenInputs(document.getElementById('content'));
 }
 
