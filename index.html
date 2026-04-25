@@ -241,6 +241,10 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .file-upload-label:active{transform:scale(.97)}
 /* file input は label 内に配置し visually-hidden で隠す（display:none だと Chrome/iOS で発火しない場合がある） */
 .visually-hidden-input{position:absolute!important;left:0;top:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:1}
+/* ===== ドラッグ＆ドロップ ===== */
+.drop-zone{border:2px dashed var(--main);border-radius:10px;padding:14px;text-align:center;color:var(--main);font-size:13px;font-weight:600;background:#f0f7ff;margin-bottom:10px;cursor:pointer;transition:all .15s;user-select:none}
+.drop-zone:hover{background:#e1efff}
+.drop-zone.drag-over{background:#c7e0ff;border-color:#1976d2;border-style:solid;transform:scale(1.01)}
 /* ===== OCR取込モーダル ===== */
 .ocr-modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9000;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
 .ocr-modal-bg.active{display:flex}
@@ -406,7 +410,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v12.4</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v12.5</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -451,6 +455,9 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
           <button class="btn-secondary btn-sm" onclick="copyCurrToPrev()" title="当月の値を『先月』欄にコピー（翌月の比較準備）">📋 当月→先月に複製</button>
           <button class="btn-secondary btn-sm" onclick="clearSeisanCol('prev')">🗑️ 先月をクリア</button>
           <button class="btn-secondary btn-sm" onclick="clearSeisanCol('ly')">🗑️ 前年をクリア</button>
+        </div>
+        <div id="seisan-drop-zone" class="drop-zone" data-handler="handleSeisanPDF" data-accept="application/pdf">
+          📥 ここに精算書PDFをドラッグ＆ドロップでもOK
         </div>
         <div id="seisan-pdf-progress" style="display:none" class="alert alert-info mb-2"></div>
         <div class="overflow-auto">
@@ -1402,7 +1409,44 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v12.4';
+const APP_VERSION='v12.5';
+
+// ===== DRAG & DROP ハンドラ =====
+function setupDropZones(){
+  document.querySelectorAll('.drop-zone').forEach(zone=>{
+    if(zone.dataset._inited)return;
+    zone.dataset._inited='1';
+    const accept=(zone.dataset.accept||'').split(',').map(s=>s.trim()).filter(Boolean);
+    const handlerName=zone.dataset.handler;
+    const checkAccept=file=>{
+      if(accept.length===0)return true;
+      return accept.some(a=>{
+        if(a.endsWith('/*')){const prefix=a.slice(0,-1);return file.type.startsWith(prefix);}
+        if(a.startsWith('.')){return file.name.toLowerCase().endsWith(a.toLowerCase());}
+        return file.type===a;
+      });
+    };
+    ['dragenter','dragover'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();zone.classList.add('drag-over');}));
+    ['dragleave','drop'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();zone.classList.remove('drag-over');}));
+    zone.addEventListener('drop',e=>{
+      const files=Array.from(e.dataTransfer?.files||[]).filter(checkAccept);
+      if(files.length===0){alert('対応していないファイル形式です。\n（必要: '+(accept.join(', ')||'すべて')+'）');return;}
+      const handler=window[handlerName];
+      if(typeof handler!=='function'){console.error('drop handler not found:',handlerName);return;}
+      // FileList を擬似生成して onchange ハンドラに渡す
+      const dt=new DataTransfer();files.forEach(f=>dt.items.add(f));
+      const fakeEvent={target:{files:dt.files,value:''}};
+      handler(fakeEvent);
+    });
+    // ドロップゾーン自体をクリックしてもファイル選択ダイアログが開くようにする
+    // 隣接 input[type=file] を探して click 経由（label 内包の input がある場合は使い回す）
+    zone.addEventListener('click',()=>{
+      const nearby=zone.parentElement?.querySelector('input[type=file]');
+      if(nearby){try{nearby.value='';nearby.click();}catch(e){console.warn(e);}}
+    });
+  });
+}
+
 console.log('[keiei-plan] '+APP_VERSION+' loaded at '+new Date().toLocaleString('ja-JP'));
 
 // ===== FILE PICKER (universal, robust) =====
@@ -4335,6 +4379,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
   loadAll();restoreForm();
   calcSeisan();calcMonthly();calcDailyStats();calcTimeStats();
   initYoubiGrid();initOrderFilter();
+  if(typeof setupDropZones==='function')setupDropZones();
   const now=new Date();
   setText('header-date',`${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`);
   // Gist設定入力欄に現在の値を反映
