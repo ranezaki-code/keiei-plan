@@ -253,8 +253,10 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .ocr-modal{background:#fff;border-radius:12px;max-width:980px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;display:flex;flex-direction:column;max-height:90vh}
 .ocr-modal.wide{max-width:1500px}
 .manual-pane{display:flex;gap:10px;height:74vh;min-height:520px}
-.manual-pdf-pane{flex:1.1;border:1px solid var(--border);border-radius:8px;background:#f3f4f6;overflow:auto;position:relative}
-.manual-pdf-pane canvas{display:block;margin:0 auto}
+.manual-pdf-pane{flex:1.1;border:1px solid var(--border);border-radius:8px;background:#f3f4f6;position:relative;display:flex;flex-direction:column;overflow:hidden}
+.manual-pdf-scroll{flex:1;overflow:auto;padding:10px;position:relative}
+.manual-pdf-scroll canvas{display:block;margin:0 auto;cursor:grab}
+.manual-pdf-scroll canvas:active{cursor:grabbing}
 .manual-form-pane{flex:1;border:1px solid var(--border);border-radius:8px;overflow-y:auto;padding:10px;background:#fff}
 .manual-form-pane h4{margin:8px 0 4px 0;font-size:12px;color:#1e3a5f;border-bottom:1px solid #e5e7eb;padding-bottom:2px;position:sticky;top:0;background:#fff;z-index:1}
 .manual-row{display:grid;grid-template-columns:1.6fr 60px 1fr;gap:6px;align-items:center;padding:3px 0;font-size:12px}
@@ -263,7 +265,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .manual-row input{padding:4px 6px;text-align:right;border:1px solid var(--border);border-radius:4px;font-size:12px;font-variant-numeric:tabular-nums}
 .manual-row input.changed{border-color:#3b82f6;background:#eff6ff}
 .manual-row input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(59,130,246,.2);outline:none}
-.manual-pdf-toolbar{position:sticky;top:0;background:rgba(255,255,255,.95);backdrop-filter:blur(4px);border-bottom:1px solid var(--border);padding:6px;display:flex;gap:6px;align-items:center;z-index:2;flex-wrap:wrap}
+.manual-pdf-toolbar{flex:0 0 auto;background:#fff;border-bottom:1px solid var(--border);padding:6px;display:flex;gap:6px;align-items:center;z-index:2;flex-wrap:wrap}
 .manual-pdf-toolbar button{padding:3px 8px;font-size:11px;border:1px solid var(--border);background:#fff;border-radius:4px;cursor:pointer}
 .manual-pdf-toolbar button:hover{background:#f3f4f6}
 .ocr-modal-head{padding:14px 20px;background:linear-gradient(135deg,#1e3a5f 0%,#152c47 100%);color:#fff;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
@@ -428,7 +430,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v16.2</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v16.3</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -1429,7 +1431,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v16.2';
+const APP_VERSION='v16.3';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -3278,9 +3280,12 @@ async function showManualSeisanInput(pageIdx){
         <button onclick="manualPdfZoom(0.8)">🔍−</button>
         <button onclick="manualPdfZoomFit('page')">⛶ 全体</button>
         <button onclick="manualPdfZoomFit('width')">↔ 横幅</button>
-        <span style="margin-left:auto;font-size:11px;color:#6b7280" id="manual-pdf-info">読み込み中...</span>
+        <span style="margin-left:auto;font-size:10px;color:#6b7280" title="トラックパッドピンチ / Ctrl+ホイールでも拡大縮小できます">💡 ピンチ/Ctrl+ホイール</span>
+        <span style="font-size:11px;color:#6b7280" id="manual-pdf-info">読み込み中...</span>
       </div>
-      <div id="manual-pdf-canvas-wrap" style="padding:10px;text-align:center;color:#6b7280;font-size:12px">📄 PDFを描画中...</div>
+      <div class="manual-pdf-scroll" id="manual-pdf-scroll">
+        <div id="manual-pdf-canvas-wrap" style="text-align:center;color:#6b7280;font-size:12px">📄 PDFを描画中...</div>
+      </div>
     </div>
     <div class="manual-form-pane">
       <div style="margin-bottom:8px;padding:6px;background:#fffbeb;border-radius:4px;font-size:11px;color:#78350f">
@@ -3317,8 +3322,8 @@ async function showManualSeisanInput(pageIdx){
     const page = await ocrCtx.pdf.getPage(ocrCtx.pages[pageIdx].pageNum);
     manualCtx.page = page;
     await renderManualPdf();
-    // 横幅フィット
-    setTimeout(()=>manualPdfZoomFit('page'), 50);
+    // 横幅フィット & トラックパッドズーム有効化
+    setTimeout(()=>{ manualPdfZoomFit('page'); manualPdfAttachWheelZoom(); }, 50);
   }catch(e){
     console.error('[manual] getPage failed:',e);
     const wrap = document.getElementById('manual-pdf-canvas-wrap');
@@ -3359,17 +3364,15 @@ function manualPdfRotate(){
   renderManualPdf();
 }
 function manualPdfZoom(factor){
-  manualCtx.scale = Math.max(0.4, Math.min(4, manualCtx.scale*factor));
+  manualCtx.scale = Math.max(0.3, Math.min(5, manualCtx.scale*factor));
   renderManualPdf();
 }
 function manualPdfZoomFit(mode){
   // mode: 'width' | 'height' | 'page' (default: page = 縦横どちらも収める)
-  const pane = document.getElementById('manual-pdf-pane');
-  if(!pane || !manualCtx.page)return;
-  const toolbar = pane.querySelector('.manual-pdf-toolbar');
-  const toolbarH = toolbar ? toolbar.offsetHeight : 30;
-  const w = pane.clientWidth - 30;
-  const h = pane.clientHeight - toolbarH - 30;
+  const scrollEl = document.getElementById('manual-pdf-scroll');
+  if(!scrollEl || !manualCtx.page)return;
+  const w = scrollEl.clientWidth - 20;
+  const h = scrollEl.clientHeight - 20;
   const baseVp = manualCtx.page.getViewport({scale:1, rotation:manualCtx.rotation});
   const sw = w / baseVp.width;
   const sh = h / baseVp.height;
@@ -3377,8 +3380,36 @@ function manualPdfZoomFit(mode){
   if(mode==='width')s = sw;
   else if(mode==='height')s = sh;
   else s = Math.min(sw, sh); // ページ全体を収める
-  manualCtx.scale = Math.max(0.3, Math.min(3, s));
+  manualCtx.scale = Math.max(0.3, Math.min(5, s));
   renderManualPdf();
+}
+
+// トラックパッドピンチ / Ctrl+ホイールで拡大縮小
+function manualPdfAttachWheelZoom(){
+  const scrollEl = document.getElementById('manual-pdf-scroll');
+  if(!scrollEl || scrollEl.dataset.zoomBound)return;
+  scrollEl.dataset.zoomBound = '1';
+  scrollEl.addEventListener('wheel', (ev)=>{
+    // Mac トラックパッドのピンチは ctrlKey=true で wheel イベントが飛ぶ
+    if(!ev.ctrlKey && !ev.metaKey)return;
+    ev.preventDefault();
+    if(!manualCtx.page)return;
+    // カーソル位置を中心にズーム
+    const rect = scrollEl.getBoundingClientRect();
+    const cx = ev.clientX - rect.left + scrollEl.scrollLeft;
+    const cy = ev.clientY - rect.top + scrollEl.scrollTop;
+    const oldScale = manualCtx.scale;
+    const factor = Math.exp(-ev.deltaY * 0.01); // 連続的にズーム
+    const newScale = Math.max(0.3, Math.min(5, oldScale * factor));
+    if(newScale === oldScale)return;
+    manualCtx.scale = newScale;
+    renderManualPdf().then(()=>{
+      // ズーム前のカーソル位置を維持するようにスクロール調整
+      const ratio = newScale / oldScale;
+      scrollEl.scrollLeft = cx * ratio - (ev.clientX - rect.left);
+      scrollEl.scrollTop = cy * ratio - (ev.clientY - rect.top);
+    });
+  }, {passive:false});
 }
 
 function manualPrefillFrom(src){
