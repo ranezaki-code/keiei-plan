@@ -406,7 +406,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v12.3</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v12.4</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -447,8 +447,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
           </div>
         </div>
         <div class="flex gap-2 mb-2" style="flex-wrap:wrap">
-          <button type="button" class="btn-primary btn-sm" onclick="pickFile('seisan-pdf-input')">📄 精算書PDFを取り込む</button>
-          <input type="file" id="seisan-pdf-input" accept="application/pdf" style="position:absolute;left:-9999px;top:-9999px;opacity:0" onchange="handleSeisanPDF(event)">
+          <label class="btn-primary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px">📄 精算書PDFを取り込む<input type="file" id="seisan-pdf-input" accept="application/pdf" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="handleSeisanPDF(event)"></label>
           <button class="btn-secondary btn-sm" onclick="copyCurrToPrev()" title="当月の値を『先月』欄にコピー（翌月の比較準備）">📋 当月→先月に複製</button>
           <button class="btn-secondary btn-sm" onclick="clearSeisanCol('prev')">🗑️ 先月をクリア</button>
           <button class="btn-secondary btn-sm" onclick="clearSeisanCol('ly')">🗑️ 前年をクリア</button>
@@ -1173,8 +1172,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
         <div class="flex justify-between items-center mb-2" style="flex-wrap:wrap;gap:6px">
           <div class="section-title" style="margin:0">📋 本部支援ルール（リファレンス）<button class="help-btn" data-help-title="本部支援ルール（リファレンス）" data-help="時期によって変動する本部支援条件のPDFや画像をここに保存しておけます。<br><br>例：<br>・FC契約タイプ別の支援率<br>・AICOカテゴリ「世界一大作戦」の期間別支援条件<br>・見切処分支援の階層率<br>・光熱費支援の上限<br><br>※1ファイル2MB以下推奨（localStorageに保存）">?</button></div>
           <div class="flex gap-2">
-            <button type="button" class="btn-secondary btn-sm" onclick="pickFile('cn-rule-file')">📄 PDF/画像追加</button>
-            <input type="file" id="cn-rule-file" accept="application/pdf,image/*" multiple style="position:absolute;left:-9999px;top:-9999px;opacity:0" onchange="cnRulesUpload(event)">
+            <label class="btn-secondary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px">📄 PDF/画像追加<input type="file" id="cn-rule-file" accept="application/pdf,image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="cnRulesUpload(event)"></label>
           </div>
         </div>
         <div class="input-hint mb-2">本部から配布された支援条件PDFや画像をアップロード。期間・メモを付けて保管できます。アップロード後はプレビューで内容を確認できます。</div>
@@ -1190,8 +1188,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
         <div class="flex justify-between items-center mb-2">
           <div class="section-title" style="margin:0">お店作り冊子（PDF）→ 重点施策抽出</div>
           <div class="flex gap-2">
-            <button type="button" class="btn-secondary btn-sm" onclick="pickFile('booklet-pdf')">📄 PDFアップロード</button>
-            <input type="file" id="booklet-pdf" accept="application/pdf" style="position:absolute;left:-9999px;top:-9999px;opacity:0" onchange="handleBookletPDF(event)">
+            <label class="btn-secondary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px">📄 PDFアップロード<input type="file" id="booklet-pdf" accept="application/pdf" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="handleBookletPDF(event)"></label>
             <button class="btn-secondary btn-sm" onclick="addBookletItemManual()">＋手動追加</button>
             <button class="btn-secondary btn-sm" onclick="clearBooklet()">クリア</button>
           </div>
@@ -1394,8 +1391,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
   <div id="bottom-bar">
     <button class="btn-secondary btn-sm" onclick="exportJSON()">↓ エクスポート</button>
-    <button type="button" class="btn-secondary btn-sm" style="padding:5px 10px" onclick="pickFile('import-file')">↑ インポート</button>
-    <input type="file" id="import-file" accept=".json,application/json" style="position:absolute;left:-9999px;top:-9999px;opacity:0" onchange="importJSON(event)">
+    <label class="btn-secondary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:5px 10px">↑ インポート<input type="file" id="import-file" accept=".json,application/json" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="importJSON(event)"></label>
     <button class="btn-secondary btn-sm" onclick="openImportPaste()" title="JSONを直接ペースト">📋 ペースト</button>
     <div style="flex:1"></div>
     <span id="gist-status" style="font-size:11px;color:var(--gray);align-self:center;cursor:pointer" onclick="showGroup('other')" title="クリックで設定画面へ"></span>
@@ -1406,7 +1402,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v12.3';
+const APP_VERSION='v12.4';
 console.log('[keiei-plan] '+APP_VERSION+' loaded at '+new Date().toLocaleString('ja-JP'));
 
 // ===== FILE PICKER (universal, robust) =====
