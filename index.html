@@ -410,7 +410,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v13.1</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v13.2</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -1411,7 +1411,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v13.1';
+const APP_VERSION='v13.2';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -1526,26 +1526,50 @@ async function claudeOcrSeisan(canvas, onProgress){
   if(!key)throw new Error('Claude APIキーが未設定です');
   const model=claudeGetModel();
 
-  // 画像を JPEG (高品質) に変換 してサイズ削減
+  // 画像を Anthropic API の上限（base64 5MB = 5,242,880 bytes）以下にエンコード
   onProgress&&onProgress('画像をエンコード中...',30);
-  // Anthropic API は最長辺 8000px、ファイル 30MB まで許容。読取精度のため
-  // 文字を最大限大きくしたいので、3500px までは縮小しない。
-  let img=canvas;
-  let maxDim=Math.max(canvas.width,canvas.height);
-  if(maxDim>3500){
-    const scale=3500/maxDim;
-    const sm=document.createElement('canvas');
-    sm.width=Math.round(canvas.width*scale);
-    sm.height=Math.round(canvas.height*scale);
-    sm.getContext('2d').drawImage(canvas,0,0,sm.width,sm.height);
-    img=sm;
+  // 上限ちょうどだとサーバ判定で弾かれることがあるので 4.7MB を目安にする
+  const MAX_B64=Math.floor(4.7*1024*1024);
+  // 段階的に「縮小率 + (PNG/JPEG画質)」を下げて、最初に上限内に収まったものを採用
+  // 文字の細さを優先したいので PNG → 高品質 JPEG → 中品質 JPEG の順で試す
+  const attempts=[
+    {dim:3500, fmt:'image/png',  q:null},
+    {dim:3200, fmt:'image/png',  q:null},
+    {dim:3500, fmt:'image/jpeg', q:0.95},
+    {dim:3200, fmt:'image/jpeg', q:0.95},
+    {dim:3500, fmt:'image/jpeg', q:0.90},
+    {dim:3000, fmt:'image/jpeg', q:0.92},
+    {dim:2800, fmt:'image/jpeg', q:0.90},
+    {dim:2500, fmt:'image/jpeg', q:0.88},
+    {dim:2200, fmt:'image/jpeg', q:0.85}
+  ];
+  let b64=null,mediaType=null,chosen=null;
+  for(const att of attempts){
+    let img=canvas;
+    const maxDim0=Math.max(canvas.width,canvas.height);
+    if(maxDim0>att.dim){
+      const scale=att.dim/maxDim0;
+      const sm=document.createElement('canvas');
+      sm.width=Math.round(canvas.width*scale);
+      sm.height=Math.round(canvas.height*scale);
+      sm.getContext('2d').drawImage(canvas,0,0,sm.width,sm.height);
+      img=sm;
+    }
+    const dataUrl=att.q!=null?img.toDataURL(att.fmt,att.q):img.toDataURL(att.fmt);
+    const cand=dataUrl.split(',')[1];
+    const sizeMB=(cand.length/1024/1024).toFixed(2);
+    console.log(`[claude-ocr] attempt dim=${att.dim} fmt=${att.fmt} q=${att.q} → ${sizeMB}MB (b64)`);
+    if(cand.length<=MAX_B64){
+      b64=cand;
+      mediaType=att.fmt;
+      chosen={...att,sizeMB};
+      break;
+    }
   }
-  // PNGの方が線・小フォントの劣化が少ないので画質優先で使う
-  const dataUrl=img.toDataURL('image/png');
-  const b64=dataUrl.split(',')[1];
-  const mediaType='image/png';
-  const sizeMB=(b64.length*0.75/1024/1024).toFixed(2);
-  console.log('[claude-ocr] image size:',sizeMB,'MB');
+  if(!b64){
+    throw new Error('画像が大きすぎてAPI上限に収まりませんでした。PDFが極端に高解像度の可能性があります。');
+  }
+  console.log('[claude-ocr] chosen:',chosen);
 
   // ラベルマップを Claude に渡すスキーマ
   const fieldDescriptions=OCR_LABEL_MAP.map(m=>{
