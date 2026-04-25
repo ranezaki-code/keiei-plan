@@ -340,7 +340,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
     <div class="tab-panel active" id="tab0">
       <div class="card">
         <div class="flex justify-between items-center mb-2" style="flex-wrap:wrap;gap:8px">
-          <div class="section-title" style="margin:0">損益計算書（精算書）<button class="help-btn" data-help-title="精算書の使い方" data-help="ローソン精算書（損益計算書）フォーマット準拠。<br><br><b>当月</b>：精算書の数値を入力（必須）<br><b>先月</b>：前月の数値（任意）→ 先月比% が自動表示<br><b>前年同月</b>：去年同じ月の数値（任意）→ 前年比% が自動表示<br><br><b>売上比</b>：各項目 ÷ 売上高 × 100<br><b>コード</b>：ローソン勘定科目コード<br><br>灰色行は自動計算（売上高合計・売上原価・粗利・営業費計・店利益）">?</button></div>
+          <div class="section-title" style="margin:0">損益計算書（精算書）<button class="help-btn" data-help-title="精算書の使い方" data-help="ローソン精算書（損益計算書）フォーマット準拠。<br><br><b>当月</b>：精算書の数値を入力（必須）<br><b>先月</b>：前月の数値（任意）→ 先月比% が自動表示<br><b>前年同月</b>：去年同じ月の数値（任意）→ 前年比% が自動表示<br><br><b>売上比</b>：各項目 ÷ 売上高 × 100<br><b>コード</b>：ローソン勘定科目コード<br><br><b>自動計算式（精算書 備考欄に準拠）</b><br>・売上原価＝期首+仕入−割戻−期末<br>・総売上原価＝売上原価−見切処分(5030)−棚卸ロス(5040)<br>・粗利＝売上−総売上原価＝A−(B−C−D)<br>・FC収入＝粗利−ローソンチャージ<br>・店利益＝FC収入−営業費計+雑益+本部負担">?</button></div>
           <div class="flex items-center gap-2" style="flex-wrap:wrap">
             <label class="unit-hint">営業日数</label>
             <input type="text" id="s-eigyo-nissu" inputmode="numeric" data-nounit placeholder="30" style="max-width:60px;text-align:right" oninput="syncNishinUriage('nissu')">
@@ -396,7 +396,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
             <div class="stat-sub" id="r-nishin-sub">—</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">📐 売変率<button class="help-btn" data-help-title="売変率の算出式" data-help="売変高 ÷ 売上<br><br>値下げ・見切り販売など、定価からの値引き割合を示す指標です。">?</button></div>
+            <div class="stat-label">📐 売変率<button class="help-btn" data-help-title="売変率の算出式" data-help="見切・処分(5030) ÷ 商品売上高 × 100<br><br>商品売上に対する値引・見切販売の割合（ローソン精算書の定義に準拠）。<br>2.0%超〜3.0%：本部負担20%／3.0%超〜4.0%：30%／4.0%超：55%（原価相当額）の支援区分の判定にも使われます。">?</button></div>
             <div class="stat-value" id="r-urihenritsu">0.0%</div>
           </div>
         </div>
@@ -1335,11 +1335,11 @@ const SEISAN_ROWS=[
   {key:'_baijogenka',name:'売上原価',subtotal:true,calc:{tanaoroshi_hatsu:1,shiire:1,shiire_nebiki:-1,tanaoroshi_sue:-1}},
   {key:'urihen',code:'5030',name:'見切・処分'},
   {key:'tanagen',code:'5040',name:'棚卸ロス'},
-  {key:'_sougenka',name:'総売上原価',subtotal:true,calc:{tanaoroshi_hatsu:1,shiire:1,shiire_nebiki:-1,tanaoroshi_sue:-1,urihen:1,tanagen:1}},
-  {key:'arari',name:'総売上利益高（粗利）',subtotal:true,highlight:true,calc:{uriage:1,sonotauriage:1,tanaoroshi_hatsu:-1,shiire:-1,shiire_nebiki:1,tanaoroshi_sue:1,urihen:-1,tanagen:-1}},
+  {key:'_sougenka',name:'総売上原価',subtotal:true,calc:{tanaoroshi_hatsu:1,shiire:1,shiire_nebiki:-1,tanaoroshi_sue:-1,urihen:-1,tanagen:-1}},
+  {key:'arari',name:'総売上利益高（粗利）',subtotal:true,highlight:true,calc:{uriage:1,sonotauriage:1,tanaoroshi_hatsu:-1,shiire:-1,shiire_nebiki:1,tanaoroshi_sue:1,urihen:1,tanagen:1}},
   {section:'【チャージ・営業費】'},
   {key:'chaji',code:'6000',name:'ローソン・チャージ'},
-  {key:'_fcnyu',name:'フランチャイジ収入',subtotal:true,calc:{uriage:1,sonotauriage:1,tanaoroshi_hatsu:-1,shiire:-1,shiire_nebiki:1,tanaoroshi_sue:1,urihen:-1,tanagen:-1,chaji:-1}},
+  {key:'_fcnyu',name:'フランチャイジ収入',subtotal:true,calc:{uriage:1,sonotauriage:1,tanaoroshi_hatsu:-1,shiire:-1,shiire_nebiki:1,tanaoroshi_sue:1,urihen:1,tanagen:1,chaji:-1}},
   {key:'kyuyo',code:'6010',name:'パートタイマー給与'},
   {key:'houtei_fukuri',code:'6020',name:'法定福利費'},
   {key:'mikiri',code:'6030',name:'見切・処分'},
@@ -1361,7 +1361,7 @@ const SEISAN_ROWS=[
   {key:'zatsuyeki',code:'4030',name:'雑益'},
   {key:'mikiri_shien',name:'見切・処分本部負担額'},
   {key:'denki_shien',name:'光熱費本部負担額'},
-  {key:'_tenrieki',name:'店利益',subtotal:true,highlight:true,final:true,calc:{uriage:1,sonotauriage:1,tanaoroshi_hatsu:-1,shiire:-1,shiire_nebiki:1,tanaoroshi_sue:1,urihen:-1,tanagen:-1,chaji:-1,kyuyo:-1,houtei_fukuri:-1,mikiri:-1,loss:-1,shomohin:-1,hoso:-1,shuzen:-1,genkin:-1,setsubi_lease:-1,setsubi_shuzen:-1,tsushin:-1,konetsu:-1,shiharai_risoku:-1,songai:-1,hieigyo:-1,zappi:-1,zatsuyeki:1,mikiri_shien:1,denki_shien:1}},
+  {key:'_tenrieki',name:'店利益',subtotal:true,highlight:true,final:true,calc:{uriage:1,sonotauriage:1,tanaoroshi_hatsu:-1,shiire:-1,shiire_nebiki:1,tanaoroshi_sue:1,urihen:1,tanagen:1,chaji:-1,kyuyo:-1,houtei_fukuri:-1,mikiri:-1,loss:-1,shomohin:-1,hoso:-1,shuzen:-1,genkin:-1,setsubi_lease:-1,setsubi_shuzen:-1,tsushin:-1,konetsu:-1,shiharai_risoku:-1,songai:-1,hieigyo:-1,zappi:-1,zatsuyeki:1,mikiri_shien:1,denki_shien:1}},
 ];
 const SEISAN_KEYS=SEISAN_ROWS.filter(r=>r.key&&!r.subtotal&&!r.section).map(r=>r.key);
 
@@ -1734,7 +1734,7 @@ function calcSeisan(){
   const minR=s.min_rieki||0;
   const toshi=rieki-minR;
   const nishin=u?u/nissu:0;
-  const urihenR=u?((s.urihen||0)/u*100).toFixed(2):'0.00';
+  const urihenR=(s.uriage||0)?((s.urihen||0)/(s.uriage||1)*100).toFixed(2):'0.00';
   setText('r-eigyo',fmt(eigyo*UNIT.factor));
   setText('r-rieki',u||eigyo?fmt(rieki*UNIT.factor):'¥—');
   setText('r-urihenritsu',urihenR+'%');
