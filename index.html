@@ -410,7 +410,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v14.0</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v14.1</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -1411,7 +1411,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v14.0';
+const APP_VERSION='v14.1';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -3083,13 +3083,24 @@ async function ocrProcessPage(pageIdx){
       // まず PDF テキストレイヤーを抽出する（あれば OCR ゼロで完璧に読める）
       ocrSetStep('PDFテキストレイヤー確認中...','埋め込みテキストを抽出',8);
       let structuredText=null;
+      let rawTcInfo={items:0,nonEmpty:0,sample:''};
       try{
         const tc=await page.getTextContent();
+        rawTcInfo.items=tc?.items?.length||0;
+        rawTcInfo.nonEmpty=(tc?.items||[]).filter(it=>it && typeof it.str==='string' && it.str.trim()).length;
+        rawTcInfo.sample=(tc?.items||[]).slice(0,10).map(it=>JSON.stringify(it.str)).join(' ');
         structuredText=buildStructuredTextFromTC(tc);
       }catch(e){console.warn('[claude] getTextContent failed:',e);}
 
-      const hasTextLayer = structuredText && structuredText.length>200 && /\d/.test(structuredText);
-      console.log('[claude] textLayer:',hasTextLayer ? `あり (${structuredText.length}文字)` : 'なし→Vision OCRへ');
+      const textLen = structuredText?structuredText.length:0;
+      const hasDigit = structuredText?/\d/.test(structuredText):false;
+      // 閾値を緩める：50文字以上で数字を含めばテキスト層ありとみなす
+      const hasTextLayer = structuredText && textLen>50 && hasDigit;
+      console.log('[claude] textContent items:',rawTcInfo.items,'non-empty:',rawTcInfo.nonEmpty);
+      console.log('[claude] textContent sample:',rawTcInfo.sample);
+      console.log('[claude] structuredText length:',textLen,'hasDigit:',hasDigit);
+      if(structuredText)console.log('[claude] structuredText preview (first 500):\n'+structuredText.slice(0,500));
+      console.log('[claude] decision:',hasTextLayer ? '📄 テキスト解析モード' : '👁 Vision OCRへフォールバック');
 
       // 補助画像（テキストモードでも列ヘッダー確認用に使う）
       ocrSetStep(hasTextLayer?'PDFを画像化中（補助用）':'PDFを高解像度で画像化中', '...', 15);
