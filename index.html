@@ -430,7 +430,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v16.4</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v16.5</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -1431,7 +1431,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v16.4';
+const APP_VERSION='v16.5';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -3262,7 +3262,7 @@ async function showManualSeisanInput(pageIdx){
       <button class="btn-secondary btn-sm" onclick="ocrCloseModal()">キャンセル</button>
       <button class="btn-secondary btn-sm" onclick="manualPrefillFrom('prev')" title="先月（state.seisan）の値で埋める">📋 先月をコピー</button>
       <button class="btn-secondary btn-sm" onclick="manualPrefillFrom('lastyear')" title="前年同月の値で埋める">📋 前年をコピー</button>
-      <button class="btn-secondary btn-sm" onclick="manualPrefillFrom('zero')">🗑 全クリア</button>
+      <button class="btn-secondary btn-sm" onclick="manualPrefillFrom('zero')" title="全項目を 0 にする">🔢 全て0</button>
     </div>
     <div>
       <button class="btn-primary btn-sm" onclick="manualSeisanApply()">✓ この内容で反映</button>
@@ -3289,7 +3289,7 @@ async function showManualSeisanInput(pageIdx){
     </div>
     <div class="manual-form-pane">
       <div style="margin-bottom:8px;padding:6px;background:#fffbeb;border-radius:4px;font-size:11px;color:#78350f;line-height:1.5">
-        💡 <b>Enter / Tab</b>=次の項目へ ／ <b>↑↓</b>=±1000円（Shift+↑↓=±10000）／ 全角数字も自動で半角に変換／フォーカス時は全選択されるのでそのまま上書き入力OK
+        💡 <b>Enter / Tab / ↓</b>=次の項目へ ／ <b>↑</b>=前の項目へ ／ 全角数字も自動で半角に変換／フォーカス時は全選択されるのでそのまま上書き入力OK
       </div>
       <h4>【ヘッダー】</h4>
       <div class="manual-row"><label>対象月</label><span class="code"></span><input type="month" id="manual-month" value="${defaultMonth}"></div>
@@ -3374,14 +3374,16 @@ async function showManualSeisanInput(pageIdx){
           if(applyBtn)applyBtn.focus();
         }
       }
-      // ↑↓で 1000 単位調整（金額入力の効率化）
-      else if((ev.key === 'ArrowUp' || ev.key === 'ArrowDown') && inp.type === 'text' && inp.dataset.key){
+      // ↑↓で前後の入力欄に移動
+      else if(ev.key === 'ArrowUp'){
         ev.preventDefault();
-        const step = ev.shiftKey ? 10000 : 1000;
-        const cur = parseInt((inp.value || '0').replace(/[^\d-]/g, ''), 10) || 0;
-        const next = cur + (ev.key === 'ArrowUp' ? step : -step);
-        inp.value = String(next);
-        inp.dispatchEvent(new Event('input'));
+        const prev = inputs[idx - 1];
+        if(prev)prev.focus();
+      }
+      else if(ev.key === 'ArrowDown'){
+        ev.preventDefault();
+        const next = inputs[idx + 1];
+        if(next)next.focus();
       }
     });
   });
@@ -3496,8 +3498,9 @@ function manualPrefillFrom(src){
     const k = inp.dataset.key;
     if(k === '__eigyo_nissu')return; // 営業日数は対象外
     const v = src==='zero' ? 0 : (source[k] ?? 0);
-    inp.value = v || '';
-    inp.dataset.init = v;
+    // zero モードは 0 を明示表示。それ以外は 0 のときは空欄
+    inp.value = src==='zero' ? '0' : (v || '');
+    inp.dataset.init = String(v);
     inp.classList.remove('changed');
   });
 }
