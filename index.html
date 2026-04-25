@@ -11,6 +11,8 @@
 <script>if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';</script>
 <!-- PDF単一ページ抽出用（Anthropic API 32MB上限対策） -->
 <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<!-- グラフ描画 (Chart.js) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <!-- Tesseract.js は OCR 利用時にのみ動的ロード -->
 <script>
 window.ocrLoadTesseract = function(){
@@ -96,6 +98,15 @@ td select:focus{background:#f0f7ff}
   .snap-list-pane{flex:1 1 auto;width:100%}
   .snap-compare-pane{width:100%}
 }
+/* ===== グラフ（Chart.js）共通スタイル ===== */
+.chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.chart-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;flex-direction:column;min-height:0}
+.chart-card .chart-title{font-size:12px;font-weight:700;color:#1e3a5f;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px}
+.chart-card .chart-sub{font-size:10px;color:#6b7280;font-weight:500}
+.chart-canvas-wrap{position:relative;width:100%;height:220px}
+.chart-canvas-wrap.tall{height:280px}
+.chart-canvas-wrap.short{height:170px}
+.chart-empty-note{font-size:11px;color:#9ca3af;text-align:center;padding:16px 8px;background:#fafafa;border:1px dashed var(--border);border-radius:6px}
 /* ===== マニュアルタブ ===== */
 .manual-card{padding:0!important;overflow:hidden}
 .manual-hero{background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);color:#fff;padding:32px 28px}
@@ -500,7 +511,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v17.0</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v18.0</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -527,6 +538,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
         <nav class="sidebar-rail">
           <button class="sidebar-btn active" data-sub="seisan" onclick="showSub('jisseki','seisan')">📒 精算書</button>
           <button class="sidebar-btn" data-sub="daily" onclick="showSub('jisseki','daily')">📊 日販・客数</button>
+          <button class="sidebar-btn" data-sub="vs" onclick="showSub('jisseki','vs')">📈 計画 vs 実績</button>
         </nav>
         <div class="sidebar-pane">
 
@@ -611,10 +623,129 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
         </div>
       </div>
 
-      <!-- ===== 月次計画の保存と比較（旧：計画スナップショット） ===== -->
+      <!-- ===== グラフ：精算書をリアルタイム可視化 ===== -->
+      <div class="card">
+        <div class="section-title">📊 精算書グラフ <span style="font-size:11px;color:#6b7280;font-weight:400">— 入力に応じてリアルタイム更新</span></div>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <div class="chart-title">主要KPI 当月／先月／前年<span class="chart-sub">売上・粗利・店利益</span></div>
+            <div class="chart-canvas-wrap"><canvas id="chart-seisan-kpi"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">営業費の内訳<span class="chart-sub">当月・科目別</span></div>
+            <div class="chart-canvas-wrap"><canvas id="chart-seisan-eigyo"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">利益構造（粗利→営業費→店利益）<span class="chart-sub">当月</span></div>
+            <div class="chart-canvas-wrap"><canvas id="chart-seisan-pl"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">前年比トレンド<span class="chart-sub">主要科目</span></div>
+            <div class="chart-canvas-wrap"><canvas id="chart-seisan-yoy"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Tab 2: 日販・客数（実績グループの2枚目） ===== -->
+    <div class="tab-panel" id="tab2">
+      <div class="card">
+        <div class="section-title">月累計・先週実績</div>
+        <div class="overflow-auto">
+        <table>
+          <thead><tr><th>区分</th><th>売上</th><th>前年比%</th><th>客数（人）</th><th>前年比%</th><th>客単価</th></tr></thead>
+          <tbody>
+            <tr><td class="font-bold">月累計</td>
+              <td><input type="text" id="d-tsuki-uriage" inputmode="numeric" placeholder="0" oninput="calcDailyStats()"></td>
+              <td><input type="text" id="d-tsuki-uriage-nen" inputmode="decimal" placeholder="100" step="0.1" oninput="calcDailyStats()"></td>
+              <td><input type="text" id="d-tsuki-kyaku" inputmode="numeric" data-nounit placeholder="0" oninput="calcDailyStats()"></td>
+              <td><input type="text" id="d-tsuki-kyaku-nen" inputmode="decimal" placeholder="100" step="0.1" oninput="calcDailyStats()"></td>
+              <td id="d-tsuki-tanka" class="font-bold">¥—</td>
+            </tr>
+            <tr><td class="font-bold">先週実績</td>
+              <td><input type="text" id="d-sen-uriage" inputmode="numeric" placeholder="0" oninput="calcDailyStats()"></td>
+              <td><input type="text" id="d-sen-uriage-nen" inputmode="decimal" placeholder="100" step="0.1" oninput="calcDailyStats()"></td>
+              <td><input type="text" id="d-sen-kyaku" inputmode="numeric" data-nounit placeholder="0" oninput="calcDailyStats()"></td>
+              <td><input type="text" id="d-sen-kyaku-nen" inputmode="decimal" placeholder="100" step="0.1" oninput="calcDailyStats()"></td>
+              <td id="d-sen-tanka" class="font-bold">¥—</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">時間帯別実績</div>
+        <div class="overflow-auto">
+        <table>
+          <thead><tr><th>時間帯</th><th>売上</th><th>前年比%</th><th>構成比</th><th>客数</th><th>前年比%</th><th>構成比</th></tr></thead>
+          <tbody>
+            <tr><td class="font-bold">朝（0〜9時）</td>
+              <td><input type="text" id="t-asa-u" inputmode="numeric" placeholder="0" oninput="calcTimeStats()"></td>
+              <td><input type="text" id="t-asa-u-nen" inputmode="decimal" placeholder="100" step="0.1" oninput="calcTimeStats()"></td>
+              <td id="t-asa-u-rate" class="font-bold">—%</td>
+              <td><input type="text" id="t-asa-k" inputmode="numeric" data-nounit placeholder="0" oninput="calcTimeStats()"></td>
+              <td><input type="text" id="t-asa-k-nen" inputmode="decimal" placeholder="100" step="0.1" oninput="calcTimeStats()"></td>
+              <td id="t-asa-k-rate" class="font-bold">—%</td>
+            </tr>
+            <tr><td class="font-bold">昼（9〜16時）</td>
+              <td><input type="text" id="t-hiru-u" inputmode="numeric" placeholder="0" oninput="calcTimeStats()"></td>
+              <td><input type="text" id="t-hiru-u-nen" inputmode="decimal" placeholder="100" step="0.1" oninput="calcTimeStats()"></td>
+              <td id="t-hiru-u-rate" class="font-bold">—%</td>
+              <td><input type="text" id="t-hiru-k" inputmode="numeric" data-nounit placeholder="0" oninput="calcTimeStats()"></td>
+              <td><input type="text" id="t-hiru-k-nen" inputmode="decimal" placeholder="100" step="0.1" oninput="calcTimeStats()"></td>
+              <td id="t-hiru-k-rate" class="font-bold">—%</td>
+            </tr>
+            <tr><td class="font-bold">夕（16〜24時）</td>
+              <td><input type="text" id="t-yu-u" inputmode="numeric" placeholder="0" oninput="calcTimeStats()"></td>
+              <td><input type="text" id="t-yu-u-nen" inputmode="decimal" placeholder="100" step="0.1" oninput="calcTimeStats()"></td>
+              <td id="t-yu-u-rate" class="font-bold">—%</td>
+              <td><input type="text" id="t-yu-k" inputmode="numeric" data-nounit placeholder="0" oninput="calcTimeStats()"></td>
+              <td><input type="text" id="t-yu-k-nen" inputmode="decimal" placeholder="100" step="0.1" oninput="calcTimeStats()"></td>
+              <td id="t-yu-k-rate" class="font-bold">—%</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">曜日別4週平均実績</div>
+        <div class="overflow-auto">
+        <table id="youbi-grid">
+          <thead><tr><th>曜日</th><th>日販</th><th>先週差</th><th>客数</th><th>先週差</th><th>客単価</th><th>先週差</th></tr></thead>
+          <tbody id="youbi-body"></tbody>
+        </table>
+        </div>
+      </div>
+
+      <!-- ===== グラフ：日販・客数をリアルタイム可視化 ===== -->
+      <div class="card">
+        <div class="section-title">📊 日販・客数グラフ <span style="font-size:11px;color:#6b7280;font-weight:400">— 入力に応じてリアルタイム更新</span></div>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <div class="chart-title">時間帯別 売上構成<span class="chart-sub">朝／昼／夕</span></div>
+            <div class="chart-canvas-wrap"><canvas id="chart-time-uriage"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">時間帯別 客数構成<span class="chart-sub">朝／昼／夕</span></div>
+            <div class="chart-canvas-wrap"><canvas id="chart-time-kyaku"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">月累計 vs 先週<span class="chart-sub">売上・客数・客単価の前年比</span></div>
+            <div class="chart-canvas-wrap"><canvas id="chart-daily-yoy"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">曜日別 日販トレンド<span class="chart-sub">4週平均</span></div>
+            <div class="chart-canvas-wrap"><canvas id="chart-youbi"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Tab vs: 計画 vs 実績（実績グループの3枚目） ===== -->
+    <div class="tab-panel" id="tab-vs">
       <div class="card">
         <div class="flex justify-between items-center mb-2" style="flex-wrap:wrap;gap:6px">
-          <div class="section-title" style="margin:0">📊 月次計画の保存と比較<button class="help-btn" data-help-title="月次計画の保存と比較" data-help="<b>サイクル</b><br>① 月初：当月計画を立てたら「＋この計画を保存」<br>② 月末：精算書PDFを取込んで当月の実績を反映<br>③ 一覧から保存した計画をクリック → 右側に自動で計画 vs 実績の比較表示<br><br><b>記録される内容</b><br>・精算書（計画値）／ 月次目標 ／ FC-Cn条件 ／ 全施策（投資・効果）<br><br><b>右側に表示される項目</b><br>・主要科目の計画 vs 実績 vs 達成率<br>・施策別の計画ROI vs 実効ROI">?</button></div>
+          <div class="section-title" style="margin:0">📈 計画 vs 実績（月次計画の保存と比較）<button class="help-btn" data-help-title="計画 vs 実績の使い方" data-help="<b>サイクル</b><br>① 月初：当月計画を立てたら「＋この計画を保存」<br>② 月末：精算書PDFを取込んで当月の実績を反映<br>③ 一覧から保存した計画をクリック → 右側に自動で計画 vs 実績の比較表示<br><br><b>記録される内容</b><br>・精算書（計画値）／ 月次目標 ／ FC-Cn条件 ／ 全施策（投資・効果）<br><br><b>右側に表示される項目</b><br>・主要科目の計画 vs 実績 vs 達成率<br>・施策別の計画ROI vs 実効ROI">?</button></div>
         </div>
         <div id="snap-layout" class="snap-layout">
           <div class="snap-list-pane">
@@ -632,76 +763,29 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- ===== Tab 2: 日販・客数（実績グループの2枚目） ===== -->
-    <div class="tab-panel" id="tab2">
+      <!-- ===== グラフ：計画 vs 実績の可視化 ===== -->
       <div class="card">
-        <div class="section-title">月累計・先週実績</div>
-        <div class="overflow-auto">
-        <table>
-          <thead><tr><th>区分</th><th>売上</th><th>前年比%</th><th>客数（人）</th><th>前年比%</th><th>客単価</th></tr></thead>
-          <tbody>
-            <tr><td class="font-bold">月累計</td>
-              <td><input type="text" id="d-tsuki-uriage" inputmode="numeric" placeholder="0" oninput="calcDailyStats()"></td>
-              <td><input type="text" id="d-tsuki-uriage-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
-              <td><input type="text" id="d-tsuki-kyaku" inputmode="numeric" data-nounit placeholder="0" oninput="calcDailyStats()"></td>
-              <td><input type="text" id="d-tsuki-kyaku-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
-              <td id="d-tsuki-tanka" class="font-bold">¥—</td>
-            </tr>
-            <tr><td class="font-bold">先週実績</td>
-              <td><input type="text" id="d-sen-uriage" inputmode="numeric" placeholder="0" oninput="calcDailyStats()"></td>
-              <td><input type="text" id="d-sen-uriage-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
-              <td><input type="text" id="d-sen-kyaku" inputmode="numeric" data-nounit placeholder="0" oninput="calcDailyStats()"></td>
-              <td><input type="text" id="d-sen-kyaku-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
-              <td id="d-sen-tanka" class="font-bold">¥—</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="section-title">📊 計画 vs 実績グラフ <span style="font-size:11px;color:#6b7280;font-weight:400">— 選択中の保存計画と現在の実績を比較</span></div>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <div class="chart-title">主要KPI 達成率<span class="chart-sub">売上／粗利／店利益</span></div>
+            <div class="chart-canvas-wrap"><canvas id="chart-vs-tassei"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">科目別 計画 vs 実績<span class="chart-sub">金額（円）</span></div>
+            <div class="chart-canvas-wrap tall"><canvas id="chart-vs-kamoku"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">施策ROI 計画 vs 実績<span class="chart-sub">投資対効果%</span></div>
+            <div class="chart-canvas-wrap tall"><canvas id="chart-vs-roi"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">差額サマリー<span class="chart-sub">実績 − 計画</span></div>
+            <div class="chart-canvas-wrap"><canvas id="chart-vs-diff"></canvas></div>
+          </div>
         </div>
-      </div>
-      <div class="card">
-        <div class="section-title">時間帯別実績</div>
-        <div class="overflow-auto">
-        <table>
-          <thead><tr><th>時間帯</th><th>売上</th><th>前年比%</th><th>構成比</th><th>客数</th><th>前年比%</th><th>構成比</th></tr></thead>
-          <tbody>
-            <tr><td class="font-bold">朝（0〜9時）</td>
-              <td><input type="text" id="t-asa-u" inputmode="numeric" placeholder="0" oninput="calcTimeStats()"></td>
-              <td><input type="text" id="t-asa-u-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
-              <td id="t-asa-u-rate" class="font-bold">—%</td>
-              <td><input type="text" id="t-asa-k" inputmode="numeric" data-nounit placeholder="0" oninput="calcTimeStats()"></td>
-              <td><input type="text" id="t-asa-k-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
-              <td id="t-asa-k-rate" class="font-bold">—%</td>
-            </tr>
-            <tr><td class="font-bold">昼（9〜16時）</td>
-              <td><input type="text" id="t-hiru-u" inputmode="numeric" placeholder="0" oninput="calcTimeStats()"></td>
-              <td><input type="text" id="t-hiru-u-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
-              <td id="t-hiru-u-rate" class="font-bold">—%</td>
-              <td><input type="text" id="t-hiru-k" inputmode="numeric" data-nounit placeholder="0" oninput="calcTimeStats()"></td>
-              <td><input type="text" id="t-hiru-k-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
-              <td id="t-hiru-k-rate" class="font-bold">—%</td>
-            </tr>
-            <tr><td class="font-bold">夕（16〜24時）</td>
-              <td><input type="text" id="t-yu-u" inputmode="numeric" placeholder="0" oninput="calcTimeStats()"></td>
-              <td><input type="text" id="t-yu-u-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
-              <td id="t-yu-u-rate" class="font-bold">—%</td>
-              <td><input type="text" id="t-yu-k" inputmode="numeric" data-nounit placeholder="0" oninput="calcTimeStats()"></td>
-              <td><input type="text" id="t-yu-k-nen" inputmode="decimal" placeholder="100" step="0.1"></td>
-              <td id="t-yu-k-rate" class="font-bold">—%</td>
-            </tr>
-          </tbody>
-        </table>
-        </div>
-      </div>
-      <div class="card">
-        <div class="section-title">曜日別4週平均実績</div>
-        <div class="overflow-auto">
-        <table id="youbi-grid">
-          <thead><tr><th>曜日</th><th>日販</th><th>先週差</th><th>客数</th><th>先週差</th><th>客単価</th><th>先週差</th></tr></thead>
-          <tbody id="youbi-body"></tbody>
-        </table>
-        </div>
+        <div id="chart-vs-empty" class="chart-empty-note" style="margin-top:8px;display:none">👈 左の一覧から保存計画を選ぶと、計画 vs 実績のグラフが描画されます。</div>
       </div>
     </div>
 
@@ -1663,7 +1747,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v17.0';
+const APP_VERSION='v18.0';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -2235,6 +2319,11 @@ function setupDropZones(){
 }
 
 console.log('[keiei-plan] '+APP_VERSION+' loaded at '+new Date().toLocaleString('ja-JP'));
+// ヘッダーのバージョン表示を APP_VERSION から自動同期（ハードコード忘れ防止）
+(function(){
+  const el=document.getElementById('app-version');
+  if(el)el.textContent=APP_VERSION;
+})();
 
 // ===== FILE PICKER (universal, robust) =====
 window.pickFile=function(inputId){
@@ -2489,7 +2578,7 @@ const dispConv=(id,v)=>{const el=document.getElementById(id);if(el)el.textConten
 // ===== TAB / GROUP / SUBTAB =====
 // グループ → サブタブ → 実体パネルID のマップ
 const SUB_MAP={
-  jisseki:{seisan:'tab0',daily:'tab2'},
+  jisseki:{seisan:'tab0',daily:'tab2',vs:'tab-vs'},
   plan:{
     'plan-main':'tab1',
     'plan-cat':'tab1-cat',
@@ -2536,6 +2625,9 @@ function showSub(g,sub){
 
 function triggerSubRender(panelId){
   // 旧showTab(n)で呼んでいた初期化を、新ID対応で再現
+  if(panelId==='tab0'){try{renderSeisanCharts();}catch(e){console.warn('seisan charts',e)}}
+  if(panelId==='tab2'){try{renderDailyCharts();}catch(e){console.warn('daily charts',e)}}
+  if(panelId==='tab-vs'){try{renderSnapList();renderVsCharts();}catch(e){console.warn('vs charts',e)}}
   if(panelId==='tab1')renderPuzzleTable();
   if(panelId==='tab1-cat')renderCategoryTab();
   if(panelId==='tab1-cn')calcCnSupport();
@@ -2554,7 +2646,8 @@ function triggerSubRender(panelId){
 function showTab(n){
   const map={0:['jisseki','seisan'],1:['plan','plan-main'],2:['jisseki','daily'],
     3:['plan','plan-cat'],4:['plan','plan-sessaku'],5:['plan','plan-kensho'],
-    6:['plan','plan-qsc'],7:['plan','plan-season'],8:['plan','plan-order'],9:['other','']};
+    6:['plan','plan-qsc'],7:['plan','plan-season'],8:['plan','plan-order'],9:['other',''],
+    'vs':['jisseki','vs']};
   const [g,s]=map[n]||['jisseki','seisan'];
   showGroup(g);if(s)showSub(g,s);
 }
@@ -2744,6 +2837,9 @@ function calcSeisan(){
   setText('inv-available',fmt(toshi*UNIT.factor));
   calcMonthly();
   updateROI();
+  // リアルタイムグラフ更新
+  try{renderSeisanCharts();}catch(e){}
+  try{if(document.getElementById('tab-vs')?.classList.contains('active'))renderVsCharts();}catch(e){}
   saveAll();
 }
 
@@ -3121,6 +3217,7 @@ function snapshotPlan(){
   _selectedSnapId = snap.id;
   renderSnapList();
   renderSnapCompare(snap.id);
+  try{renderVsCharts();}catch(e){}
   showToast(`✅ ${label} の計画を保存しました（${snap.sessaku.length}施策）`);
 }
 
@@ -3133,6 +3230,7 @@ function deleteSnapshot(id, ev){
   renderSnapList();
   if(_selectedSnapId)renderSnapCompare(_selectedSnapId);
   else clearSnapCompare();
+  try{renderVsCharts();}catch(e){}
 }
 
 function updateSnapshotNote(id, note){
@@ -3144,6 +3242,7 @@ function selectSnap(id){
   _selectedSnapId = id;
   renderSnapList();
   renderSnapCompare(id);
+  try{renderVsCharts();}catch(e){}
 }
 
 // 後方互換（古いコード/テンプレ用）
@@ -3285,6 +3384,336 @@ function renderSnapCompare(id){
     html += '</details>';
   }
   pane.innerHTML = html;
+}
+
+// ===== Chart.js グラフ描画ユーティリティ =====
+// 各 canvas に紐付く Chart インスタンスを保持して、再描画前に destroy する
+const _chartReg = {};
+function _chartGet(id){return _chartReg[id]||null;}
+function _chartSet(id, c){_chartReg[id]=c;}
+function _chartDestroy(id){const c=_chartReg[id];if(c){try{c.destroy()}catch(e){}delete _chartReg[id];}}
+function _hasChartLib(){return typeof window.Chart !== 'undefined';}
+function _yenTick(v){
+  if(v==null||isNaN(v))return '';
+  const a=Math.abs(v);
+  if(a>=1e8)return (v/1e8).toFixed(1)+'億';
+  if(a>=1e4)return (v/1e4).toFixed(0)+'万';
+  return v.toLocaleString();
+}
+const _chartColors = {
+  curr:'rgba(33,150,243,0.85)',     // 当月（青）
+  prev:'rgba(255,152,0,0.75)',      // 先月（オレンジ）
+  ly  :'rgba(156,39,176,0.65)',     // 前年（紫）
+  plan:'rgba(96,165,250,0.85)',     // 計画（水色）
+  actual:'rgba(34,197,94,0.85)',    // 実績（緑）
+  bad :'rgba(239,68,68,0.85)',      // 赤
+  warn:'rgba(245,158,11,0.85)',     // 黄
+  good:'rgba(16,185,129,0.85)',     // 緑
+  palette:[
+    '#2196f3','#ff9800','#9c27b0','#4caf50','#ff5722',
+    '#00bcd4','#ffc107','#795548','#607d8b','#e91e63',
+    '#3f51b5','#8bc34a','#cddc39','#009688','#673ab7'
+  ]
+};
+
+// ----- 精算書タブ用グラフ -----
+function renderSeisanCharts(){
+  if(!_hasChartLib())return;
+  if(!document.getElementById('chart-seisan-kpi'))return; // パネル未表示
+  const s=state.seisan||{}, p=state.seisan_prev||{}, l=state.seisan_lastyear||{};
+  const sum=(b,r)=>{try{return sumCalc(SEISAN_ROWS.find(x=>x.key===r),b||{})}catch(e){return 0}};
+  const u=(b)=>(b.uriage||0)+(b.sonotauriage||0);
+
+  // 主要KPI（売上／粗利／店利益）3列バー
+  {
+    const ctx=document.getElementById('chart-seisan-kpi');
+    if(ctx){
+      _chartDestroy('chart-seisan-kpi');
+      _chartSet('chart-seisan-kpi', new Chart(ctx,{type:'bar',
+        data:{labels:['売上高','粗利','店利益'],
+          datasets:[
+            {label:'当月',backgroundColor:_chartColors.curr,data:[u(s),sum(s,'arari'),sum(s,'_tenrieki')]},
+            {label:'先月',backgroundColor:_chartColors.prev,data:[u(p),sum(p,'arari'),sum(p,'_tenrieki')]},
+            {label:'前年',backgroundColor:_chartColors.ly,data:[u(l),sum(l,'arari'),sum(l,'_tenrieki')]}
+          ]},
+        options:{responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{position:'top',labels:{font:{size:11}}},
+            tooltip:{callbacks:{label:c=>c.dataset.label+': ¥'+(c.parsed.y||0).toLocaleString()}}},
+          scales:{y:{ticks:{font:{size:10},callback:v=>'¥'+_yenTick(v)}},x:{ticks:{font:{size:11}}}}}
+      }));
+    }
+  }
+
+  // 営業費の内訳（doughnut）
+  {
+    const ctx=document.getElementById('chart-seisan-eigyo');
+    if(ctx){
+      const items=[
+        ['給与',s.kyuyo],['法定福利',s.houtei_fukuri],['見切',s.mikiri],['ロス',s.loss],
+        ['消耗品',s.shomohin],['包装',s.hoso],['清掃',s.shuzen],['電話',s.setsubi_lease],
+        ['設備修繕',s.setsubi_shuzen],['一般維持',s.tsushin],['水道光熱',s.konetsu],
+        ['雑費',s.zappi],['非課税',s.hieigyo],['損害保険',s.songai]
+      ].filter(x=>(x[1]||0)>0);
+      _chartDestroy('chart-seisan-eigyo');
+      if(items.length){
+        _chartSet('chart-seisan-eigyo', new Chart(ctx,{type:'doughnut',
+          data:{labels:items.map(x=>x[0]),datasets:[{data:items.map(x=>x[1]||0),
+            backgroundColor:_chartColors.palette,borderWidth:1,borderColor:'#fff'}]},
+          options:{responsive:true,maintainAspectRatio:false,
+            plugins:{legend:{position:'right',labels:{font:{size:10},boxWidth:10}},
+              tooltip:{callbacks:{label:c=>c.label+': ¥'+(c.parsed||0).toLocaleString()}}}}
+        }));
+      }else{
+        const c2=ctx.getContext('2d');c2.clearRect(0,0,ctx.width,ctx.height);
+        c2.fillStyle='#9ca3af';c2.font='12px sans-serif';c2.textAlign='center';
+        c2.fillText('営業費が未入力です',ctx.width/2,ctx.height/2);
+      }
+    }
+  }
+
+  // 利益構造（売上→粗利→営業費→店利益）waterfall風 横バー
+  {
+    const ctx=document.getElementById('chart-seisan-pl');
+    if(ctx){
+      _chartDestroy('chart-seisan-pl');
+      const arari=sum(s,'arari'), eigyo=sum(s,'_eigyokei'), rieki=sum(s,'_tenrieki');
+      _chartSet('chart-seisan-pl', new Chart(ctx,{type:'bar',
+        data:{labels:['売上高','粗利','営業費','店利益'],
+          datasets:[{label:'金額',data:[u(s),arari,eigyo,rieki],
+            backgroundColor:[_chartColors.curr,_chartColors.good,_chartColors.warn,_chartColors.actual],
+            borderWidth:0}]},
+        options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false},
+            tooltip:{callbacks:{label:c=>'¥'+(c.parsed.x||0).toLocaleString()}}},
+          scales:{x:{ticks:{font:{size:10},callback:v=>'¥'+_yenTick(v)}},y:{ticks:{font:{size:11}}}}}
+      }));
+    }
+  }
+
+  // 前年比トレンド（売上・粗利・営業費・店利益）
+  {
+    const ctx=document.getElementById('chart-seisan-yoy');
+    if(ctx){
+      _chartDestroy('chart-seisan-yoy');
+      const calc=(b)=>[u(b),sum(b,'arari'),sum(b,'_eigyokei'),sum(b,'_tenrieki')];
+      const cur=calc(s), ly=calc(l);
+      const yoy=cur.map((v,i)=>ly[i]?(v/ly[i]*100):null);
+      _chartSet('chart-seisan-yoy', new Chart(ctx,{type:'bar',
+        data:{labels:['売上','粗利','営業費','店利益'],
+          datasets:[{label:'前年比%',data:yoy.map(v=>v==null?0:v),
+            backgroundColor:yoy.map(v=>v==null?'#cbd5e1':(v>=100?_chartColors.good:_chartColors.bad)),
+            borderWidth:0}]},
+        options:{responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false},
+            tooltip:{callbacks:{label:c=>{const v=yoy[c.dataIndex];return v==null?'前年データなし':'前年比 '+v.toFixed(1)+'%';}}}},
+          scales:{y:{beginAtZero:true,ticks:{font:{size:10},callback:v=>v+'%'},
+            grid:{color:c=>c.tick.value===100?'#1e3a5f':'#e5e7eb'}}}}
+      }));
+    }
+  }
+}
+
+// ----- 日販・客数タブ用グラフ -----
+function renderDailyCharts(){
+  if(!_hasChartLib())return;
+  if(!document.getElementById('chart-time-uriage'))return;
+  const num=id=>parseFloat((document.getElementById(id)?.value||'0').toString().replace(/[^\d.\-]/g,''))||0;
+
+  const au=num('t-asa-u'),hu=num('t-hiru-u'),yu=num('t-yu-u');
+  const ak=num('t-asa-k'),hk=num('t-hiru-k'),yk=num('t-yu-k');
+  const aun=num('t-asa-u-nen'),hun=num('t-hiru-u-nen'),yun=num('t-yu-u-nen');
+  const akn=num('t-asa-k-nen'),hkn=num('t-hiru-k-nen'),ykn=num('t-yu-k-nen');
+
+  // 時間帯別 売上構成
+  {
+    const ctx=document.getElementById('chart-time-uriage');
+    if(ctx){
+      _chartDestroy('chart-time-uriage');
+      _chartSet('chart-time-uriage', new Chart(ctx,{type:'bar',
+        data:{labels:['朝(0-9)','昼(9-16)','夕(16-24)'],
+          datasets:[
+            {label:'売上',backgroundColor:_chartColors.curr,data:[au,hu,yu],yAxisID:'y'},
+            {type:'line',label:'前年比%',borderColor:_chartColors.ly,backgroundColor:_chartColors.ly,
+              data:[aun,hun,yun],yAxisID:'y1',tension:0.3,pointRadius:4}
+          ]},
+        options:{responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{position:'top',labels:{font:{size:11}}}},
+          scales:{
+            y:{position:'left',ticks:{font:{size:10},callback:v=>'¥'+_yenTick(v)}},
+            y1:{position:'right',grid:{drawOnChartArea:false},ticks:{font:{size:10},callback:v=>v+'%'}}}}
+      }));
+    }
+  }
+
+  // 時間帯別 客数構成
+  {
+    const ctx=document.getElementById('chart-time-kyaku');
+    if(ctx){
+      _chartDestroy('chart-time-kyaku');
+      _chartSet('chart-time-kyaku', new Chart(ctx,{type:'bar',
+        data:{labels:['朝(0-9)','昼(9-16)','夕(16-24)'],
+          datasets:[
+            {label:'客数',backgroundColor:_chartColors.actual,data:[ak,hk,yk],yAxisID:'y'},
+            {type:'line',label:'前年比%',borderColor:_chartColors.ly,backgroundColor:_chartColors.ly,
+              data:[akn,hkn,ykn],yAxisID:'y1',tension:0.3,pointRadius:4}
+          ]},
+        options:{responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{position:'top',labels:{font:{size:11}}}},
+          scales:{
+            y:{position:'left',ticks:{font:{size:10}}},
+            y1:{position:'right',grid:{drawOnChartArea:false},ticks:{font:{size:10},callback:v=>v+'%'}}}}
+      }));
+    }
+  }
+
+  // 月累計 vs 先週（売上・客数の前年比）
+  {
+    const ctx=document.getElementById('chart-daily-yoy');
+    if(ctx){
+      const tu_n=num('d-tsuki-uriage-nen'), tk_n=num('d-tsuki-kyaku-nen');
+      const su_n=num('d-sen-uriage-nen'),  sk_n=num('d-sen-kyaku-nen');
+      _chartDestroy('chart-daily-yoy');
+      _chartSet('chart-daily-yoy', new Chart(ctx,{type:'bar',
+        data:{labels:['売上 前年比','客数 前年比'],
+          datasets:[
+            {label:'月累計',backgroundColor:_chartColors.curr,data:[tu_n,tk_n]},
+            {label:'先週',backgroundColor:_chartColors.prev,data:[su_n,sk_n]}
+          ]},
+        options:{responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{position:'top',labels:{font:{size:11}}}},
+          scales:{y:{beginAtZero:true,ticks:{font:{size:10},callback:v=>v+'%'},
+            grid:{color:c=>c.tick.value===100?'#1e3a5f':'#e5e7eb'}}}}
+      }));
+    }
+  }
+
+  // 曜日別 日販トレンド
+  {
+    const ctx=document.getElementById('chart-youbi');
+    if(ctx){
+      _chartDestroy('chart-youbi');
+      const labels=(typeof DAYS!=='undefined'?DAYS:['月','火','水','木','金','土','日']);
+      const vals=labels.map((_,i)=>parseFloat((document.getElementById('yb-u-'+i)?.value||'').toString().replace(/[^\d.\-]/g,''))||0);
+      _chartSet('chart-youbi', new Chart(ctx,{type:'line',
+        data:{labels:labels,
+          datasets:[{label:'日販',data:vals,borderColor:_chartColors.curr,
+            backgroundColor:'rgba(33,150,243,0.15)',fill:true,tension:0.35,pointRadius:5}]},
+        options:{responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false},
+            tooltip:{callbacks:{label:c=>'¥'+(c.parsed.y||0).toLocaleString()}}},
+          scales:{y:{ticks:{font:{size:10},callback:v=>'¥'+_yenTick(v)}}}}
+      }));
+    }
+  }
+}
+
+// ----- 計画 vs 実績タブ用グラフ -----
+function renderVsCharts(){
+  if(!_hasChartLib())return;
+  if(!document.getElementById('chart-vs-tassei'))return;
+  const empty=document.getElementById('chart-vs-empty');
+  const id=_selectedSnapId;
+  const h = id ? (state.history||[]).find(x=>x.id===id) : null;
+  ['chart-vs-tassei','chart-vs-kamoku','chart-vs-roi','chart-vs-diff'].forEach(_chartDestroy);
+  if(!h){if(empty)empty.style.display='block';return;}
+  if(empty)empty.style.display='none';
+
+  const planned=h.seisan_planned||{}, actual=state.seisan||{};
+  const sum=(b,r)=>{try{return sumCalc(SEISAN_ROWS.find(x=>x.key===r),b||{})}catch(e){return 0}};
+  const u=(b)=>(b.uriage||0)+(b.sonotauriage||0);
+  // 計画店利益・実績店利益
+  let planTen=0;
+  try{
+    const cnP=simCn({type:h.cnPlan?.type||'cn',h24:h.cnPlan?.h24||1,nissu:h.cnPlan?.nissu||30,koyomi:h.cnPlan?.koyomi||30,firstYear:h.cnPlan?.firstYear||0,uriage:planned.uriage||0,sonota:planned.sonotauriage||0,cr:h.cnPlan?.cr||72,mikiri:h.cnPlan?.mikiri||0,tanaloss:h.cnPlan?.tanaloss||0,konetsu:h.cnPlan?.konetsu||0,eigyoOther:h.cnPlan?.eigyoOther||0,zatsuOther:h.cnPlan?.zatsuOther||0});
+    planTen=cnP.tenrieki||0;
+  }catch(e){planTen=sum(planned,'_tenrieki');}
+  const actTen=(typeof window._lastTenrieki==='number')?window._lastTenrieki:sum(actual,'_tenrieki');
+
+  // 主要KPI 達成率（％）
+  {
+    const ctx=document.getElementById('chart-vs-tassei');
+    const labels=['売上高','粗利','店利益'];
+    const planVals=[u(planned),sum(planned,'arari'),planTen];
+    const actVals=[u(actual),sum(actual,'arari'),actTen];
+    const tassei=planVals.map((p,i)=>p>0?(actVals[i]/p*100):null);
+    _chartSet('chart-vs-tassei', new Chart(ctx,{type:'bar',
+      data:{labels:labels,datasets:[{label:'達成率%',data:tassei.map(v=>v==null?0:v),
+        backgroundColor:tassei.map(v=>v==null?'#cbd5e1':(v>=100?_chartColors.good:v>=80?_chartColors.warn:_chartColors.bad))}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},
+          tooltip:{callbacks:{label:c=>{const v=tassei[c.dataIndex];return v==null?'計画なし':'達成率 '+v.toFixed(1)+'%';}}}},
+        scales:{y:{beginAtZero:true,ticks:{font:{size:10},callback:v=>v+'%'},
+          grid:{color:c=>c.tick.value===100?'#1e3a5f':'#e5e7eb'}}}}
+    }));
+  }
+
+  // 科目別 計画 vs 実績
+  {
+    const ctx=document.getElementById('chart-vs-kamoku');
+    const focusKeys=['uriage','sonotauriage','arari','chaji','kyuyo','konetsu','mikiri','urihen','zappi','mikiri_shien','denki_shien'];
+    const labels=focusKeys.map(k=>SEISAN_ROWS.find(r=>r.key===k)?.name||k);
+    const planArr=focusKeys.map(k=>planned[k]||0);
+    const actArr=focusKeys.map(k=>actual[k]||0);
+    _chartSet('chart-vs-kamoku', new Chart(ctx,{type:'bar',
+      data:{labels:labels,
+        datasets:[
+          {label:'計画',backgroundColor:_chartColors.plan,data:planArr},
+          {label:'実績',backgroundColor:_chartColors.actual,data:actArr}
+        ]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'top',labels:{font:{size:11}}},
+          tooltip:{callbacks:{label:c=>c.dataset.label+': ¥'+(c.parsed.x||0).toLocaleString()}}},
+        scales:{x:{ticks:{font:{size:10},callback:v=>'¥'+_yenTick(v)}},y:{ticks:{font:{size:10}}}}}
+    }));
+  }
+
+  // 施策ROI 計画 vs 実績
+  {
+    const ctx=document.getElementById('chart-vs-roi');
+    const sess=h.sessaku||[];
+    if(sess.length){
+      const planU=planned.uriage||0, actU=actual.uriage||0;
+      const totalEff=sess.reduce((s,x)=>s+(x.effect||0),0);
+      const totalDiff=actU-(planU-totalEff);
+      const planROI=sess.map(s=>(s.invest||0)>0?((s.effect||0)/s.invest*100):0);
+      const actROI=sess.map(s=>{
+        const eff=totalEff>0?totalDiff*((s.effect||0)/totalEff):0;
+        return (s.invest||0)>0?(eff/s.invest*100):0;
+      });
+      _chartSet('chart-vs-roi', new Chart(ctx,{type:'bar',
+        data:{labels:sess.map(s=>s.name||'(無名)'),
+          datasets:[
+            {label:'計画ROI%',backgroundColor:_chartColors.plan,data:planROI},
+            {label:'実績ROI%',backgroundColor:_chartColors.actual,data:actROI}
+          ]},
+        options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{position:'top',labels:{font:{size:11}}},
+            tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.parsed.x||0).toFixed(0)+'%'}}},
+          scales:{x:{beginAtZero:true,ticks:{font:{size:10},callback:v=>v+'%'}},y:{ticks:{font:{size:10}}}}}
+      }));
+    }else{
+      const c2=ctx.getContext('2d');c2.clearRect(0,0,ctx.width,ctx.height);
+      c2.fillStyle='#9ca3af';c2.font='12px sans-serif';c2.textAlign='center';
+      c2.fillText('保存計画に施策が含まれていません',ctx.width/2,ctx.height/2);
+    }
+  }
+
+  // 差額サマリー（実績 − 計画）
+  {
+    const ctx=document.getElementById('chart-vs-diff');
+    const keys=['uriage','arari','chaji','kyuyo','konetsu','mikiri','urihen','zappi'];
+    const labels=keys.map(k=>SEISAN_ROWS.find(r=>r.key===k)?.name||k);
+    const diffs=keys.map(k=>(actual[k]||0)-(planned[k]||0));
+    _chartSet('chart-vs-diff', new Chart(ctx,{type:'bar',
+      data:{labels:labels,datasets:[{label:'実績−計画',data:diffs,
+        backgroundColor:diffs.map(v=>v>=0?_chartColors.good:_chartColors.bad)}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},
+          tooltip:{callbacks:{label:c=>(c.parsed.y>=0?'+¥':'-¥')+Math.abs(c.parsed.y||0).toLocaleString()}}},
+        scales:{y:{ticks:{font:{size:10},callback:v=>(v>=0?'+':'')+_yenTick(v)},
+          grid:{color:c=>c.tick.value===0?'#1e3a5f':'#e5e7eb'}}}}
+    }));
+  }
 }
 
 // 軽量トースト通知
@@ -4753,6 +5182,7 @@ function calcDailyStats(){
   setText('d-tsuki-tanka',tu&&tk?fmt(tu/tk):'¥—');
   const su=man('d-sen-uriage'),sk=num('d-sen-kyaku');
   setText('d-sen-tanka',su&&sk?fmt(su/sk):'¥—');
+  try{renderDailyCharts();}catch(e){}
   saveAll();
 }
 function calcTimeStats(){
@@ -4765,6 +5195,7 @@ function calcTimeStats(){
   setText('t-asa-k-rate',totK?pct(ak,totK):'—%');
   setText('t-hiru-k-rate',totK?pct(hk,totK):'—%');
   setText('t-yu-k-rate',totK?pct(yk,totK):'—%');
+  try{renderDailyCharts();}catch(e){}
   saveAll();
 }
 function initYoubiGrid(){
@@ -4790,6 +5221,7 @@ function saveYoubi(){
       state.daily.youbi[i][k]=parseFloat(document.getElementById(ids[j]+i)?.value)||0;
     });
   });
+  try{renderDailyCharts();}catch(e){}
   saveAll();
 }
 
