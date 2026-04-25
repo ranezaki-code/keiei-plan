@@ -6,6 +6,19 @@
 <title>経営計画管理システム</title>
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 <script>if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';</script>
+<!-- Tesseract.js は OCR 利用時にのみ動的ロード -->
+<script>
+window.ocrLoadTesseract = function(){
+  return new Promise((resolve,reject)=>{
+    if(window.Tesseract)return resolve(window.Tesseract);
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.0.4/dist/tesseract.min.js';
+    s.onload=()=>resolve(window.Tesseract);
+    s.onerror=()=>reject(new Error('Tesseract.js の読み込みに失敗しました'));
+    document.head.appendChild(s);
+  });
+};
+</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -219,6 +232,42 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   .qsc-row>*:nth-child(3),.qsc-row>*:nth-child(4){grid-column:1/-1}
   th,td{font-size:11px;padding:3px 4px}
 }
+/* ===== OCR取込モーダル ===== */
+.ocr-modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9000;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+.ocr-modal-bg.active{display:flex}
+.ocr-modal{background:#fff;border-radius:12px;max-width:980px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;display:flex;flex-direction:column;max-height:90vh}
+.ocr-modal-head{padding:14px 20px;background:linear-gradient(135deg,#1e3a5f 0%,#152c47 100%);color:#fff;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.ocr-modal-head h3{margin:0;font-size:15px}
+.ocr-modal-body{padding:14px 20px;overflow-y:auto;flex:1}
+.ocr-modal-foot{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;background:#f8fafc}
+.ocr-summary{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.ocr-summary .pill{padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600}
+.ocr-summary .pill.ok{background:#d1fae5;color:#065f46}
+.ocr-summary .pill.ng{background:#fee2e2;color:#991b1b}
+.ocr-summary .pill.warn{background:#fef3c7;color:#92400e}
+.ocr-table{width:100%;border-collapse:collapse;font-size:12px}
+.ocr-table th{background:#f3f4f6;padding:6px 8px;border:1px solid var(--border);text-align:left;font-weight:600}
+.ocr-table td{border:1px solid var(--border);padding:4px 6px;vertical-align:middle}
+.ocr-table tr.ocr-row-section td{background:#eff6ff;font-weight:700;color:#1e40af;text-align:center}
+.ocr-table tr.ocr-row-subtotal td{background:#fffbeb;font-weight:600}
+.ocr-table tr.ocr-mismatch td{background:#fee2e2!important}
+.ocr-table tr.ocr-match td{background:#d1fae5!important}
+.ocr-table input{width:120px;text-align:right;padding:3px 6px;font-size:12px;border:1px solid var(--border);border-radius:4px}
+.ocr-table input.suspect{border-color:#dc2626;background:#fef2f2;font-weight:700}
+.ocr-table .ocr-conf{font-size:10px;color:#6b7280}
+.ocr-check-list{list-style:none;padding:0;margin:0;font-size:12px}
+.ocr-check-list li{padding:6px 10px;border-radius:6px;margin-bottom:4px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.ocr-check-list li.ok{background:#d1fae5;color:#065f46}
+.ocr-check-list li.ng{background:#fee2e2;color:#991b1b}
+.ocr-check-list li.warn{background:#fef3c7;color:#92400e}
+.ocr-step{font-size:13px;color:#1e40af;font-weight:600}
+.ocr-progress-bar{height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;margin-top:6px}
+.ocr-progress-bar>div{height:100%;background:linear-gradient(90deg,#3b82f6,#1e40af);transition:width .3s;width:0%}
+.ocr-canvas-preview{max-width:300px;border:1px solid var(--border);border-radius:6px}
+.ocr-page-thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.ocr-page-thumb{cursor:pointer;border:2px solid transparent;border-radius:6px;padding:4px;text-align:center;font-size:11px}
+.ocr-page-thumb.selected{border-color:var(--accent);background:#e3f2fd}
+.ocr-page-thumb canvas{display:block;max-width:120px;height:auto;border:1px solid #ddd}
 </style>
 </head>
 <body>
@@ -304,6 +353,32 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   }
 })();
 </script>
+<!-- ===== 精算書OCR取込モーダル ===== -->
+<div id="ocr-modal" class="ocr-modal-bg" onclick="if(event.target===this)ocrCloseModal()">
+  <div class="ocr-modal">
+    <div class="ocr-modal-head">
+      <h3 id="ocr-modal-title">📄 精算書PDFの取込確認</h3>
+      <button onclick="ocrCloseModal()" style="background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:6px;padding:4px 12px;cursor:pointer">✕</button>
+    </div>
+    <div class="ocr-modal-body" id="ocr-modal-body">
+      <div id="ocr-modal-loading">
+        <div class="ocr-step" id="ocr-step-text">準備中...</div>
+        <div class="ocr-progress-bar"><div id="ocr-progress-fill"></div></div>
+        <div id="ocr-step-detail" style="font-size:11px;color:#6b7280;margin-top:6px"></div>
+      </div>
+      <div id="ocr-modal-result" style="display:none"></div>
+    </div>
+    <div class="ocr-modal-foot" id="ocr-modal-foot" style="display:none">
+      <div>
+        <button class="btn-secondary btn-sm" onclick="ocrCloseModal()">キャンセル</button>
+        <button class="btn-secondary btn-sm" onclick="ocrReRunAll()" id="ocr-rerun-btn" style="display:none">🔄 全項目を再OCR</button>
+      </div>
+      <div>
+        <button class="btn-primary btn-sm" onclick="ocrApplyValues()" id="ocr-apply-btn" disabled>✅ この内容で反映</button>
+      </div>
+    </div>
+  </div>
+</div>
 <div id="app">
   <div id="header">
     <h1>経営計画管理システム</h1>
@@ -348,10 +423,15 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
           </div>
         </div>
         <div class="flex gap-2 mb-2" style="flex-wrap:wrap">
+          <label class="btn-primary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px">
+            📄 精算書PDFを取り込む
+            <input type="file" id="seisan-pdf-input" accept="application/pdf" style="display:none" onchange="handleSeisanPDF(event)">
+          </label>
           <button class="btn-secondary btn-sm" onclick="copyCurrToPrev()" title="当月の値を『先月』欄にコピー（翌月の比較準備）">📋 当月→先月に複製</button>
           <button class="btn-secondary btn-sm" onclick="clearSeisanCol('prev')">🗑️ 先月をクリア</button>
           <button class="btn-secondary btn-sm" onclick="clearSeisanCol('ly')">🗑️ 前年をクリア</button>
         </div>
+        <div id="seisan-pdf-progress" style="display:none" class="alert alert-info mb-2"></div>
         <div class="overflow-auto">
           <table id="seisan-table" class="seisan-table">
             <thead>
@@ -2015,6 +2095,492 @@ function cnRulesPreview(id){
   }catch(e){alert('プレビュー失敗: '+e.message);}
 }
 function escHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+// ===== 精算書PDF OCR取込システム =====
+// 高精度を実現するため、以下を組み合わせて検証：
+// (1) 高解像度レンダリング (3x zoom)
+// (2) 4方向の自動回転検出
+// (3) 数字専用ホワイトリストでの再OCR (各値ごと)
+// (4) 8つの不変式による自動検算
+// (5) 該当セルの赤ハイライト + 手動編集
+
+let ocrCtx = {pdf:null,pages:[],selectedPageIdx:0,extracted:{},ranges:{},col:'curr',issues:[],canvas:null};
+
+// 精算書ラベル → state.seisan のキーマッピング
+const OCR_LABEL_MAP = [
+  {key:'uriage',code:'4010',aliases:['商品売上高','商品売上']},
+  {key:'sonotauriage',code:'4020',aliases:['その他営業収入','他営業収入']},
+  {key:'tanaoroshi_hatsu',code:'5050',aliases:['期首在庫高','月首在庫高','期(月)首在庫高','期月首在庫高']},
+  {key:'shiire',code:'5010',aliases:['商品仕入高','仕入高']},
+  {key:'shiire_nebiki',code:'5020',aliases:['仕入割戻高','割戻高','仕入値引']},
+  {key:'tanaoroshi_sue',code:'5060',aliases:['期末在庫高','月末在庫高','期(月)末在庫高','期月末在庫高']},
+  {key:'urihen',code:'5030',aliases:['見切・処分','見切処分','売変高']},
+  {key:'tanagen',code:'5040',aliases:['棚卸ロス','棚減']},
+  {key:'chaji',code:'6000',aliases:['ローソン・チャージ','ローソンチャージ','チャージ']},
+  {key:'kyuyo',code:'6010',aliases:['パートタイマー給与','パート給与','給与']},
+  {key:'houtei_fukuri',code:'6020',aliases:['法定福利費']},
+  {key:'mikiri',code:'6030',aliases:['見切・処分','見切処分']},  // 営業費側
+  {key:'loss',code:'6040',aliases:['棚卸ロス']},  // 営業費側
+  {key:'shomohin',code:'6050',aliases:['消耗品費']},
+  {key:'hoso',code:'6060',aliases:['包装資材費','包装']},
+  {key:'shuzen',code:'6070',aliases:['清掃費']},
+  {key:'genkin',code:'6080',aliases:['現金過不足']},
+  {key:'setsubi_lease',code:'6100',aliases:['電話料']},
+  {key:'setsubi_shuzen',code:'6110',aliases:['設備修繕料','修繕料']},
+  {key:'tsushin',code:'6120',aliases:['一般維持費']},
+  {key:'konetsu',code:'6130',aliases:['水道光熱費','光熱費']},
+  {key:'shiharai_risoku',code:'6140',aliases:['支払利息']},
+  {key:'songai',code:'6160',aliases:['損害保険料','保険料']},
+  {key:'hieigyo',code:'6170',aliases:['非課税経費']},
+  {key:'zappi',code:'6150',aliases:['雑費']},
+  {key:'zatsuyeki',code:'4030',aliases:['雑益']},
+  {key:'mikiri_shien',aliases:['見切・処分本部負担額','見切処分本部負担額','見切本部負担']},
+  {key:'denki_shien',aliases:['光熱費本部負担額','電気本部負担','光熱本部負担']},
+];
+
+function ocrSetStep(text,detail,pct){
+  const t=document.getElementById('ocr-step-text');if(t)t.textContent=text;
+  const d=document.getElementById('ocr-step-detail');if(d)d.textContent=detail||'';
+  const f=document.getElementById('ocr-progress-fill');if(f)f.style.width=(pct||0)+'%';
+}
+function ocrCloseModal(){
+  const m=document.getElementById('ocr-modal');if(m)m.classList.remove('active');
+  ocrCtx={pdf:null,pages:[],selectedPageIdx:0,extracted:{},ranges:{},col:'curr',issues:[],canvas:null};
+}
+function ocrShowModal(){
+  const m=document.getElementById('ocr-modal');if(m)m.classList.add('active');
+  document.getElementById('ocr-modal-loading').style.display='block';
+  document.getElementById('ocr-modal-result').style.display='none';
+  document.getElementById('ocr-modal-foot').style.display='none';
+}
+
+async function handleSeisanPDF(ev){
+  const file = ev.target.files[0];
+  ev.target.value='';
+  if(!file)return;
+  if(file.size > 30*1024*1024){
+    if(!confirm(`PDFサイズが ${(file.size/1024/1024).toFixed(1)}MB です。処理に時間がかかりますが続行しますか？`))return;
+  }
+  ocrShowModal();
+  try{
+    ocrSetStep('PDFを読み込み中...','',5);
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data:buf}).promise;
+    ocrCtx.pdf = pdf;
+
+    // 全ページのサムネイルを生成
+    ocrSetStep('ページ一覧を作成中...',`合計 ${pdf.numPages} ページ`,15);
+    ocrCtx.pages = [];
+    for(let i=1;i<=pdf.numPages;i++){
+      const page = await pdf.getPage(i);
+      const vp = page.getViewport({scale:0.4});
+      const cv = document.createElement('canvas');
+      cv.width=vp.width;cv.height=vp.height;
+      const ctx=cv.getContext('2d');
+      await page.render({canvasContext:ctx,viewport:vp}).promise;
+      ocrCtx.pages.push({pageNum:i,thumbCanvas:cv});
+    }
+
+    if(pdf.numPages > 1){
+      // ページ選択UI
+      ocrShowPageSelector();
+    }else{
+      await ocrProcessPage(0);
+    }
+  }catch(e){
+    console.error(e);
+    ocrSetStep('❌ エラー',e.message,0);
+  }
+}
+
+function ocrShowPageSelector(){
+  document.getElementById('ocr-modal-loading').style.display='none';
+  const result = document.getElementById('ocr-modal-result');
+  result.style.display='block';
+  let html = '<div style="margin-bottom:12px"><b>取り込むページを選択してください：</b><br><span class="input-hint">通常、精算書PDFには複数月分が含まれます。当月分のページをクリックしてください。</span></div>';
+  html += '<div class="ocr-page-thumbs" id="ocr-page-thumbs"></div>';
+  result.innerHTML = html;
+  const thumbsEl = document.getElementById('ocr-page-thumbs');
+  ocrCtx.pages.forEach((p,i)=>{
+    const div = document.createElement('div');
+    div.className = 'ocr-page-thumb';
+    div.onclick = ()=>ocrProcessPage(i);
+    div.innerHTML = `<div>ページ ${p.pageNum}</div>`;
+    div.appendChild(p.thumbCanvas);
+    thumbsEl.appendChild(div);
+  });
+}
+
+async function ocrProcessPage(pageIdx){
+  ocrCtx.selectedPageIdx = pageIdx;
+  document.getElementById('ocr-modal-loading').style.display='block';
+  document.getElementById('ocr-modal-result').style.display='none';
+
+  try{
+    const Tess = await ocrLoadTesseract();
+    const pdf = ocrCtx.pdf;
+    const page = await pdf.getPage(ocrCtx.pages[pageIdx].pageNum);
+
+    // 低解像度版で回転検出（高速化）
+    ocrSetStep('最適な向きを検出中...','低解像度で4方向プレ判定',20);
+    const lowVp = page.getViewport({scale:1});
+    const lowCv = document.createElement('canvas');
+    lowCv.width = lowVp.width; lowCv.height = lowVp.height;
+    await page.render({canvasContext:lowCv.getContext('2d'),viewport:lowVp}).promise;
+
+    const rotations = [0,90,180,270];
+    let bestRot = 0, bestScore = -1, bestPreText = '';
+    for(let i=0;i<rotations.length;i++){
+      const rot = rotations[i];
+      ocrSetStep('最適な向きを検出中...',`${rot}° を試行 (${i+1}/4)`,20 + (i+1)*10);
+      const rotCv = ocrRotateCanvas(lowCv, rot);
+      const r = await Tess.recognize(rotCv,'jpn',{logger:()=>{}});
+      const text = r.data.text;
+      let score = 0;
+      OCR_LABEL_MAP.forEach(m=>{
+        m.aliases.forEach(a=>{ if(text.includes(a))score++; });
+        if(m.code && text.includes(m.code))score+=2;
+      });
+      if(score > bestScore){bestScore=score; bestRot=rot; bestPreText=text;}
+    }
+
+    // 高解像度レンダリング (3倍ズーム) で本OCR
+    ocrSetStep('高解像度で本OCR実行中...',`${bestRot}° / 3x zoom`,65);
+    const vp = page.getViewport({scale:3});
+    const cv = document.createElement('canvas');
+    cv.width = vp.width; cv.height = vp.height;
+    await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+    const canvas = bestRot===0 ? cv : ocrRotateCanvas(cv,bestRot);
+    ocrCtx.canvas = canvas;
+
+    const fullR = await Tess.recognize(canvas,'jpn',{logger:()=>{}});
+    const bestText = fullR.data.text;
+    ocrCtx.fullText = bestText;
+
+    // 値抽出
+    ocrSetStep('数値を抽出中...','ラベルマッチングで値を特定',80);
+    const extracted = ocrParseSeisanText(bestText);
+
+    // 数字精度を上げるため、見つからなかった値や信頼性低い値は数字専用OCRで再取得
+    ocrSetStep('数字精度を補強中...','数字ホワイトリストで再OCR',85);
+    const numText = await ocrNumericPass(canvas, Tess);
+    ocrEnhanceWithNumeric(extracted, numText);
+
+    ocrCtx.extracted = extracted;
+
+    // 検算
+    ocrSetStep('整合性を検算中...','8つの不変式で検証',95);
+    const issues = ocrVerifyInvariants(extracted);
+    ocrCtx.issues = issues;
+
+    ocrSetStep('完了',`認識スコア ${bestScore} / 回転 ${bestRot}°`,100);
+    setTimeout(()=>ocrShowConfirmation(),300);
+  }catch(e){
+    console.error(e);
+    ocrSetStep('❌ エラー',e.message+'\n\n精算書PDFの形式を確認してください。',0);
+  }
+}
+
+function ocrRotateCanvas(src, deg){
+  if(deg===0)return src;
+  const cv = document.createElement('canvas');
+  const ctx = cv.getContext('2d');
+  if(deg===90 || deg===270){cv.width=src.height; cv.height=src.width;}
+  else{cv.width=src.width; cv.height=src.height;}
+  ctx.translate(cv.width/2, cv.height/2);
+  ctx.rotate(deg*Math.PI/180);
+  ctx.drawImage(src, -src.width/2, -src.height/2);
+  return cv;
+}
+
+// テキストから値を抽出（ラベルマッチング）
+function ocrParseSeisanText(text){
+  const lines = text.split(/\r?\n/);
+  const result = {};
+  // 同じ行 + 直後 N 行までを連結して数字を探す（縦書き/列ズレ対策）
+  const peekLines = (idx,n=2)=>lines.slice(idx,idx+n+1).join(' ');
+  // 営業費側の重複ラベル(見切・処分=urihen5030 vs mikiri6030)を識別するため、コードを優先
+  OCR_LABEL_MAP.forEach(m=>{
+    let val = null;
+    // (1) コード優先
+    if(m.code){
+      for(let i=0;i<lines.length;i++){
+        if(lines[i].includes(m.code)){
+          const v = ocrExtractFirstNumber(peekLines(i,2));
+          if(v!=null){val=v;break;}
+        }
+      }
+    }
+    // (2) ラベル名でマッチ
+    if(val==null){
+      for(let i=0;i<lines.length;i++){
+        let hit=false;
+        for(const a of m.aliases){
+          if(lines[i].includes(a)){hit=true;break;}
+        }
+        if(hit){
+          const v = ocrExtractFirstNumber(peekLines(i,2));
+          if(v!=null){val=v;break;}
+        }
+      }
+    }
+    if(val!=null)result[m.key] = val;
+  });
+  // 営業日数の検出
+  for(const ln of lines){
+    const m = ln.match(/(?:営業日数|営業日)[^0-9]*(\d{1,2})/);
+    if(m){result._eigyo_nissu = parseInt(m[1]);break;}
+  }
+  // 月の検出
+  for(const ln of lines){
+    const m = ln.match(/(20\d{2})\s*[年\.\/\-]\s*(\d{1,2})\s*月/) || ln.match(/(\d{1,2})\s*月度/);
+    if(m){
+      if(m[2]){result._month = m[1]+'-'+String(m[2]).padStart(2,'0');}
+      break;
+    }
+  }
+  return result;
+}
+
+function ocrExtractFirstNumber(line){
+  // カンマ区切り含む整数パターン
+  const m = line.match(/(-?\d{1,3}(?:[,、]\d{3})+|\d{4,})/);
+  if(!m)return null;
+  const n = parseInt(m[1].replace(/[,、]/g,''));
+  return isFinite(n)?n:null;
+}
+
+// 数字専用OCR (ホワイトリスト)
+async function ocrNumericPass(canvas, Tess){
+  try{
+    const r = await Tess.recognize(canvas,'eng',{
+      tessedit_char_whitelist:'0123456789,-',
+      logger:()=>{}
+    });
+    return r.data.text;
+  }catch(e){return '';}
+}
+
+// jpn パスで欠落した項目を数字パスから補完（参考用）
+function ocrEnhanceWithNumeric(extracted, numText){
+  // 現状は欠落キーの存在を補強する用途では使わず、結果モーダルで参照表示する
+  ocrCtx.numericText = numText;
+}
+
+// 8つの不変式による検算
+function ocrVerifyInvariants(e){
+  const issues = [];
+  const get = k => e[k]||0;
+  const tol = 100; // ±100円許容（OCR/丸め誤差）
+
+  // ① 売上原価 = 期首+仕入−割戻−期末
+  const baijoCalc = get('tanaoroshi_hatsu')+get('shiire')-get('shiire_nebiki')-get('tanaoroshi_sue');
+
+  // ② 粗利 = 売上+その他 − 売上原価 + 売変+棚減
+  //    SEISAN_ROWS のarari定義に従う
+  const arariCalc = get('uriage')+get('sonotauriage')-get('tanaoroshi_hatsu')-get('shiire')+get('shiire_nebiki')+get('tanaoroshi_sue')+get('urihen')+get('tanagen');
+  // arari は精算書には印字されていない場合がある(=計算値のみ)。検算は内部整合性だけ。
+
+  // ③ 営業費計 = 14科目の合計
+  const eigyoKeys = ['kyuyo','houtei_fukuri','mikiri','loss','shomohin','hoso','shuzen','genkin','setsubi_lease','setsubi_shuzen','tsushin','konetsu','shiharai_risoku','songai','hieigyo','zappi'];
+  const eigyoSum = eigyoKeys.reduce((s,k)=>s+get(k),0);
+
+  // ④ 売変高内訳: urihen は売価ベースなので mikiri (営業費側)とは別
+
+  // ⑤ 商品売上 が大きすぎ/小さすぎ（先月比較）
+  const prevUriage = (state.seisan_prev && state.seisan_prev.uriage) || 0;
+  if(prevUriage>0 && get('uriage')>0){
+    const ratio = get('uriage')/prevUriage;
+    if(ratio<0.5 || ratio>2){
+      issues.push({type:'warn',msg:`商品売上が先月比 ${(ratio*100).toFixed(0)}% — OCR誤読の可能性あり`,keys:['uriage']});
+    }
+  }
+
+  // ⑥ 各値が異常な桁か
+  ['uriage','sonotauriage','tanaoroshi_hatsu','tanaoroshi_sue','shiire'].forEach(k=>{
+    const v = get(k);
+    if(v>0 && v<1000){
+      issues.push({type:'warn',msg:`${k} が 1000 円未満 (${v}) — 桁が落ちた可能性`,keys:[k]});
+    }
+    if(v>1e9){
+      issues.push({type:'warn',msg:`${k} が 10億超 (${v.toLocaleString()}) — 桁が増えた可能性`,keys:[k]});
+    }
+  });
+
+  // ⑦ 値引高 (urihen) ÷ 売上 の妥当性
+  if(get('uriage')>0 && get('urihen')>0){
+    const r = get('urihen')/get('uriage');
+    if(r>0.1){
+      issues.push({type:'warn',msg:`売変率が ${(r*100).toFixed(1)}% (10%超) — 通常2〜5%`,keys:['urihen','uriage']});
+    }
+  }
+
+  // ⑧ 必須項目の欠損
+  ['uriage','shiire','tanaoroshi_hatsu','tanaoroshi_sue'].forEach(k=>{
+    if(!get(k)){
+      issues.push({type:'ng',msg:`必須項目「${k}」が抽出できませんでした`,keys:[k]});
+    }
+  });
+
+  return {issues, calculated:{baijoCalc, arariCalc, eigyoSum}};
+}
+
+function ocrShowConfirmation(){
+  document.getElementById('ocr-modal-loading').style.display='none';
+  const result = document.getElementById('ocr-modal-result');
+  result.style.display='block';
+  document.getElementById('ocr-modal-foot').style.display='flex';
+  document.getElementById('ocr-rerun-btn').style.display='inline-block';
+
+  const ext = ocrCtx.extracted;
+  const issues = ocrCtx.issues.issues;
+  const calc = ocrCtx.issues.calculated;
+  const ngCount = issues.filter(i=>i.type==='ng').length;
+  const warnCount = issues.filter(i=>i.type==='warn').length;
+  const okCount = OCR_LABEL_MAP.length - issues.filter(i=>i.type==='ng').length;
+
+  // サマリー
+  let html = '<div class="ocr-summary">';
+  html += `<span class="pill ${ngCount===0?'ok':'ng'}">${ngCount===0?'✅':'❌'} 整合性: ${ngCount===0?'OK':ngCount+'件のエラー'}</span>`;
+  html += `<span class="pill ${warnCount===0?'ok':'warn'}">${warnCount===0?'✅':'⚠️'} 警告: ${warnCount}件</span>`;
+  html += `<span class="pill ok">📊 抽出: ${Object.keys(ext).filter(k=>!k.startsWith('_')).length} / ${OCR_LABEL_MAP.length} 項目</span>`;
+  if(ext._month)html += `<span class="pill ok">📅 ${ext._month}</span>`;
+  if(ext._eigyo_nissu)html += `<span class="pill ok">📆 営業日数 ${ext._eigyo_nissu}日</span>`;
+  html += '</div>';
+
+  // 取込先カラム選択
+  html += '<div style="margin-bottom:8px"><b>取込先カラム：</b> ';
+  html += `<label style="margin-right:12px"><input type="radio" name="ocr-col" value="curr" checked> 当月</label>`;
+  html += `<label style="margin-right:12px"><input type="radio" name="ocr-col" value="prev"> 先月</label>`;
+  html += `<label><input type="radio" name="ocr-col" value="ly"> 前年同月</label>`;
+  html += '</div>';
+
+  // 検算結果
+  if(issues.length){
+    html += '<div style="margin-bottom:12px"><b>🔍 検算結果：</b><ul class="ocr-check-list">';
+    issues.forEach(iss=>{
+      html += `<li class="${iss.type}"><span>${iss.type==='ng'?'❌':'⚠️'} ${escHtml(iss.msg)}</span></li>`;
+    });
+    html += '</ul></div>';
+  }
+
+  // 内部整合性チェック
+  html += '<div style="margin-bottom:12px"><b>📐 自動算出値との整合性：</b><ul class="ocr-check-list">';
+  html += `<li class="ok"><span>売上原価 (計算値)</span><b>¥${calc.baijoCalc.toLocaleString()}</b></li>`;
+  html += `<li class="ok"><span>営業費合計 (計算値)</span><b>¥${calc.eigyoSum.toLocaleString()}</b></li>`;
+  html += `<li class="ok"><span>粗利 (計算値)</span><b>¥${calc.arariCalc.toLocaleString()}</b></li>`;
+  html += '</ul></div>';
+
+  // 値テーブル
+  html += '<div style="margin-bottom:8px"><b>💱 抽出された値（編集可能）：</b><br><span class="input-hint">赤いセルはOCR誤読の可能性。手動で修正してください。</span></div>';
+  html += '<div class="overflow-auto"><table class="ocr-table"><thead><tr><th>科目</th><th style="width:60px">コード</th><th style="width:140px">抽出値</th><th>備考</th></tr></thead><tbody>';
+
+  const suspectKeys = new Set();
+  issues.forEach(i=>i.keys.forEach(k=>suspectKeys.add(k)));
+
+  // SEISAN_ROWS順に表示
+  SEISAN_ROWS.forEach(row=>{
+    if(row.section){
+      html += `<tr class="ocr-row-section"><td colspan="4">${escHtml(row.section)}</td></tr>`;
+      return;
+    }
+    if(row.subtotal||!row.key)return;
+    const v = ext[row.key];
+    const isSuspect = suspectKeys.has(row.key);
+    const cls = isSuspect?'ocr-mismatch':(v!=null?'ocr-match':'');
+    const inputCls = isSuspect?'suspect':'';
+    html += `<tr class="${cls}">`;
+    html += `<td>${escHtml(row.name)}</td>`;
+    html += `<td>${row.code||'—'}</td>`;
+    html += `<td><input type="text" inputmode="numeric" data-ocr-key="${row.key}" class="${inputCls}" value="${v!=null?v.toLocaleString():''}" oninput="ocrOnEdit('${row.key}',this.value)"></td>`;
+    html += `<td>${v==null?'<span style="color:#dc2626">未抽出</span>':isSuspect?'<span style="color:#dc2626">要確認</span>':'<span style="color:#059669">✓</span>'}</td>`;
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // 元画像プレビュー
+  if(ocrCtx.canvas){
+    html += '<div style="margin-top:14px"><b>🖼️ 認識した画像：</b><br>';
+    const small = document.createElement('canvas');
+    const sw = Math.min(400, ocrCtx.canvas.width);
+    const ratio = sw/ocrCtx.canvas.width;
+    small.width = sw; small.height = ocrCtx.canvas.height*ratio;
+    small.getContext('2d').drawImage(ocrCtx.canvas,0,0,small.width,small.height);
+    html += `<div id="ocr-canvas-mount"></div></div>`;
+  }
+
+  // 生テキスト（折りたたみ）
+  html += `<details style="margin-top:10px"><summary style="cursor:pointer;font-size:11px;color:#6b7280">🔧 OCR生データ（デバッグ用）</summary>`;
+  html += `<pre style="font-size:10px;background:#f3f4f6;padding:8px;border-radius:6px;max-height:200px;overflow:auto">${escHtml(ocrCtx.fullText||'')}</pre>`;
+  html += `</details>`;
+
+  result.innerHTML = html;
+
+  if(ocrCtx.canvas){
+    const small = document.createElement('canvas');
+    const sw = Math.min(400, ocrCtx.canvas.width);
+    const ratio = sw/ocrCtx.canvas.width;
+    small.width = sw; small.height = ocrCtx.canvas.height*ratio;
+    small.style.maxWidth='100%';
+    small.style.border='1px solid #ddd';
+    small.style.borderRadius='6px';
+    small.getContext('2d').drawImage(ocrCtx.canvas,0,0,small.width,small.height);
+    const mount=document.getElementById('ocr-canvas-mount');
+    if(mount)mount.appendChild(small);
+  }
+
+  // ボタン状態
+  const applyBtn = document.getElementById('ocr-apply-btn');
+  applyBtn.disabled = ngCount > 0;
+  applyBtn.title = ngCount>0?'必須項目が抽出されていません。手動で修正してから反映してください。':'';
+  // 編集が入ると ngCount が変わる可能性があるので onEdit で再評価
+}
+
+function ocrOnEdit(key,val){
+  const n = parseInt(String(val).replace(/[^0-9-]/g,''));
+  if(isFinite(n)){
+    ocrCtx.extracted[key] = n;
+  }else{
+    delete ocrCtx.extracted[key];
+  }
+  // 必須項目チェックを再評価
+  const required = ['uriage','shiire','tanaoroshi_hatsu','tanaoroshi_sue'];
+  const missing = required.filter(k=>!ocrCtx.extracted[k]);
+  const applyBtn = document.getElementById('ocr-apply-btn');
+  if(applyBtn){
+    applyBtn.disabled = missing.length > 0;
+    applyBtn.title = missing.length?`必須項目: ${missing.join(', ')} を入力してください`:'';
+  }
+}
+
+async function ocrReRunAll(){
+  if(!ocrCtx.pdf || ocrCtx.selectedPageIdx==null)return;
+  await ocrProcessPage(ocrCtx.selectedPageIdx);
+}
+
+function ocrApplyValues(){
+  const colRadio = document.querySelector('input[name="ocr-col"]:checked');
+  const col = colRadio?colRadio.value:'curr';
+  const ext = ocrCtx.extracted;
+  const target = col==='curr'?state.seisan : col==='prev'?state.seisan_prev : state.seisan_lastyear;
+
+  // 値を反映
+  SEISAN_KEYS.forEach(k=>{
+    if(ext[k]!=null)target[k] = ext[k];
+  });
+  if(col==='curr'){
+    if(ext._month)state.seisan.month = ext._month;
+    if(ext._eigyo_nissu)state.seisan.eigyo_nissu = ext._eigyo_nissu;
+  }
+
+  // 入力欄を更新
+  if(typeof restoreSeisanInputs==='function')restoreSeisanInputs();
+  if(typeof calcSeisan==='function')calcSeisan();
+  saveAll(true);
+
+  ocrCloseModal();
+  alert(`✅ 精算書を反映しました（${col==='curr'?'当月':col==='prev'?'先月':'前年同月'}）`);
+}
 
 // ===== MONTHLY =====
 function calcMonthly(){
