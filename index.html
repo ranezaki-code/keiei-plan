@@ -430,7 +430,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v16.5</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v16.6</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -473,6 +473,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
         <div class="flex gap-2 mb-2" style="flex-wrap:wrap;align-items:center">
           <label class="btn-primary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px">📄 精算書PDFを取り込む<input type="file" id="seisan-pdf-input" accept="application/pdf" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="handleSeisanPDF(event)"></label>
           <button class="btn-secondary btn-sm" onclick="copyCurrToPrev()" title="当月の値を『先月』欄にコピー（翌月の比較準備）">📋 当月→先月に複製</button>
+          <button class="btn-secondary btn-sm" onclick="clearSeisanCol('curr')" title="当月の入力値をすべて 0 にリセット">🔢 当月を全て0</button>
           <button class="btn-secondary btn-sm" onclick="clearSeisanCol('prev')">🗑️ 先月をクリア</button>
           <button class="btn-secondary btn-sm" onclick="clearSeisanCol('ly')">🗑️ 前年をクリア</button>
           <span style="flex:1"></span>
@@ -1431,7 +1432,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v16.5';
+const APP_VERSION='v16.6';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -2398,8 +2399,13 @@ function sumCalc(row,bucket){
 }
 
 function clearSeisanCol(col){
-  if(!confirm((col==='prev'?'先月':'前年同月')+'の入力値をすべてクリアしますか？'))return;
-  const target=col==='prev'?state.seisan_prev:state.seisan_lastyear;
+  const labelMap={prev:'先月',ly:'前年同月',curr:'当月'};
+  const label=labelMap[col]||col;
+  if(!confirm(label+'の入力値をすべて 0 にしますか？'))return;
+  let target;
+  if(col==='prev')target=state.seisan_prev;
+  else if(col==='ly')target=state.seisan_lastyear;
+  else target=state.seisan;
   SEISAN_KEYS.forEach(k=>{target[k]=0;});
   restoreSeisanInputs();calcSeisan();saveAll();
 }
