@@ -1258,8 +1258,10 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
   <div id="bottom-bar">
     <button class="btn-secondary btn-sm" onclick="exportJSON()">↓ エクスポート</button>
-    <button class="btn-secondary btn-sm" onclick="document.getElementById('import-file').click()">↑ インポート</button>
-    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
+    <label class="btn-secondary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;padding:5px 10px">↑ インポート
+      <input type="file" id="import-file" accept=".json,application/json" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="importJSON(event)">
+    </label>
+    <button class="btn-secondary btn-sm" onclick="openImportPaste()" title="JSONを直接ペースト">📋 ペースト</button>
     <div style="flex:1"></div>
     <span id="gist-status" style="font-size:11px;color:var(--gray);align-self:center;cursor:pointer" onclick="showGroup('other')" title="クリックで設定画面へ"></span>
     <span id="save-indicator" style="font-size:11px;color:var(--gray);align-self:center"></span>
@@ -3152,13 +3154,28 @@ function importJSON(e){
   const reader=new FileReader();
   reader.onload=ev=>{
     try{
-      const s=JSON.parse(ev.target.result);
-      if(confirm('インポートすると現在のデータが上書きされます。続行しますか？')){
-        localStorage.setItem('keiei_plan_v1',JSON.stringify(s));location.reload();
-      }
+      applyImportedJSON(ev.target.result);
     }catch(err){alert('読み込み失敗: '+err.message);}
   };
   reader.readAsText(file);e.target.value='';
+}
+function applyImportedJSON(text){
+  const s=JSON.parse(text);
+  if(confirm('インポートすると現在のデータが上書きされます。続行しますか？')){
+    // 部分インポート対応：既存stateにマージ（不足キーは既存値を維持）
+    const cur=JSON.parse(localStorage.getItem('keiei_plan_v1')||'{}');
+    const merged={...cur,...s};
+    if(s.seisan)merged.seisan={...(cur.seisan||{}),...s.seisan};
+    if(s.seisan_prev)merged.seisan_prev={...(cur.seisan_prev||{}),...s.seisan_prev};
+    if(s.seisan_lastyear)merged.seisan_lastyear={...(cur.seisan_lastyear||{}),...s.seisan_lastyear};
+    localStorage.setItem('keiei_plan_v1',JSON.stringify(merged));
+    location.reload();
+  }
+}
+function openImportPaste(){
+  const txt=prompt('JSONテキストを貼り付けてください（マイドライブ/松本新村店/keiei_plan_2026-03.json の中身）：');
+  if(!txt)return;
+  try{applyImportedJSON(txt);}catch(err){alert('読み込み失敗: '+err.message);}
 }
 
 // ===== HELP POPOVER =====
