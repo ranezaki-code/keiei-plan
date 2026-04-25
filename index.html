@@ -410,7 +410,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v13.2</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v14.0</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -1411,7 +1411,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v13.2';
+const APP_VERSION='v14.0';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -1521,6 +1521,169 @@ async function claudeKeyTest(){
 }
 
 // 精算書PDFページの canvas を Claude Vision で解析
+// PDF.js の getTextContent() の結果を、行・列が見えるテキストに整形する
+// PDFがテキストレイヤーを持っていればこれが「OCRゼロの正解データ」になる
+function buildStructuredTextFromTC(textContent){
+  const items=(textContent?.items||[]).filter(it=>it && typeof it.str==='string' && it.str.length);
+  if(items.length===0)return null;
+  // y 座標で行にグルーピング（フォントサイズ程度のトレランス）
+  const lines=[];
+  const yTol=2.5;
+  items.forEach(it=>{
+    const y=it.transform[5];
+    const x=it.transform[4];
+    let line=lines.find(l=>Math.abs(l.y-y)<yTol);
+    if(!line){line={y,items:[]};lines.push(line);}
+    line.items.push({x,str:it.str});
+  });
+  // PDF座標は下原点なので y が大きいほど上 → 降順ソート
+  lines.sort((a,b)=>b.y-a.y);
+  // 各行内は x 昇順、x ギャップが大きければ複数スペース挿入で列っぽさを残す
+  return lines.map(l=>{
+    l.items.sort((a,b)=>a.x-b.x);
+    let s='',lastEnd=null;
+    l.items.forEach(it=>{
+      if(lastEnd!==null){
+        const gap=it.x-lastEnd;
+        s += gap>30 ? '   ' : gap>10 ? '  ' : ' ';
+      }
+      s += it.str;
+      lastEnd = it.x + (it.str.length*4);
+    });
+    return s.trim();
+  }).filter(s=>s.length).join('\n');
+}
+
+// テキストレイヤーがある PDF 用：OCR せず、抽出済みテキストを Claude にパースさせる
+async function claudeParseFromText(structuredText, canvas, onProgress){
+  const key=claudeGetKey();
+  if(!key)throw new Error('Claude APIキーが未設定です');
+  const model=claudeGetModel();
+
+  // レイアウト確認用の補助画像（小さめでOK：列名照合のみ）
+  onProgress&&onProgress('補助画像をエンコード中...',25);
+  const MAX_B64=Math.floor(4.5*1024*1024);
+  const attempts=[
+    {dim:2000,fmt:'image/jpeg',q:0.85},
+    {dim:1700,fmt:'image/jpeg',q:0.82},
+    {dim:1400,fmt:'image/jpeg',q:0.80}
+  ];
+  let imgB64=null,imgMedia=null;
+  for(const att of attempts){
+    let img=canvas;
+    const md=Math.max(canvas.width,canvas.height);
+    if(md>att.dim){
+      const sc=att.dim/md;
+      const sm=document.createElement('canvas');
+      sm.width=Math.round(canvas.width*sc);sm.height=Math.round(canvas.height*sc);
+      sm.getContext('2d').drawImage(canvas,0,0,sm.width,sm.height);
+      img=sm;
+    }
+    const du=img.toDataURL(att.fmt,att.q);
+    const c=du.split(',')[1];
+    if(c.length<=MAX_B64){imgB64=c;imgMedia=att.fmt;break;}
+  }
+
+  const fieldDescriptions=OCR_LABEL_MAP.map(m=>{
+    const code=m.code?` (コード${m.code})`:'';
+    return `- ${m.key}${code}: ${m.aliases.join(' / ')}`;
+  }).join('\n');
+
+  const systemPrompt=`あなたはローソンFC加盟店の月次精算書テキストパーサーです。
+PDF から抽出した**生のテキストデータ**を解析し、指定フィールドの数値をJSONで返してください。
+
+【超重要】
+- これは OCR ではない。テキストデータは**100%正確**。文字を勝手に修正・推測してはいけない。
+- 数値はテキスト中の**カンマ付き数字をそのまま integer 化**するだけ（例: "11,145,822" → 11145822）。
+- 値の取り違えだけが唯一のリスク。「どの行・どの列」を絶対に間違えない。
+
+【判断ルール】
+- 「当月」「先月」「前年同月」など複数カラムが並んでいる場合、**「当月」「今月」「該当月」のいずれかと判定できる列**だけを採用。判定不能なら警告に書く。
+- 補助画像も渡しているので、列ヘッダーの位置を画像で確認してから採用列を決める。
+- コード番号（4010, 5010, 5030, 6030 など）は強い手がかり。行ラベルが曖昧でもコード番号で同定可能。
+- 「見切・処分」は売上原価側(コード5030 → urihen)と営業費側(コード6030 → mikiri)で別物。
+
+【読み取り対象フィールド】
+${fieldDescriptions}
+
+【出力フォーマット】
+必ず以下の単一JSONを返す（前置き・コードブロック記号禁止）：
+
+{
+  "month": "YYYY-MM",
+  "eigyo_nissu": 31,
+  "fields": {
+    "uriage": 11145822,
+    "shiire": 7762098
+  },
+  "cells": [
+    {"key":"uriage","raw":"11,145,822","column":"当月","row_label":"商品売上高","code":"4010"},
+    ...
+  ],
+  "notes": "...",
+  "confidence": "high|medium|low",
+  "warnings": ["..."]
+}
+
+【追加ルール】
+1. fields は上記マッピングのキーのみ。値は整数のみ（カンマ・¥・小数禁止）。
+2. テキストにない/該当行がないフィールドは fields からも cells からも省略。
+3. cells には fields に入れた全項目を必ず記録。
+4. confidence: high=全部明確 / medium=列判定で迷い / low=多くが不明瞭
+5. warnings に「迷った点」「判断根拠」を箇条書き。
+6. valid な JSON（trailing comma禁止、ダブルクォート使用）。`;
+
+  onProgress&&onProgress('Claude にテキスト解析を依頼中...',45);
+  const userText=`以下が PDF テキストレイヤーから抽出した生テキストです。OCRエラーはありません。
+これを解析して、指定された JSON 形式で返してください。
+
+【抽出テキスト】
+\`\`\`
+${structuredText}
+\`\`\`
+
+補助として精算書の画像も同送します。列ヘッダー（当月／先月／前年）の位置確認に使ってください。`;
+
+  const content=[{type:'text',text:userText}];
+  if(imgB64)content.push({type:'image',source:{type:'base64',media_type:imgMedia,data:imgB64}});
+
+  const t0=performance.now();
+  const r=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'content-type':'application/json',
+      'x-api-key':key,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body:JSON.stringify({
+      model:model,
+      max_tokens:4000,
+      system:systemPrompt,
+      messages:[{role:'user',content:content}]
+    })
+  });
+  const dt=((performance.now()-t0)/1000).toFixed(1);
+  if(!r.ok){
+    const errText=await r.text();
+    throw new Error(`Claude API error ${r.status}: ${errText.slice(0,300)}`);
+  }
+  const j=await r.json();
+  const txt=j.content?.[0]?.text||'';
+  console.log('[claude-text] response time:',dt+'s, tokens:',j.usage);
+
+  let parsed;
+  try{
+    const m=txt.match(/\{[\s\S]*\}/);
+    if(!m)throw new Error('JSON見つからず');
+    parsed=JSON.parse(m[0]);
+  }catch(e){
+    console.error('[claude-text] parse failed. raw:',txt);
+    throw new Error('Claude応答のJSON解析失敗: '+e.message+'\n\n応答:\n'+txt.slice(0,500));
+  }
+  return {parsed,raw:txt,usage:j.usage,timeSec:dt,mode:'text'};
+}
+
 async function claudeOcrSeisan(canvas, onProgress){
   const key=claudeGetKey();
   if(!key)throw new Error('Claude APIキーが未設定です');
@@ -1660,7 +1823,7 @@ ${fieldDescriptions}
     console.error('[claude-ocr] parse failed. raw:',txt);
     throw new Error('Claude応答のJSON解析失敗: '+e.message+'\n\n応答:\n'+txt.slice(0,500));
   }
-  return {parsed,raw:txt,usage:j.usage,timeSec:dt};
+  return {parsed,raw:txt,usage:j.usage,timeSec:dt,mode:'vision'};
 }
 
 // ===== DRAG & DROP ハンドラ =====
@@ -2916,16 +3079,34 @@ async function ocrProcessPage(pageIdx){
     const page = await pdf.getPage(ocrCtx.pages[pageIdx].pageNum);
 
     if(useClaude){
-      // === Claude Vision モード ===
-      ocrSetStep('Claude Vision OCR モード','PDFを最高解像度で画像化中...',15);
-      // 細かい数字を確実に読ませるため scale=4（A4 で約 3300px）
-      const vp = page.getViewport({scale:4});
+      // === Claude モード ===
+      // まず PDF テキストレイヤーを抽出する（あれば OCR ゼロで完璧に読める）
+      ocrSetStep('PDFテキストレイヤー確認中...','埋め込みテキストを抽出',8);
+      let structuredText=null;
+      try{
+        const tc=await page.getTextContent();
+        structuredText=buildStructuredTextFromTC(tc);
+      }catch(e){console.warn('[claude] getTextContent failed:',e);}
+
+      const hasTextLayer = structuredText && structuredText.length>200 && /\d/.test(structuredText);
+      console.log('[claude] textLayer:',hasTextLayer ? `あり (${structuredText.length}文字)` : 'なし→Vision OCRへ');
+
+      // 補助画像（テキストモードでも列ヘッダー確認用に使う）
+      ocrSetStep(hasTextLayer?'PDFを画像化中（補助用）':'PDFを高解像度で画像化中', '...', 15);
+      const vp = page.getViewport({scale: hasTextLayer ? 2.5 : 4});
       const cv = document.createElement('canvas');
       cv.width = vp.width; cv.height = vp.height;
       await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
       ocrCtx.canvas = cv;
 
-      const {parsed,raw,usage,timeSec} = await claudeOcrSeisan(cv, ocrSetStep);
+      let result;
+      if(hasTextLayer){
+        ocrSetStep('テキスト解析モード','OCR不要・100%正確',25);
+        result = await claudeParseFromText(structuredText, cv, ocrSetStep);
+      }else{
+        result = await claudeOcrSeisan(cv, ocrSetStep);
+      }
+      const {parsed,raw,usage,timeSec,mode} = result;
 
       ocrSetStep('結果を整形中...','JSON → state 変換',85);
       const extracted = {};
@@ -2943,6 +3124,7 @@ async function ocrProcessPage(pageIdx){
       if(parsed.confidence)extracted._confidence=parsed.confidence;
       if(Array.isArray(parsed.warnings))extracted._warnings=parsed.warnings;
       if(Array.isArray(parsed.cells))extracted._cells=parsed.cells;
+      extracted._mode=mode||'vision';
 
       ocrCtx.extracted = extracted;
       ocrCtx.fullText = raw;
@@ -2953,7 +3135,8 @@ async function ocrProcessPage(pageIdx){
       ocrCtx.issues = issues;
 
       const inT = usage?.input_tokens||0, outT = usage?.output_tokens||0;
-      ocrSetStep('完了 ✨',`Claude ${claudeGetModel().split('-').slice(0,3).join('-')} / ${timeSec}秒 / ${inT}+${outT} tokens`,100);
+      const modeLabel = (mode==='text') ? '📄テキスト解析' : '👁Vision OCR';
+      ocrSetStep('完了 ✨',`${modeLabel} / Claude ${claudeGetModel().split('-').slice(0,3).join('-')} / ${timeSec}秒 / ${inT}+${outT} tokens`,100);
       setTimeout(()=>ocrShowConfirmation(),300);
       return;
     }
@@ -3186,6 +3369,8 @@ function ocrShowConfirmation(){
   html += `<span class="pill ok">📊 抽出: ${Object.keys(ext).filter(k=>!k.startsWith('_')).length} / ${OCR_LABEL_MAP.length} 項目</span>`;
   if(ext._month)html += `<span class="pill ok">📅 ${ext._month}</span>`;
   if(ext._eigyo_nissu)html += `<span class="pill ok">📆 営業日数 ${ext._eigyo_nissu}日</span>`;
+  if(ext._mode==='text')html += `<span class="pill" style="background:#dbeafe;color:#1e40af">📄 テキスト解析（OCR不要）</span>`;
+  else if(ext._mode==='vision')html += `<span class="pill" style="background:#fef3c7;color:#92400e">👁 Vision OCR</span>`;
   html += '</div>';
 
   if(ext._notes){
