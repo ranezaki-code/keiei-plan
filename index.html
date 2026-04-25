@@ -410,7 +410,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v13.0</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v13.1</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -1411,7 +1411,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v13.0';
+const APP_VERSION='v13.1';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -1528,19 +1528,22 @@ async function claudeOcrSeisan(canvas, onProgress){
 
   // 画像を JPEG (高品質) に変換 してサイズ削減
   onProgress&&onProgress('画像をエンコード中...',30);
-  // 大きすぎる場合は縮小（5MB 以内目安）
+  // Anthropic API は最長辺 8000px、ファイル 30MB まで許容。読取精度のため
+  // 文字を最大限大きくしたいので、3500px までは縮小しない。
   let img=canvas;
   let maxDim=Math.max(canvas.width,canvas.height);
-  if(maxDim>2400){
-    const scale=2400/maxDim;
+  if(maxDim>3500){
+    const scale=3500/maxDim;
     const sm=document.createElement('canvas');
     sm.width=Math.round(canvas.width*scale);
     sm.height=Math.round(canvas.height*scale);
     sm.getContext('2d').drawImage(canvas,0,0,sm.width,sm.height);
     img=sm;
   }
-  const dataUrl=img.toDataURL('image/jpeg',0.92);
+  // PNGの方が線・小フォントの劣化が少ないので画質優先で使う
+  const dataUrl=img.toDataURL('image/png');
   const b64=dataUrl.split(',')[1];
+  const mediaType='image/png';
   const sizeMB=(b64.length*0.75/1024/1024).toFixed(2);
   console.log('[claude-ocr] image size:',sizeMB,'MB');
 
@@ -1550,20 +1553,46 @@ async function claudeOcrSeisan(canvas, onProgress){
     return `- ${m.key}${code}: ${m.aliases.join(' / ')}`;
   }).join('\n');
 
-  const systemPrompt=`あなたはローソンFC加盟店の月次精算書OCRエンジンです。画像から正確に数値を読み取り、JSONで返してください。
+  const systemPrompt=`あなたはローソンFC加盟店の月次精算書OCRエンジンです。画像から数値を**1ピクセルも勘違いせず**正確にOCRしてJSONで返してください。
 
-【読み取り対象フィールド】
+【最重要・厳守】
+- **絶対に推測しない**。画像で読めない値は省略（fields に入れない）。整合性を保とうとして勝手に値を作るのは厳禁。
+- 単位は **円**。多くの精算書には「(単位:円)」と記載されている。「千円」表記なら ×1000、「百万円」なら ×1000000 して報告すること。
+- 画像内に「**当月**」「**先月**」「**前年同月**」など複数カラムがあれば、**当月（または今月・該当月の数値）の列だけ**を fields に入れる。
+- 各 field の値の右側に、その値を画像のどこから読み取ったか説明できなければならない（後述の cells 配列に記録）。
+
+【読み取り対象フィールドとマッピング】
 ${fieldDescriptions}
 
-【出力ルール】
-1. 必ず {"fields": {...}, "month": "YYYY-MM", "eigyo_nissu": <int>, "notes": "..."} の形式の単一JSONオブジェクトを返す
-2. fields は上記キーのみ使用。値は整数（円単位、カンマ・¥記号なし）
-3. 画像内に見つからないフィールドは fields から省略（nullや0で埋めない）
-4. month は精算月（例：2026-03）。読み取れなければ省略
-5. eigyo_nissu は営業日数（例：31）。読み取れなければ省略
-6. notes に読取の信頼度や注意点を簡潔に書く（例：「全フィールド明瞭」「タンクロスのみ判別困難」）
-7. 「見切・処分」は売上原価側（urihen）と営業費側（mikiri）の2箇所に出る場合があるので、コードまたは表の位置で区別する
-8. JSON以外の説明文・コードブロック記号・前置き禁止。必ず { から } で完結したJSONのみ出力する`;
+【出力フォーマット】
+必ず以下の形式の単一JSONを返す。前置き・コードブロック記号(\`\`\`)禁止：
+
+{
+  "month": "YYYY-MM",
+  "eigyo_nissu": 31,
+  "fields": {
+    "uriage": 11145822,
+    "shiire": 7762098,
+    ...
+  },
+  "cells": [
+    {"key":"uriage","raw":"11,145,822","column":"当月","row_label":"商品売上高","code":"4010"},
+    {"key":"shiire","raw":"7,762,098","column":"当月","row_label":"商品仕入高","code":"5010"},
+    ...
+  ],
+  "notes": "全フィールド明瞭に読取。カラム=当月。",
+  "confidence": "high|medium|low",
+  "warnings": ["先月カラムは無視した", "見切・処分は5030(売上原価側)を採用"]
+}
+
+【追加ルール】
+1. fields は上記マッピングのキーのみ使用。値は整数のみ（カンマ・¥記号・小数禁止）
+2. 画像で読めない or 該当しないフィールドは fields からも cells からも省略
+3. cells には fields に入れた全項目について、行ラベルとコード番号と元の表記（カンマ含む文字列）を必ず記録
+4. 「見切・処分」は売上原価側(コード5030=urihen)と営業費側(コード6030=mikiri)で別物。code欄を見て区別
+5. confidence は全体の信頼度（high=全部読めた / medium=一部不明瞭 / low=多くが推定）
+6. warnings に「読み取りで迷った点」「無視した値」を箇条書き
+7. JSON は valid な JSON でなければならない（trailing comma 禁止、ダブルクォート使用）`;
 
   onProgress&&onProgress('Claude Vision に送信中...',50);
   const t0=performance.now();
@@ -1577,13 +1606,13 @@ ${fieldDescriptions}
     },
     body:JSON.stringify({
       model:model,
-      max_tokens:2000,
+      max_tokens:4000,
       system:systemPrompt,
       messages:[{
         role:'user',
         content:[
-          {type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}},
-          {type:'text',text:'この精算書PDFから値を読み取って、指定された形式のJSONで返してください。'}
+          {type:'image',source:{type:'base64',media_type:mediaType,data:b64}},
+          {type:'text',text:'この精算書PDFを読み取り、指定された JSON 形式で返してください。\n\n重要：\n- 値を**画像から正確にOCR**してください（推測・整合性合わせ・四捨五入は厳禁）\n- 「当月」カラムの値だけを抽出（複数月並んでいる場合は「当月」「今月」「該当月」のいずれかの列）\n- 読めない値は fields に入れない（省略）\n- cells 配列に「どの行・どのコード番号・元の表記」を必ず記録\n- 確信が持てない値は warnings に記載'}
         ]
       }]
     })
@@ -2864,8 +2893,9 @@ async function ocrProcessPage(pageIdx){
 
     if(useClaude){
       // === Claude Vision モード ===
-      ocrSetStep('Claude Vision OCR モード','PDFを高解像度で画像化中...',15);
-      const vp = page.getViewport({scale:2.5});
+      ocrSetStep('Claude Vision OCR モード','PDFを最高解像度で画像化中...',15);
+      // 細かい数字を確実に読ませるため scale=4（A4 で約 3300px）
+      const vp = page.getViewport({scale:4});
       const cv = document.createElement('canvas');
       cv.width = vp.width; cv.height = vp.height;
       await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
@@ -2886,6 +2916,9 @@ async function ocrProcessPage(pageIdx){
       if(parsed.month)extracted._month=parsed.month;
       if(parsed.eigyo_nissu)extracted._eigyo_nissu=parsed.eigyo_nissu;
       if(parsed.notes)extracted._notes=parsed.notes;
+      if(parsed.confidence)extracted._confidence=parsed.confidence;
+      if(Array.isArray(parsed.warnings))extracted._warnings=parsed.warnings;
+      if(Array.isArray(parsed.cells))extracted._cells=parsed.cells;
 
       ocrCtx.extracted = extracted;
       ocrCtx.fullText = raw;
@@ -3132,7 +3165,22 @@ function ocrShowConfirmation(){
   html += '</div>';
 
   if(ext._notes){
-    html += `<div class="alert alert-info" style="font-size:12px;margin-bottom:10px"><b>🤖 Claude のメモ：</b> ${escHtml(ext._notes)}</div>`;
+    const confColor=ext._confidence==='high'?'#16a34a':ext._confidence==='medium'?'#d97706':ext._confidence==='low'?'#dc2626':'#6b7280';
+    const confLabel=ext._confidence==='high'?'高':ext._confidence==='medium'?'中':ext._confidence==='low'?'低':'';
+    html += `<div class="alert alert-info" style="font-size:12px;margin-bottom:10px"><b>🤖 Claude のメモ：</b> ${escHtml(ext._notes)}`;
+    if(ext._confidence)html += ` <span style="background:${confColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:11px">信頼度: ${confLabel}</span>`;
+    html += `</div>`;
+  }
+  if(Array.isArray(ext._warnings)&&ext._warnings.length){
+    html += `<div class="alert alert-warning" style="font-size:12px;margin-bottom:10px"><b>⚠️ 警告（Claudeが迷った点）：</b><ul style="margin:4px 0 0 18px;padding:0">${ext._warnings.map(w=>`<li>${escHtml(String(w))}</li>`).join('')}</ul></div>`;
+  }
+  if(Array.isArray(ext._cells)&&ext._cells.length){
+    html += `<details style="margin-bottom:10px"><summary style="cursor:pointer;font-size:12px;color:#374151"><b>🔍 Claudeが画像から読んだ場所一覧（${ext._cells.length}件）</b></summary>`;
+    html += `<table style="width:100%;font-size:11px;margin-top:6px;border-collapse:collapse"><thead><tr style="background:#f3f4f6"><th style="padding:4px 6px;text-align:left;border:1px solid #e5e7eb">field</th><th style="padding:4px 6px;text-align:left;border:1px solid #e5e7eb">行ラベル</th><th style="padding:4px 6px;text-align:left;border:1px solid #e5e7eb">コード</th><th style="padding:4px 6px;text-align:right;border:1px solid #e5e7eb">読取値</th><th style="padding:4px 6px;text-align:left;border:1px solid #e5e7eb">列</th></tr></thead><tbody>`;
+    ext._cells.forEach(c=>{
+      html += `<tr><td style="padding:3px 6px;border:1px solid #e5e7eb"><code>${escHtml(c.key||'')}</code></td><td style="padding:3px 6px;border:1px solid #e5e7eb">${escHtml(c.row_label||'')}</td><td style="padding:3px 6px;border:1px solid #e5e7eb">${escHtml(c.code||'')}</td><td style="padding:3px 6px;border:1px solid #e5e7eb;text-align:right;font-family:monospace">${escHtml(c.raw||'')}</td><td style="padding:3px 6px;border:1px solid #e5e7eb">${escHtml(c.column||'')}</td></tr>`;
+    });
+    html += `</tbody></table></details>`;
   }
 
   // 取込先カラム選択
