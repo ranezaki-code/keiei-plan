@@ -428,7 +428,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v16.0</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v16.1</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -1429,7 +1429,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v16.0';
+const APP_VERSION='v16.1';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -3266,20 +3266,10 @@ async function showManualSeisanInput(pageIdx){
       <button class="btn-primary btn-sm" onclick="manualSeisanApply()">✓ この内容で反映</button>
     </div>`;
 
-  // PDFページを取得して描画
-  const page = await ocrCtx.pdf.getPage(ocrCtx.pages[pageIdx].pageNum);
-  manualCtx.page = page;
-  // 自動向き検出
-  try{
-    const rotInfo = await detectPageRotation(page, ()=>{});
-    manualCtx.rotation = rotInfo.rotation;
-    console.log('[manual] auto-detected rotation:',rotInfo.rotation,'°');
-  }catch(e){console.warn('[manual] rotation detect failed:',e.message);}
-
   // 当月 month / 営業日数 のデフォルト
   const defaultMonth = state.seisan?.month || new Date().toISOString().slice(0,7);
 
-  // HTML を組み立て
+  // ★ 先に HTML を組み立てて表示する（PDFロード/向き検出を待たない）
   let html = `<div class="manual-pane">
     <div class="manual-pdf-pane" id="manual-pdf-pane">
       <div class="manual-pdf-toolbar">
@@ -3287,9 +3277,9 @@ async function showManualSeisanInput(pageIdx){
         <button onclick="manualPdfZoom(1.25)">🔍+</button>
         <button onclick="manualPdfZoom(0.8)">🔍−</button>
         <button onclick="manualPdfZoomFit()">↔ 横幅</button>
-        <span style="margin-left:auto;font-size:11px;color:#6b7280" id="manual-pdf-info"></span>
+        <span style="margin-left:auto;font-size:11px;color:#6b7280" id="manual-pdf-info">読み込み中...</span>
       </div>
-      <div id="manual-pdf-canvas-wrap" style="padding:10px"></div>
+      <div id="manual-pdf-canvas-wrap" style="padding:10px;text-align:center;color:#6b7280;font-size:12px">📄 PDFを描画中...</div>
     </div>
     <div class="manual-form-pane">
       <div style="margin-bottom:8px;padding:6px;background:#fffbeb;border-radius:4px;font-size:11px;color:#78350f">
@@ -3321,8 +3311,33 @@ async function showManualSeisanInput(pageIdx){
     });
   });
 
-  // PDF を描画
-  await renderManualPdf();
+  // ★ PDFページを取得し、まず rotation=0 で即描画（ユーザーは見える状態）
+  try{
+    const page = await ocrCtx.pdf.getPage(ocrCtx.pages[pageIdx].pageNum);
+    manualCtx.page = page;
+    await renderManualPdf();
+    // 横幅フィット
+    setTimeout(()=>manualPdfZoomFit(), 50);
+  }catch(e){
+    console.error('[manual] getPage failed:',e);
+    const wrap = document.getElementById('manual-pdf-canvas-wrap');
+    if(wrap)wrap.innerHTML='<div style="color:#dc2626;padding:20px">PDF読み込み失敗: '+e.message+'</div>';
+    return;
+  }
+
+  // ★ 向き検出はバックグラウンドで実行（UIをブロックしない）
+  const info = document.getElementById('manual-pdf-info');
+  if(info)info.textContent = '向き判定中...';
+  detectPageRotation(manualCtx.page, ()=>{}).then(rotInfo=>{
+    if(rotInfo.rotation !== manualCtx.rotation){
+      manualCtx.rotation = rotInfo.rotation;
+      renderManualPdf().then(()=>setTimeout(()=>manualPdfZoomFit(), 50));
+    }
+    console.log('[manual] auto-detected rotation:',rotInfo.rotation,'°');
+  }).catch(e=>{
+    console.warn('[manual] rotation detect failed:',e.message);
+    if(info)info.textContent = `${manualCtx.rotation}° / 手動で回転してください`;
+  });
 }
 
 async function renderManualPdf(){
