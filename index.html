@@ -410,7 +410,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v12.5</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v13.0</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -450,11 +450,13 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
             <input type="month" id="seisan-month" style="display:none">
           </div>
         </div>
-        <div class="flex gap-2 mb-2" style="flex-wrap:wrap">
+        <div class="flex gap-2 mb-2" style="flex-wrap:wrap;align-items:center">
           <label class="btn-primary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px">📄 精算書PDFを取り込む<input type="file" id="seisan-pdf-input" accept="application/pdf" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="handleSeisanPDF(event)"></label>
           <button class="btn-secondary btn-sm" onclick="copyCurrToPrev()" title="当月の値を『先月』欄にコピー（翌月の比較準備）">📋 当月→先月に複製</button>
           <button class="btn-secondary btn-sm" onclick="clearSeisanCol('prev')">🗑️ 先月をクリア</button>
           <button class="btn-secondary btn-sm" onclick="clearSeisanCol('ly')">🗑️ 前年をクリア</button>
+          <span style="flex:1"></span>
+          <button class="btn-secondary btn-sm" onclick="claudeKeyOpen()" id="claude-key-status" title="Claude APIキー設定">🔑 Claude API: 未設定</button>
         </div>
         <div id="seisan-drop-zone" class="drop-zone" data-handler="handleSeisanPDF" data-accept="application/pdf">
           📥 ここに精算書PDFをドラッグ＆ドロップでもOK
@@ -1409,7 +1411,204 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v12.5';
+const APP_VERSION='v13.0';
+
+// ===== CLAUDE API (Anthropic Vision OCR) =====
+const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
+const CLAUDE_MODEL_STORAGE='keiei_anthropic_model_v1';
+const CLAUDE_DEFAULT_MODEL='claude-sonnet-4-5-20250929';
+function claudeGetKey(){return localStorage.getItem(CLAUDE_KEY_STORAGE)||'';}
+function claudeGetModel(){return localStorage.getItem(CLAUDE_MODEL_STORAGE)||CLAUDE_DEFAULT_MODEL;}
+function claudeKeyUpdateStatus(){
+  const el=document.getElementById('claude-key-status');
+  if(!el)return;
+  const k=claudeGetKey();
+  if(k){
+    const masked='sk-...'+k.slice(-6);
+    el.textContent='🔑 Claude API: '+masked;
+    el.style.background='#dcfce7';
+    el.style.color='#166534';
+  }else{
+    el.textContent='🔑 Claude API: 未設定';
+    el.style.background='';
+    el.style.color='';
+  }
+}
+function claudeKeyOpen(){
+  const cur=claudeGetKey();
+  const model=claudeGetModel();
+  const html=`
+    <div style="margin-bottom:12px"><b>Claude API キー設定</b><br>
+    <span class="input-hint">設定すると精算書OCRが Claude Vision（高精度）に切り替わります。<br>
+    キーは https://console.anthropic.com/ で取得してください。</span></div>
+    <div class="flex gap-2 mb-2"><label style="min-width:80px;align-self:center">APIキー</label>
+      <input type="password" id="claude-key-input" placeholder="sk-ant-api03-..." value="${cur.replace(/"/g,'&quot;')}" style="flex:1;font-family:monospace;font-size:12px"></div>
+    <div class="flex gap-2 mb-2"><label style="min-width:80px;align-self:center">モデル</label>
+      <select id="claude-model-input" style="flex:1">
+        <option value="claude-sonnet-4-5-20250929"${model==='claude-sonnet-4-5-20250929'?' selected':''}>Claude Sonnet 4.5（推奨：高精度・低コスト）</option>
+        <option value="claude-opus-4-5-20251101"${model==='claude-opus-4-5-20251101'?' selected':''}>Claude Opus 4.5（最高精度・高コスト）</option>
+        <option value="claude-3-5-sonnet-20241022"${model==='claude-3-5-sonnet-20241022'?' selected':''}>Claude 3.5 Sonnet（旧版）</option>
+      </select></div>
+    <div class="alert alert-info" style="font-size:11px">⚠️ APIキーはこの端末のlocalStorageにのみ保存され、クラウド同期には載りません。</div>
+    <div class="flex gap-2 mt-2" style="justify-content:flex-end">
+      <button class="btn-secondary btn-sm" onclick="claudeKeyTest()">🧪 接続テスト</button>
+      <button class="btn-secondary btn-sm" onclick="claudeKeyClear()">🗑️ クリア</button>
+      <button class="btn-primary btn-sm" onclick="claudeKeySave()">💾 保存</button>
+      <button class="btn-secondary btn-sm" onclick="ocrCloseModal()">閉じる</button>
+    </div>
+    <div id="claude-key-msg" style="margin-top:10px;font-size:12px"></div>`;
+  const m=document.getElementById('ocr-modal');
+  if(!m){alert('モーダル要素が見つかりません');return;}
+  m.classList.add('active');
+  document.getElementById('ocr-modal-loading').style.display='none';
+  const r=document.getElementById('ocr-modal-result');
+  r.style.display='block';
+  r.innerHTML=html;
+  document.getElementById('ocr-modal-foot').style.display='none';
+}
+function claudeKeySave(){
+  const k=document.getElementById('claude-key-input').value.trim();
+  const m=document.getElementById('claude-model-input').value;
+  if(k && !k.startsWith('sk-ant-')){
+    document.getElementById('claude-key-msg').innerHTML='<span style="color:#dc2626">⚠️ Anthropic APIキーは "sk-ant-" で始まります。確認してください。</span>';
+    return;
+  }
+  if(k)localStorage.setItem(CLAUDE_KEY_STORAGE,k);else localStorage.removeItem(CLAUDE_KEY_STORAGE);
+  localStorage.setItem(CLAUDE_MODEL_STORAGE,m);
+  claudeKeyUpdateStatus();
+  document.getElementById('claude-key-msg').innerHTML='<span style="color:#16a34a">✅ 保存しました</span>';
+  setTimeout(ocrCloseModal,800);
+}
+function claudeKeyClear(){
+  if(!confirm('APIキーを削除します。OCRは Tesseract（低精度）に戻ります。よろしいですか？'))return;
+  localStorage.removeItem(CLAUDE_KEY_STORAGE);
+  claudeKeyUpdateStatus();
+  document.getElementById('claude-key-input').value='';
+  document.getElementById('claude-key-msg').innerHTML='<span style="color:#6b7280">削除しました</span>';
+}
+async function claudeKeyTest(){
+  const k=document.getElementById('claude-key-input').value.trim();
+  const model=document.getElementById('claude-model-input').value;
+  const msg=document.getElementById('claude-key-msg');
+  if(!k){msg.innerHTML='<span style="color:#dc2626">キーを入力してください</span>';return;}
+  msg.innerHTML='<span style="color:#6b7280">⏳ 接続テスト中...</span>';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'content-type':'application/json',
+        'x-api-key':k,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:model,
+        max_tokens:30,
+        messages:[{role:'user',content:'返信は「OK」のみ'}]
+      })
+    });
+    if(!r.ok){
+      const t=await r.text();
+      msg.innerHTML=`<span style="color:#dc2626">❌ ${r.status}: ${t.slice(0,200)}</span>`;
+      return;
+    }
+    const j=await r.json();
+    const reply=j.content?.[0]?.text||'(空応答)';
+    msg.innerHTML=`<span style="color:#16a34a">✅ 接続成功 / model=${model} / 応答="${reply}"</span>`;
+  }catch(e){
+    msg.innerHTML=`<span style="color:#dc2626">❌ 通信エラー: ${e.message}</span>`;
+  }
+}
+
+// 精算書PDFページの canvas を Claude Vision で解析
+async function claudeOcrSeisan(canvas, onProgress){
+  const key=claudeGetKey();
+  if(!key)throw new Error('Claude APIキーが未設定です');
+  const model=claudeGetModel();
+
+  // 画像を JPEG (高品質) に変換 してサイズ削減
+  onProgress&&onProgress('画像をエンコード中...',30);
+  // 大きすぎる場合は縮小（5MB 以内目安）
+  let img=canvas;
+  let maxDim=Math.max(canvas.width,canvas.height);
+  if(maxDim>2400){
+    const scale=2400/maxDim;
+    const sm=document.createElement('canvas');
+    sm.width=Math.round(canvas.width*scale);
+    sm.height=Math.round(canvas.height*scale);
+    sm.getContext('2d').drawImage(canvas,0,0,sm.width,sm.height);
+    img=sm;
+  }
+  const dataUrl=img.toDataURL('image/jpeg',0.92);
+  const b64=dataUrl.split(',')[1];
+  const sizeMB=(b64.length*0.75/1024/1024).toFixed(2);
+  console.log('[claude-ocr] image size:',sizeMB,'MB');
+
+  // ラベルマップを Claude に渡すスキーマ
+  const fieldDescriptions=OCR_LABEL_MAP.map(m=>{
+    const code=m.code?` (コード${m.code})`:'';
+    return `- ${m.key}${code}: ${m.aliases.join(' / ')}`;
+  }).join('\n');
+
+  const systemPrompt=`あなたはローソンFC加盟店の月次精算書OCRエンジンです。画像から正確に数値を読み取り、JSONで返してください。
+
+【読み取り対象フィールド】
+${fieldDescriptions}
+
+【出力ルール】
+1. 必ず {"fields": {...}, "month": "YYYY-MM", "eigyo_nissu": <int>, "notes": "..."} の形式の単一JSONオブジェクトを返す
+2. fields は上記キーのみ使用。値は整数（円単位、カンマ・¥記号なし）
+3. 画像内に見つからないフィールドは fields から省略（nullや0で埋めない）
+4. month は精算月（例：2026-03）。読み取れなければ省略
+5. eigyo_nissu は営業日数（例：31）。読み取れなければ省略
+6. notes に読取の信頼度や注意点を簡潔に書く（例：「全フィールド明瞭」「タンクロスのみ判別困難」）
+7. 「見切・処分」は売上原価側（urihen）と営業費側（mikiri）の2箇所に出る場合があるので、コードまたは表の位置で区別する
+8. JSON以外の説明文・コードブロック記号・前置き禁止。必ず { から } で完結したJSONのみ出力する`;
+
+  onProgress&&onProgress('Claude Vision に送信中...',50);
+  const t0=performance.now();
+  const r=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'content-type':'application/json',
+      'x-api-key':key,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body:JSON.stringify({
+      model:model,
+      max_tokens:2000,
+      system:systemPrompt,
+      messages:[{
+        role:'user',
+        content:[
+          {type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}},
+          {type:'text',text:'この精算書PDFから値を読み取って、指定された形式のJSONで返してください。'}
+        ]
+      }]
+    })
+  });
+  const dt=((performance.now()-t0)/1000).toFixed(1);
+  if(!r.ok){
+    const errText=await r.text();
+    throw new Error(`Claude API error ${r.status}: ${errText.slice(0,300)}`);
+  }
+  const j=await r.json();
+  const txt=j.content?.[0]?.text||'';
+  console.log('[claude-ocr] response time:',dt+'s, tokens:',j.usage);
+
+  // JSON 抽出（前後にゴミがあっても拾う）
+  let parsed;
+  try{
+    const m=txt.match(/\{[\s\S]*\}/);
+    if(!m)throw new Error('JSON見つからず');
+    parsed=JSON.parse(m[0]);
+  }catch(e){
+    console.error('[claude-ocr] parse failed. raw:',txt);
+    throw new Error('Claude応答のJSON解析失敗: '+e.message+'\n\n応答:\n'+txt.slice(0,500));
+  }
+  return {parsed,raw:txt,usage:j.usage,timeSec:dt};
+}
 
 // ===== DRAG & DROP ハンドラ =====
 function setupDropZones(){
@@ -2657,10 +2856,53 @@ async function ocrProcessPage(pageIdx){
   document.getElementById('ocr-modal-loading').style.display='block';
   document.getElementById('ocr-modal-result').style.display='none';
 
+  const useClaude = !!claudeGetKey();
+
   try{
-    const Tess = await ocrLoadTesseract();
     const pdf = ocrCtx.pdf;
     const page = await pdf.getPage(ocrCtx.pages[pageIdx].pageNum);
+
+    if(useClaude){
+      // === Claude Vision モード ===
+      ocrSetStep('Claude Vision OCR モード','PDFを高解像度で画像化中...',15);
+      const vp = page.getViewport({scale:2.5});
+      const cv = document.createElement('canvas');
+      cv.width = vp.width; cv.height = vp.height;
+      await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+      ocrCtx.canvas = cv;
+
+      const {parsed,raw,usage,timeSec} = await claudeOcrSeisan(cv, ocrSetStep);
+
+      ocrSetStep('結果を整形中...','JSON → state 変換',85);
+      const extracted = {};
+      const fields = parsed.fields || {};
+      OCR_LABEL_MAP.forEach(m=>{
+        const v = fields[m.key];
+        if(v!=null && v!==''){
+          const num = typeof v==='number' ? v : parseInt(String(v).replace(/[^\d-]/g,''),10);
+          if(!isNaN(num))extracted[m.key]=num;
+        }
+      });
+      if(parsed.month)extracted._month=parsed.month;
+      if(parsed.eigyo_nissu)extracted._eigyo_nissu=parsed.eigyo_nissu;
+      if(parsed.notes)extracted._notes=parsed.notes;
+
+      ocrCtx.extracted = extracted;
+      ocrCtx.fullText = raw;
+
+      // 検算
+      ocrSetStep('整合性を検算中...','8つの不変式で検証',95);
+      const issues = ocrVerifyInvariants(extracted);
+      ocrCtx.issues = issues;
+
+      const inT = usage?.input_tokens||0, outT = usage?.output_tokens||0;
+      ocrSetStep('完了 ✨',`Claude ${claudeGetModel().split('-').slice(0,3).join('-')} / ${timeSec}秒 / ${inT}+${outT} tokens`,100);
+      setTimeout(()=>ocrShowConfirmation(),300);
+      return;
+    }
+
+    // === Tesseract モード（fallback） ===
+    const Tess = await ocrLoadTesseract();
 
     // 低解像度版で回転検出（高速化）
     ocrSetStep('最適な向きを検出中...','低解像度で4方向プレ判定',20);
@@ -2714,11 +2956,11 @@ async function ocrProcessPage(pageIdx){
     const issues = ocrVerifyInvariants(extracted);
     ocrCtx.issues = issues;
 
-    ocrSetStep('完了',`認識スコア ${bestScore} / 回転 ${bestRot}°`,100);
+    ocrSetStep('完了',`Tesseract / 認識スコア ${bestScore} / 回転 ${bestRot}°`,100);
     setTimeout(()=>ocrShowConfirmation(),300);
   }catch(e){
     console.error(e);
-    ocrSetStep('❌ エラー',e.message+'\n\n精算書PDFの形式を確認してください。',0);
+    ocrSetStep('❌ エラー',e.message+'\n\n精算書PDFの形式・APIキー・通信を確認してください。',0);
   }
 }
 
@@ -2888,6 +3130,10 @@ function ocrShowConfirmation(){
   if(ext._month)html += `<span class="pill ok">📅 ${ext._month}</span>`;
   if(ext._eigyo_nissu)html += `<span class="pill ok">📆 営業日数 ${ext._eigyo_nissu}日</span>`;
   html += '</div>';
+
+  if(ext._notes){
+    html += `<div class="alert alert-info" style="font-size:12px;margin-bottom:10px"><b>🤖 Claude のメモ：</b> ${escHtml(ext._notes)}</div>`;
+  }
 
   // 取込先カラム選択
   html += '<div style="margin-bottom:8px"><b>取込先カラム：</b> ';
@@ -4380,6 +4626,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
   calcSeisan();calcMonthly();calcDailyStats();calcTimeStats();
   initYoubiGrid();initOrderFilter();
   if(typeof setupDropZones==='function')setupDropZones();
+  if(typeof claudeKeyUpdateStatus==='function')claudeKeyUpdateStatus();
   const now=new Date();
   setText('header-date',`${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`);
   // Gist設定入力欄に現在の値を反映
