@@ -9,6 +9,8 @@
 <title>経営計画管理システム</title>
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 <script>if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';</script>
+<!-- PDF単一ページ抽出用（Anthropic API 32MB上限対策） -->
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <!-- Tesseract.js は OCR 利用時にのみ動的ロード -->
 <script>
 window.ocrLoadTesseract = function(){
@@ -410,7 +412,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v15.0</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v15.1</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -1411,7 +1413,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v15.0';
+const APP_VERSION='v15.1';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -1521,6 +1523,22 @@ async function claudeKeyTest(){
 }
 
 // 精算書PDFページの canvas を Claude Vision で解析
+// pdf-lib で「指定ページだけの単一ページPDF」を作って ArrayBuffer で返す
+// （Anthropic API の PDF 上限は 32MB だが、base64 化で 33% 増えるので元PDFが
+//  20MB 程度を超えると弾かれる。対象ページだけ切り出して数MB に絞る。）
+async function extractSinglePagePdf(srcArrayBuffer, pageIdxOneBased){
+  if(!window.PDFLib){throw new Error('pdf-lib が読み込まれていません');}
+  const {PDFDocument} = window.PDFLib;
+  const src = await PDFDocument.load(srcArrayBuffer, {ignoreEncryption:true});
+  const out = await PDFDocument.create();
+  const idx0 = Math.max(0, pageIdxOneBased-1);
+  const [copied] = await out.copyPages(src, [idx0]);
+  out.addPage(copied);
+  const bytes = await out.save();
+  // 返値は Uint8Array なので buffer を渡す
+  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset+bytes.byteLength);
+}
+
 // ArrayBuffer → base64 文字列（大きいバッファでも StackOverflow しないようチャンク処理）
 async function arrayBufferToBase64(buf){
   const bytes=new Uint8Array(buf);
@@ -3127,11 +3145,10 @@ async function handleSeisanPDF(ev){
     const buf = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({data:buf.slice(0)}).promise;
     ocrCtx.pdf = pdf;
-    // Anthropic API への直接送信用に PDF を base64 化して保持
+    // PDF 単一ページ抽出用に元バッファを保持（base64化は送信直前に行う）
     ocrCtx.pdfBuf = buf;
-    ocrCtx.pdfBase64 = await arrayBufferToBase64(buf);
     ocrCtx.pdfSizeMB = (buf.byteLength/1024/1024).toFixed(2);
-    console.log('[seisan] PDF size:',ocrCtx.pdfSizeMB,'MB, base64:',(ocrCtx.pdfBase64.length/1024/1024).toFixed(2),'MB');
+    console.log('[seisan] PDF size:',ocrCtx.pdfSizeMB,'MB,',pdf.numPages,'pages');
 
     // 全ページのサムネイルを生成
     ocrSetStep('ページ一覧を作成中...',`合計 ${pdf.numPages} ページ`,15);
@@ -3193,12 +3210,8 @@ async function ocrProcessPage(pageIdx){
       //   1. PDF直送モード（Anthropic APIの document content block）= サーバ側でテキスト+画像抽出
       //   2. PDFテキストレイヤー（PDF.js getTextContent）
       //   3. Vision OCR（最後の砦）
-      const pdfBase64 = ocrCtx.pdfBase64;
-      const pdfBytes = ocrCtx.pdfBuf?.byteLength || 0;
-      const pdfMB = pdfBytes/1024/1024;
-      // Anthropic の PDF 上限は 32MB。base64 化するとさらに膨らむので余裕を見て 23MB まで
-      const canSendPdf = pdfBase64 && pdfMB < 23;
-      console.log('[claude] PDF size:',pdfMB.toFixed(2),'MB, canSendPdf:',canSendPdf);
+      const fullPdfMB = (ocrCtx.pdfBuf?.byteLength||0)/1024/1024;
+      console.log('[claude] full PDF size:',fullPdfMB.toFixed(2),'MB');
 
       let result=null;
       let imgCanvas=null;
@@ -3210,11 +3223,22 @@ async function ocrProcessPage(pageIdx){
       await page.render({canvasContext:imgCanvas.getContext('2d'),viewport:vp}).promise;
       ocrCtx.canvas = imgCanvas;
 
-      // ① PDF 直送モード
-      if(canSendPdf){
+      // ① PDF 直送モード（選択ページだけを抽出してサイズを抑える）
+      if(ocrCtx.pdfBuf && window.PDFLib){
         try{
-          ocrSetStep('PDF直送モード','Anthropic API にPDFをそのまま送信',15);
-          result = await claudeParseFromPDF(pdfBase64, ocrCtx.pages[pageIdx].pageNum, ocrSetStep);
+          ocrSetStep('PDF単一ページ抽出中...','選択ページだけを切り出し',12);
+          const targetPageNum = ocrCtx.pages[pageIdx].pageNum;
+          const singleBuf = await extractSinglePagePdf(ocrCtx.pdfBuf, targetPageNum);
+          const singleMB = singleBuf.byteLength/1024/1024;
+          console.log('[claude] single-page PDF size:',singleMB.toFixed(2),'MB (page',targetPageNum,')');
+          if(singleMB > 23){
+            console.warn('[claude] 単一ページでもサイズ超過 → スキップ');
+            throw new Error('単一ページでも 23MB 超え');
+          }
+          const singleB64 = await arrayBufferToBase64(singleBuf);
+          ocrSetStep('📄 PDF直送モード','Anthropic API に単一ページPDFを送信中',20);
+          // 単一ページ PDF なのでページ番号は 1 を指定
+          result = await claudeParseFromPDF(singleB64, 1, ocrSetStep);
           console.log('[claude] PDF direct mode succeeded');
         }catch(e){
           console.warn('[claude] PDF直送 失敗、フォールバック:',e.message);
