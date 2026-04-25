@@ -3159,23 +3159,32 @@ function importJSON(e){
   };
   reader.readAsText(file);e.target.value='';
 }
-function applyImportedJSON(text){
+async function applyImportedJSON(text){
   const s=JSON.parse(text);
-  if(confirm('インポートすると現在のデータが上書きされます。続行しますか？')){
-    // 部分インポート対応：既存stateにマージ（不足キーは既存値を維持）
-    const cur=JSON.parse(localStorage.getItem('keiei_plan_v1')||'{}');
-    const merged={...cur,...s};
-    if(s.seisan)merged.seisan={...(cur.seisan||{}),...s.seisan};
-    if(s.seisan_prev)merged.seisan_prev={...(cur.seisan_prev||{}),...s.seisan_prev};
-    if(s.seisan_lastyear)merged.seisan_lastyear={...(cur.seisan_lastyear||{}),...s.seisan_lastyear};
-    localStorage.setItem('keiei_plan_v1',JSON.stringify(merged));
-    location.reload();
+  if(!confirm('インポートすると現在のデータが上書きされます。続行しますか？'))return;
+  // 部分インポート対応：既存stateにマージ（不足キーは既存値を維持）
+  const cur=JSON.parse(localStorage.getItem('keiei_plan_v1')||'{}');
+  const merged={...cur,...s};
+  if(s.seisan)merged.seisan={...(cur.seisan||{}),...s.seisan};
+  if(s.seisan_prev)merged.seisan_prev={...(cur.seisan_prev||{}),...s.seisan_prev};
+  if(s.seisan_lastyear)merged.seisan_lastyear={...(cur.seisan_lastyear||{}),...s.seisan_lastyear};
+  localStorage.setItem('keiei_plan_v1',JSON.stringify(merged));
+  // Gist連携が有効ならクラウドにも反映（リロード時の取得で上書きされないように）
+  const {token,id}=gistCfg();
+  if(token&&id){
+    try{
+      Object.assign(state,merged);
+      const detail=document.getElementById('gist-status-detail');
+      if(detail)detail.textContent='インポート内容をクラウドに反映中...';
+      await gistPush();
+    }catch(e){console.warn('post-import gist push failed',e);}
   }
+  location.reload();
 }
-function openImportPaste(){
+async function openImportPaste(){
   const txt=prompt('JSONテキストを貼り付けてください（マイドライブ/松本新村店/keiei_plan_2026-03.json の中身）：');
   if(!txt)return;
-  try{applyImportedJSON(txt);}catch(err){alert('読み込み失敗: '+err.message);}
+  try{await applyImportedJSON(txt);}catch(err){alert('読み込み失敗: '+err.message);}
 }
 
 // ===== HELP POPOVER =====
