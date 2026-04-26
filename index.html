@@ -613,7 +613,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v19.1</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v19.2</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -885,6 +885,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
         <nav class="sidebar-rail">
           <button class="sidebar-btn active" data-sub="plan-main" onclick="showSub('plan','plan-main')">📊 計画ダッシュボード</button>
           <button class="sidebar-btn ai-btn" data-sub="plan-ai" onclick="showSub('plan','plan-ai')" style="background:linear-gradient(90deg,#7c3aed 0%,#2563eb 100%);color:#fff;border-left-color:#7c3aed">🤖 AI計画提案</button>
+          <button class="sidebar-btn ai-btn" data-sub="plan-qa" onclick="showSub('plan','plan-qa')" style="background:linear-gradient(90deg,#0891b2 0%,#0d9488 100%);color:#fff;border-left-color:#0891b2">💬 Q&Aメモ</button>
           <button class="sidebar-btn" data-sub="plan-cat" onclick="showSub('plan','plan-cat')">📦 カテゴリ別計画</button>
           <button class="sidebar-btn" data-sub="plan-cn" onclick="showSub('plan','plan-cn')">💴 FC-Cn 支援算出</button>
           <button class="sidebar-btn" data-sub="plan-sessaku" onclick="showSub('plan','plan-sessaku')">🎯 施策・売場</button>
@@ -1307,6 +1308,67 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
         <div class="section-title">📋 プロンプト・テンプレート（参考）<button class="help-btn" data-help-title="プロンプトカスタマイズについて" data-help="AI提案で使われるプロンプトの全文をここで確認できます。デフォルトの「経営計画提案プロンプト」が組まれており、現状の状態を JSON にして渡しています。<br><br>必要なら下のテキストエリアで編集できます。空欄に戻すとデフォルトに戻ります。">?</button></div>
         <div class="input-hint">プロンプトをカスタマイズしたい場合は下に書き換えてください（空欄でデフォルト）。</div>
         <textarea id="ai-prompt-custom" rows="4" placeholder="（カスタムプロンプト未設定 - デフォルトを使用）" style="margin-top:6px;font-family:monospace;font-size:11px" oninput="state.aiPromptCustom=this.value;saveAll()"></textarea>
+      </div>
+    </div>
+
+    <!-- ===== Tab QA: 💬 Q&Aメモ（NotebookLM代替） ===== -->
+    <div class="tab-panel" id="tab-qa">
+      <div class="card" style="background:linear-gradient(135deg,#cffafe 0%,#dcfce7 100%);border:1px solid #67e8f9">
+        <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
+          <div style="font-size:34px;line-height:1">💬</div>
+          <div style="flex:1;min-width:240px">
+            <h2 style="margin:0 0 4px;color:#0e7490;font-size:18px">Q&A メモ — Claude に何でも質問</h2>
+            <p style="margin:0;font-size:12px;color:#475569;line-height:1.6">
+              店舗データ（精算書／施策／カテゴリ／外部要因）を文脈として Claude に質問できます。<br>
+              <b>回答はチャットに埋もれず、ここに永続保存</b>。タグ付け・月別フィルタ・キーワード検索が可能です。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">❓ 新しい質問</div>
+        <div class="row">
+          <div class="col" style="max-width:200px"><div class="form-group">
+            <label>タグ（任意）</label>
+            <input type="text" id="qa-tag" placeholder="例：売上 / 施策 / 客数" list="qa-tag-suggestions">
+            <datalist id="qa-tag-suggestions">
+              <option value="売上"><option value="粗利"><option value="経費"><option value="客数"><option value="施策"><option value="カテゴリ"><option value="外部要因"><option value="計画"><option value="分析"><option value="予測">
+            </datalist>
+          </div></div>
+          <div class="col" style="max-width:130px"><div class="form-group">
+            <label>文脈データ</label>
+            <select id="qa-context">
+              <option value="all">全体（推奨）</option>
+              <option value="seisan">精算書のみ</option>
+              <option value="cat">カテゴリのみ</option>
+              <option value="sessaku">施策のみ</option>
+              <option value="ext">外部要因のみ</option>
+              <option value="none">なし（軽量）</option>
+            </select>
+          </div></div>
+        </div>
+        <div class="form-group">
+          <label>質問</label>
+          <textarea id="qa-question" rows="3" placeholder="例：来週の弁当売上を10%伸ばすには、どのカテゴリ/時間帯/施策に注力すべき？根拠付きで答えて。"></textarea>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn-primary btn-sm" onclick="askClaudeQA()" style="background:#0891b2;font-weight:700">💬 Claude に質問</button>
+          <button class="btn-secondary btn-sm" onclick="document.getElementById('qa-question').value='';document.getElementById('qa-tag').value=''">クリア</button>
+        </div>
+        <div id="qa-current-answer" style="margin-top:10px"></div>
+      </div>
+
+      <div class="card">
+        <div class="flex justify-between items-center mb-2" style="flex-wrap:wrap;gap:8px">
+          <div class="section-title" style="margin:0">📚 Q&A 履歴</div>
+          <div class="flex gap-2" style="flex-wrap:wrap">
+            <input type="text" id="qa-search" placeholder="🔍 キーワードで絞込" oninput="renderQALog()" style="font-size:12px;width:auto;min-width:140px">
+            <select id="qa-filter-tag" onchange="renderQALog()" style="font-size:12px;width:auto"><option value="">すべてのタグ</option></select>
+            <select id="qa-filter-month" onchange="renderQALog()" style="font-size:12px;width:auto"><option value="">すべての月</option></select>
+          </div>
+        </div>
+        <div id="qa-history-list"></div>
       </div>
     </div>
 
@@ -1999,7 +2061,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v19.1';
+const APP_VERSION='v19.2';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -2770,23 +2832,25 @@ let state={
     sessaku_booklet:{filename:'',uploaded_at:'',items:[]}},
   daily:{t_asa_u:0,t_asa_k:0,t_asa_u_nen:100,t_asa_k_nen:100,t_hiru_u:0,t_hiru_k:0,t_hiru_u_nen:100,t_hiru_k_nen:100,t_yu_u:0,t_yu_k:0,t_yu_u_nen:100,t_yu_k_nen:100,youbi:DAYS.map(d=>({day:d,nishin:0,nishin_diff:0,kyaku:0,kyaku_diff:0,tanka:0,tanka_diff:0}))},
   cats:CATS.reduce((o,c)=>({...o,[c]:{sm_u:0,mp_u:0,sw_u:0,kp_u:0,sw_uh:0,sm_a:0,mp_a:0,sw_a:0,kp_a:0,aico_u:0,aico_a:0,aico_ne:0,aico_hai:0,driver_h:1,driver_d:2,driver_hantei:'処方箋通',driver_riyu:''}}),{}),
-  // v19.1: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）の入力用ストア
+  // v19.2: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）の入力用ストア
   // 構造: catReport[section][row][col_curr|col_prev] = number   例 catReport.dept['米飯'].sales_curr
   catReport:{
     period:{curr_start:'',curr_end:'',prev_start:'',prev_end:''},
     dept:DEPT_ROWS.reduce((o,r)=>({...o,[r]:{}}),{}),
     alco:ALCO_ROWS.reduce((o,r)=>({...o,[r]:{}}),{})
   },
-  // v19.1: 処方箋/ドライバ次週計画（自動判定: 処方箋通／上方修正）
+  // v19.2: 処方箋/ドライバ次週計画（自動判定: 処方箋通／上方修正）
   aicoDriver:{},
-  // v19.1: 月次ファイル管理（一元アップロード履歴） + v19.1: external（外部要因）追加
+  // v19.2: 月次ファイル管理（一元アップロード履歴） + v19.2: external（外部要因）追加
   fileUploads:{seisan:[],catreport:[],booklet:[],syohou:[],external:[]},
-  // v19.1: 外部要因テキスト（PDF抽出・要約）
+  // v19.2: 外部要因テキスト（PDF抽出・要約）
   externalFactors:[],
-  // v19.1: AI計画提案
+  // v19.2: AI計画提案
   aiProposals:[],
   aiPromptCustom:'',
-  // v19.1: 月別データアーカイブ（対象月切替時に過去月のデータを保持）
+  // v19.2: Q&A メモ（NotebookLM代替）
+  qaLog:[],
+  // v19.2: 月別データアーカイブ（対象月切替時に過去月のデータを保持）
   byMonth:{},
   sessaku:[],
   layout:LAYOUT_AREAS.map(a=>({area:a,shoten:'',point:''})),
@@ -2868,6 +2932,7 @@ const SUB_MAP={
   plan:{
     'plan-main':'tab1',
     'plan-ai':'tab-ai',
+    'plan-qa':'tab-qa',
     'plan-cat':'tab1-cat',
     'plan-cn':'tab1-cn',
     'plan-sessaku':'tab4',
@@ -2917,6 +2982,7 @@ function triggerSubRender(panelId){
   if(panelId==='tab-vs'){try{renderSnapList();renderVsCharts();}catch(e){console.warn('vs charts',e)}}
   if(panelId==='tab1')renderPuzzleTable();
   if(panelId==='tab-ai')try{renderAIProposalsTab();}catch(e){console.warn(e);}
+  if(panelId==='tab-qa')try{renderQALog();}catch(e){console.warn(e);}
   if(panelId==='tab1-cat'){renderCategoryTab();try{renderCatGap();}catch(e){}}
   if(panelId==='tab-files')try{renderFileUploads();}catch(e){console.warn(e);}
   if(panelId==='tab1-cn')calcCnSupport();
@@ -2942,11 +3008,11 @@ function showTab(n){
 }
 
 // グローバル月セレクタ
-// ===== v19.1: 月別データアーカイブ =====
+// ===== v19.2: 月別データアーカイブ =====
 // state.byMonth = { 'YYYY-MM': { seisan, seisan_prev, seisan_lastyear, monthly, cats,
 //                                 catReport, aicoDriver, sessaku, fileUploads, daily } }
 // 対象月を切り替えると、現在の月別データを archive に退避し、新しい月のデータを読み込む。
-const MONTHLY_SLICES = ['seisan','seisan_prev','seisan_lastyear','monthly','cats','catReport','aicoDriver','sessaku','fileUploads','daily','externalFactors','kensho_ext','aiProposals'];
+const MONTHLY_SLICES = ['seisan','seisan_prev','seisan_lastyear','monthly','cats','catReport','aicoDriver','sessaku','fileUploads','daily','externalFactors','kensho_ext','aiProposals','qaLog'];
 
 function _emptySliceFor(slice){
   switch(slice){
@@ -2962,6 +3028,7 @@ function _emptySliceFor(slice){
     case 'externalFactors':return [];
     case 'kensho_ext':     return [];
     case 'aiProposals':    return [];
+    case 'qaLog':          return [];
     case 'daily':          return {t_asa_u:0,t_asa_k:0,t_asa_u_nen:100,t_asa_k_nen:100,t_hiru_u:0,t_hiru_k:0,t_hiru_u_nen:100,t_hiru_k_nen:100,t_yu_u:0,t_yu_k:0,t_yu_u_nen:100,t_yu_k_nen:100,youbi:DAYS.map(d=>({day:d,nishin:0,nishin_diff:0,kyaku:0,kyaku_diff:0,tanka:0,tanka_diff:0}))};
   }
   return {};
@@ -4094,7 +4161,7 @@ function renderVsCharts(){
   }
 }
 
-// ===== v19.1: AI計画提案 =====
+// ===== v19.2: AI計画提案 =====
 // 現在の state を集約して Claude に渡し、構造化された計画提案を取得する
 // 設計方針:
 //   - すべての関連state を 1つの JSON にまとめる（snapshot）
@@ -4527,6 +4594,208 @@ function duplicateAIProposalAsCustomPrompt(id){
     saveAll();
   }
   showToast('📝 プロンプトをカスタム欄にコピーしました');
+}
+
+// ===== v19.2: Q&A メモ機能（NotebookLM代替） =====
+function _qaBuildContext(level){
+  const s = state.seisan||{};
+  const sumKey = (b,r)=>{ try{return sumCalc(SEISAN_ROWS.find(x=>x.key===r),b||{})}catch(e){return 0} };
+  const baseKpi = (b)=>({
+    uriage:(b.uriage||0)+(b.sonotauriage||0),
+    arari: sumKey(b,'arari'),
+    tenrieki: sumKey(b,'_tenrieki'),
+    eigyokei: sumKey(b,'_eigyokei')
+  });
+  if(level==='none')return null;
+  const ctx = {
+    target_month: s.month||'',
+    eigyo_nissu: s.eigyo_nissu||30
+  };
+  if(level==='all'||level==='seisan'){
+    ctx.seisan = {curr:baseKpi(s),prev:baseKpi(state.seisan_prev||{}),ly:baseKpi(state.seisan_lastyear||{})};
+  }
+  if(level==='all'||level==='cat'){
+    const cats={};
+    CATS.forEach(c=>{
+      const plan = state.cats?.[c]?.kp_u || state.cats?.[c]?.mp_u || 0;
+      const actual = state.catReport?.alco?.[c]?.sales_curr || state.catReport?.dept?.[c]?.sales_curr || 0;
+      if(plan>0||actual>0)cats[c]={plan,actual};
+    });
+    ctx.categories = cats;
+  }
+  if(level==='all'||level==='sessaku'){
+    ctx.sessaku = (state.sessaku||[]).map(x=>({
+      name:x.name,cat:x.cat,invest:x.invest||0,effect:x.effect||0,
+      content:(x.content||'').slice(0,150)
+    }));
+  }
+  if(level==='all'||level==='ext'){
+    ctx.external = (state.externalFactors||[]).slice(0,3).map(f=>({
+      filename:f.filename,month:f.month,
+      summary:(f.summary||'').slice(0,1200),note:f.note||''
+    }));
+  }
+  if(level==='all'){
+    ctx.fc_contract = state.cnPlan ? {type:state.cnPlan.type,h24:!!state.cnPlan.h24} : null;
+    if(typeof AICO_DRIVER_CATS!=='undefined' && typeof _judgeAicoCategory==='function'){
+      ctx.aico_judgment = AICO_DRIVER_CATS.map(c=>({cat:c,judge:_judgeAicoCategory(c).judge}));
+    }
+  }
+  return ctx;
+}
+
+async function askClaudeQA(){
+  const apiKey = (typeof claudeGetKey==='function')?claudeGetKey():'';
+  const q = (document.getElementById('qa-question')?.value||'').trim();
+  if(!q){ alert('質問を入力してください'); return; }
+  if(!apiKey){
+    if(!confirm('Claude APIキーが未設定です。先に設定しますか？'))return;
+    if(typeof claudeKeyOpen==='function')claudeKeyOpen();
+    return;
+  }
+  const tag = (document.getElementById('qa-tag')?.value||'').trim();
+  const level = document.getElementById('qa-context')?.value || 'all';
+  const ctx = _qaBuildContext(level);
+
+  const out = document.getElementById('qa-current-answer');
+  if(out)out.innerHTML='<div class="ai-loading" style="color:#0891b2">Claude が回答中...</div>';
+
+  // 質問プロンプト
+  const prompt = `あなたはローソン店舗の経営参謀です。以下の店舗データ（JSON）を文脈にして、店舗オーナーの質問に答えてください。
+
+# 回答ルール
+- 数字は具体的に（円・%・件数）
+- 関連する施策・カテゴリ・外部要因があれば必ず引用
+- 推奨アクションがあれば最後に箇条書きで提示
+- 不確かな点は「データ不足」と明記
+
+${ctx?'# 店舗データ\n'+JSON.stringify(ctx,null,2)+'\n\n':''}# 質問
+${q}`;
+
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-5',
+        max_tokens:4000,
+        messages:[{role:'user',content:[{type:'text',text:prompt}]}]
+      })
+    });
+    if(!res.ok){
+      const errTxt = await res.text();
+      throw new Error(`API ${res.status}: ${errTxt.slice(0,300)}`);
+    }
+    const json = await res.json();
+    const answer = (json.content||[]).map(c=>c.text||'').join('').trim();
+    // 保存
+    const entry = {
+      id:Date.now(),
+      date:new Date().toISOString(),
+      month:state.seisan?.month||'',
+      tag:tag||'',
+      contextLevel:level,
+      question:q,
+      answer
+    };
+    state.qaLog = state.qaLog || [];
+    state.qaLog.unshift(entry);
+    if(state.qaLog.length>100)state.qaLog.length=100;
+    saveAll(true);
+    if(out)out.innerHTML = _qaRenderEntry(entry, true);
+    renderQALog();
+  }catch(e){
+    console.error('[qa] failed:',e);
+    if(out)out.innerHTML = '<div style="padding:12px;color:#dc2626;background:#fef2f2;border-radius:6px;font-size:12px"><b>❌ 失敗</b><br>'+(e.message||e)+'</div>';
+  }
+}
+
+function _qaEscape(s){ return (s||'').replace(/</g,'&lt;'); }
+function _qaFormatAnswer(text){
+  // 簡易マークダウン: 改行・* 箇条書き・**太字**
+  let html = _qaEscape(text);
+  html = html.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+  html = html.replace(/^[\*\-]\s+(.+)$/gm,'<li>$1</li>');
+  html = html.replace(/(<li>.+<\/li>(\n)?)+/g, m=>'<ul style="margin:6px 0 6px 18px;padding:0">'+m+'</ul>');
+  html = html.replace(/\n/g,'<br>');
+  return html;
+}
+
+function _qaRenderEntry(e, fresh){
+  const dt = new Date(e.date).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  return `<div style="border:1px solid var(--border);border-radius:10px;padding:12px;background:#fff;${fresh?'border-left:4px solid #0891b2':''}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px;margin-bottom:6px">
+      <div>
+        <div style="font-weight:700;color:#0e7490;font-size:13px">❓ ${_qaEscape(e.question)}</div>
+        <div style="font-size:10px;color:#6b7280;margin-top:2px">
+          ${dt}
+          ${e.month?` ／ <span style="background:#dbeafe;padding:1px 6px;border-radius:8px">${e.month}</span>`:''}
+          ${e.tag?` ／ <span style="background:#cffafe;padding:1px 6px;border-radius:8px">#${_qaEscape(e.tag)}</span>`:''}
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn-secondary btn-sm" style="padding:2px 8px;font-size:10px" onclick="copyQAAnswer(${e.id})">📋 コピー</button>
+        <button class="btn-danger btn-sm" style="padding:2px 8px;font-size:10px" onclick="deleteQAEntry(${e.id})">🗑️</button>
+      </div>
+    </div>
+    <div style="background:#f0f9ff;border-left:3px solid #0891b2;padding:10px;border-radius:0 6px 6px 0;font-size:12px;line-height:1.7;color:#1e3a5f">
+      ${_qaFormatAnswer(e.answer||'')}
+    </div>
+  </div>`;
+}
+
+function renderQALog(){
+  const arr = state.qaLog||[];
+  const list = document.getElementById('qa-history-list');
+  if(!list)return;
+  // フィルタ更新
+  const tagSel = document.getElementById('qa-filter-tag');
+  const monSel = document.getElementById('qa-filter-month');
+  if(tagSel){
+    const cur=tagSel.value;
+    const tags = Array.from(new Set(arr.map(e=>e.tag).filter(Boolean))).sort();
+    tagSel.innerHTML = '<option value="">すべてのタグ</option>'+tags.map(t=>`<option value="${_qaEscape(t)}" ${cur===t?'selected':''}>#${_qaEscape(t)}</option>`).join('');
+  }
+  if(monSel){
+    const cur=monSel.value;
+    const months = Array.from(new Set(arr.map(e=>e.month).filter(Boolean))).sort().reverse();
+    monSel.innerHTML = '<option value="">すべての月</option>'+months.map(m=>`<option value="${m}" ${cur===m?'selected':''}>${m}</option>`).join('');
+  }
+  const kw = (document.getElementById('qa-search')?.value||'').toLowerCase();
+  const ftag = tagSel?.value||'';
+  const fmon = monSel?.value||'';
+  const filtered = arr.filter(e=>{
+    if(ftag && e.tag!==ftag)return false;
+    if(fmon && e.month!==fmon)return false;
+    if(kw){
+      const hay = ((e.question||'')+' '+(e.answer||'')+' '+(e.tag||'')).toLowerCase();
+      if(!hay.includes(kw))return false;
+    }
+    return true;
+  });
+  if(!filtered.length){
+    list.innerHTML='<div class="text-gray text-sm" style="padding:14px;text-align:center">'+(arr.length?'絞込条件に一致する Q&A はありません':'まだ Q&A はありません。上のフォームから質問を投げてみましょう。')+'</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(e=>_qaRenderEntry(e,false)).join('<div style="height:8px"></div>');
+}
+
+function deleteQAEntry(id){
+  if(!confirm('この Q&A を削除しますか？'))return;
+  state.qaLog = (state.qaLog||[]).filter(e=>e.id!==id);
+  saveAll(true);
+  renderQALog();
+}
+function copyQAAnswer(id){
+  const e=(state.qaLog||[]).find(x=>x.id===id);
+  if(!e)return;
+  const txt = `Q: ${e.question}\n\nA: ${e.answer}`;
+  navigator.clipboard?.writeText(txt).then(()=>showToast('📋 クリップボードにコピーしました')).catch(()=>{});
 }
 
 // 軽量トースト通知
@@ -5991,7 +6260,7 @@ function renderWeeklyProgress(){
 }
 
 // ===== DAILY =====
-// v19.1: 月累計・先週実績の入力欄は廃止。互換のため stub だけ残す（古い保存データ等の影響を吸収）
+// v19.2: 月累計・先週実績の入力欄は廃止。互換のため stub だけ残す（古い保存データ等の影響を吸収）
 function calcDailyStats(){ /* deprecated: kept as no-op for backward compat */ }
 function calcTimeStats(){
   const au=num('t-asa-u'),hu=num('t-hiru-u'),yu=num('t-yu-u');
@@ -6035,7 +6304,7 @@ function saveYoubi(){
 
 // ===== CATEGORY TAB =====
 // ===== 週次お店づくりレポート（DEPT別／ALCOカテゴリ別） =====
-// v19.1: 本部の週次レポートPDFを取り込み、PDFを左に表示しながら手入力できる
+// v19.2: 本部の週次レポートPDFを取り込み、PDFを左に表示しながら手入力できる
 function _ensureCatReport(){
   if(!state.catReport)state.catReport={period:{curr_start:'',curr_end:'',prev_start:'',prev_end:''},dept:{},alco:{}};
   ['dept','alco'].forEach(sec=>{
@@ -6837,11 +7106,11 @@ function renderCategoryTab(){
   try{ renderCatReport(); }catch(e){ console.warn(e); }
   try{ renderMgmtCompare(); }catch(e){ console.warn(e); }
   try{ renderAicoDriver(); }catch(e){ console.warn(e); }
-  // v19.1: 旧「カテゴリ別計画（売上/粗利/AICO）」UI は撤去。
+  // v19.2: 旧「カテゴリ別計画（売上/粗利/AICO）」UI は撤去。
   // データ自体は state.cats に残るので互換のため saveCat は維持。
 }
 // 後方互換: 既存の onclick 等から呼ばれても落ちないように noop
-function switchCatView(_v){ /* removed in v19.1 */ }
+function switchCatView(_v){ /* removed in v19.2 */ }
 function saveCat(cat,key,val){
   if(!state.cats[cat])state.cats[cat]={};
   state.cats[cat][key]=isNaN(val)?val:parseFloat(val)||0;
@@ -7810,7 +8079,7 @@ function collectFormValues(){
   const jyEl=document.getElementById('m-jyokyo-nenhi');if(jyEl)state.monthly.jyokyo_nenhi=parseFloat(jyEl.value)||0;
   const znEl=document.getElementById('m-zennen-nishin');if(znEl)state.monthly.zennen_nishin=parseNum(znEl.value);
   const kEl=document.getElementById('kaizen-memo');if(kEl)state.kaizen_memo=kEl.value;
-  // v19.1: 月累計・先週は廃止。時間帯別のみ保存
+  // v19.2: 月累計・先週は廃止。時間帯別のみ保存
   ['t_asa_u','t_asa_k','t_asa_u_nen','t_asa_k_nen','t_hiru_u','t_hiru_k','t_hiru_u_nen','t_hiru_k_nen','t_yu_u','t_yu_k','t_yu_u_nen','t_yu_k_nen'].forEach(k=>{
     const el=document.getElementById(k.replace(/_/g,'-'));if(el)state.daily[k]=parseNum(el.value);
   });
@@ -7848,30 +8117,32 @@ function loadAll(){
     }
     if(s.daily)Object.assign(state.daily,s.daily);
     if(s.cats)Object.keys(s.cats).forEach(k=>{state.cats[k]=Object.assign(state.cats[k]||{},s.cats[k]);});
-    // v19.1: 処方箋/ドライバ次週計画
+    // v19.2: 処方箋/ドライバ次週計画
     if(s.aicoDriver){
       state.aicoDriver=state.aicoDriver||{};
       Object.keys(s.aicoDriver).forEach(cat=>{
         state.aicoDriver[cat]=Object.assign({},state.aicoDriver[cat]||{},s.aicoDriver[cat]||{});
       });
     }
-    // v19.1: 月次ファイル管理（アップロード履歴）
+    // v19.2: 月次ファイル管理（アップロード履歴）
     if(s.fileUploads){
       state.fileUploads=state.fileUploads||{seisan:[],catreport:[],booklet:[],syohou:[]};
       ['seisan','catreport','booklet','syohou','external'].forEach(t=>{
         if(Array.isArray(s.fileUploads[t]))state.fileUploads[t]=s.fileUploads[t].slice(0,10);
       });
     }
-    // v19.1: 月別データアーカイブ
+    // v19.2: 月別データアーカイブ
     if(s.byMonth && typeof s.byMonth==='object'){
       state.byMonth = s.byMonth;
     }
-    // v19.1: 外部要因テキスト要約
+    // v19.2: 外部要因テキスト要約
     if(Array.isArray(s.externalFactors))state.externalFactors=s.externalFactors;
-    // v19.1: AI計画提案
+    // v19.2: AI計画提案
     if(Array.isArray(s.aiProposals))state.aiProposals=s.aiProposals;
     if(typeof s.aiPromptCustom==='string')state.aiPromptCustom=s.aiPromptCustom;
-    // v19.1: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）
+    // v19.2: Q&Aログ
+    if(Array.isArray(s.qaLog))state.qaLog=s.qaLog;
+    // v19.2: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）
     if(s.catReport){
       if(!state.catReport)state.catReport={period:{},dept:{},alco:{}};
       if(s.catReport.period)state.catReport.period=Object.assign(state.catReport.period||{},s.catReport.period);
@@ -7929,7 +8200,7 @@ function restoreForm(){
   if(!state.monthly.target_uriage&&state.seisan.uriage){const el=document.getElementById('m-target-uriage');if(el)el.value=state.seisan.uriage;}
   const jEl=document.getElementById('m-juten-sessaku');if(jEl)jEl.value=state.monthly.juten_sessaku||'';
   const kEl=document.getElementById('kaizen-memo');if(kEl)kEl.value=state.kaizen_memo||'';
-  // v19.1: 月累計・先週の復元は廃止（state.daily.tsuki_*/sen_* は localStorage に残るが UI からは参照しない）
+  // v19.2: 月累計・先週の復元は廃止（state.daily.tsuki_*/sen_* は localStorage に残るが UI からは参照しない）
   ['t_asa_u','t_asa_k','t_asa_u_nen','t_asa_k_nen','t_hiru_u','t_hiru_k','t_hiru_u_nen','t_hiru_k_nen','t_yu_u','t_yu_k','t_yu_u_nen','t_yu_k_nen'].forEach(k=>{
     const el=document.getElementById(k.replace(/_/g,'-'));if(el&&state.daily[k])el.value=state.daily[k];
   });
