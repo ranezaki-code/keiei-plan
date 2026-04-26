@@ -348,6 +348,39 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .aico-driver-table .judge-ok{background:#10b981}
 .aico-driver-table .judge-up{background:#f59e0b}
 .aico-driver-table .support-note{font-size:9px;color:#475569;margin-top:2px;display:block;font-weight:500}
+/* 📁 ファイル管理 - file-card grid */
+.files-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.file-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px;transition:border-color .15s,box-shadow .15s}
+.file-card:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(33,150,243,.08)}
+.file-card[data-type=seisan]{border-left:4px solid #2196f3}
+.file-card[data-type=catreport]{border-left:4px solid #4caf50}
+.file-card[data-type=booklet]{border-left:4px solid #ff9800}
+.file-card[data-type=syohou]{border-left:4px solid #9c27b0}
+.file-card-head{display:flex;align-items:flex-start;gap:10px}
+.file-card-icon{font-size:22px;line-height:1}
+.file-card-title{font-weight:700;color:#1e3a5f;font-size:13px}
+.file-card-desc{font-size:11px;color:#6b7280;margin-top:2px;line-height:1.5}
+.file-card-actions{display:flex;gap:6px;flex-wrap:wrap}
+.file-card-status{font-size:10px;color:#9ca3af;padding-top:4px;border-top:1px dashed var(--border)}
+.file-card-status.ok{color:#059669}
+/* ===== カテゴリ計画 vs 施策効果ギャップ ===== */
+.gap-table{font-size:12px;width:100%;border-collapse:collapse}
+.gap-table th,.gap-table td{border:1px solid var(--border);padding:5px 8px;text-align:right;white-space:nowrap}
+.gap-table th{background:#f3f4f6;font-weight:700;text-align:center;font-size:11px}
+.gap-table td.row-name{text-align:left;font-weight:700;background:#fff;min-width:130px}
+.gap-table .bar-cell{position:relative;text-align:left;min-width:160px;padding:4px 6px}
+.gap-table .bar-bg{background:#fef2f2;border:1px solid #fecaca;border-radius:4px;height:18px;width:100%;position:relative;overflow:hidden}
+.gap-table .bar-fill{background:linear-gradient(90deg,#10b981,#22c55e);height:100%;border-radius:4px}
+.gap-table .bar-text{position:absolute;left:6px;top:0;line-height:18px;font-size:10px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.gap-table .row-good td{background:#f0fdf4}
+.gap-table .row-warn td{background:#fffbeb}
+.gap-table .row-bad td{background:#fef2f2}
+/* ===== 施策・売場 拡張：発注リスト表示 ===== */
+.sessaku-orders{margin-top:6px;padding:6px;background:#fafbff;border:1px solid var(--border);border-radius:6px}
+.sessaku-orders-head{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;color:#1e3a5f;margin-bottom:4px}
+.sessaku-order-row{display:grid;grid-template-columns:1fr 70px 30px;gap:4px;margin-bottom:3px}
+.sessaku-order-row input{font-size:11px;padding:3px 6px}
+.sessaku-order-del{background:none;border:1px solid #fecaca;color:#dc2626;border-radius:3px;font-size:10px;padding:1px 5px;cursor:pointer}
 /* Seisan table */
 .seisan-group td:first-child{text-align:right;font-weight:600;font-size:12px;white-space:nowrap;padding-right:8px;width:140px}
 .seisan-group td:last-child{width:160px}
@@ -556,7 +589,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v18.4</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v18.5</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -1322,6 +1355,19 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
         <div class="input-hint" style="margin-top:6px">💡 ドライバ・在庫の数値は曜日別に入力／判定は値変更時にリアルタイム更新／全角→半角・Enter次へ・↑↓移動対応</div>
       </div>
 
+      <!-- ===== 計画 vs 施策効果ギャップ ===== -->
+      <div class="card">
+        <div class="flex justify-between items-center mb-2" style="flex-wrap:wrap;gap:8px">
+          <div class="section-title" style="margin:0">🎯 カテゴリ別 計画 vs 施策効果ギャップ<button class="help-btn" data-help-title="ギャップの見方" data-help="<b>狙い</b>：登録済みの施策（投資・期待効果）がカテゴリ別の月次計画に対して<br>どれだけ寄与するかを可視化します。<br><br>計算:<br>・<b>計画売上</b>（カテゴリ）= 当月計画売上（社内計画タブ「kp_u」）<br>・<b>現状実績</b>（カテゴリ）= 週次レポート「販売高(当月)」<br>・<b>施策効果合計</b> = そのカテゴリに紐付く全施策の「期待売上増」合計<br>・<b>ギャップ</b> = 計画 − (現状実績 + 施策効果合計)<br><br>判定:<br>・🟢 達成見込み：施策込みで計画を超えそう<br>・🟡 一部不足：あと数%で届く（10%以内）<br>・🔴 大きく不足：施策では届かない（10%超）<br><br><b>「この施策だけだと届かない」がひと目でわかる</b>のが目的です。">?</button></div>
+          <div class="flex gap-2"><button class="btn-secondary btn-sm" onclick="renderCatGap()">🔄 再計算</button></div>
+        </div>
+        <div id="catgap-summary" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;padding:10px;background:#f8fafc;border:1px solid var(--border);border-radius:6px;font-size:12px"></div>
+        <div class="overflow-auto">
+          <table class="gap-table" id="catgap-table"></table>
+        </div>
+        <div class="input-hint" style="margin-top:6px">💡 「施策・売場」タブで各施策のカテゴリと期待効果を入力するとここに反映されます。</div>
+      </div>
+
     </div><!-- /tab1-cat -->
 
     <!-- ===== FC-Cn 契約 支援算出 ===== -->
@@ -1619,9 +1665,89 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
     <!-- ===== グループ ② その他（クラウド同期＋その他計画） ======= -->
     <!-- ============================================================ -->
     <div class="group" id="group-other">
+      <div class="layout-sidebar">
+        <nav class="sidebar-rail">
+          <button class="sidebar-btn active" data-sub="files" onclick="showSub('other','files')">📁 ファイル管理</button>
+          <button class="sidebar-btn" data-sub="other-main" onclick="showSub('other','other-main')">⚙️ クラウド同期・その他</button>
+        </nav>
+        <div class="sidebar-pane">
 
-    <!-- ===== Tab 9: その他 ===== -->
-    <div class="tab-panel active" id="tab9">
+    <!-- ===== Tab files: 📁 ファイル管理（一元アップロード） ===== -->
+    <div class="tab-panel active" id="tab-files">
+      <div class="card">
+        <div class="section-title">📁 月次ファイル管理（一元アップロード）<button class="help-btn" data-help-title="月次ファイル管理の使い方" data-help="毎月本部から届く各種ファイルをここで一括アップロード・管理できます。<br><br>① 📒 精算書PDF：月末に届く損益計算書<br>② 📦 週次お店づくりレポート PDF：DEPT別／ALCOカテゴリ別の実績<br>③ 📘 お店作り冊子 PDF：本部の月次重点施策リスト<br>④ 💊 月次処方箋 PDF：AICOドライバ・処方箋設定値<br><br>ここからアップロードしても、各タブのアップロードボタンと同じ処理が走ります。<br>過去にアップロードしたファイルの一覧と日時、再処理ボタンも提供します。">?</button></div>
+        <div class="input-hint" style="margin-bottom:10px">毎月の各種PDFをここから一元的にアップロード。各タブで同じ処理が走ります（同一の状態を共有）。</div>
+
+        <!-- 4 つのファイル種別 -->
+        <div class="files-grid">
+          <div class="file-card" data-type="seisan">
+            <div class="file-card-head">
+              <span class="file-card-icon">📒</span>
+              <div>
+                <div class="file-card-title">精算書（月次）</div>
+                <div class="file-card-desc">本部精算書PDFを取り込み、損益計算書を自動入力</div>
+              </div>
+            </div>
+            <div class="file-card-actions">
+              <label class="btn-primary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px">📄 PDFを選択<input type="file" id="files-seisan-input" accept="application/pdf" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="handleSeisanPDF(event)"></label>
+              <button class="btn-secondary btn-sm" onclick="showGroup('jisseki');showSub('jisseki','seisan')">→ 精算書タブを開く</button>
+            </div>
+            <div class="file-card-status" id="files-seisan-status">— 未取り込み —</div>
+          </div>
+
+          <div class="file-card" data-type="catreport">
+            <div class="file-card-head">
+              <span class="file-card-icon">📦</span>
+              <div>
+                <div class="file-card-title">週次お店づくりレポート</div>
+                <div class="file-card-desc">DEPT別／ALCOカテゴリ別の実績PDF（週次）</div>
+              </div>
+            </div>
+            <div class="file-card-actions">
+              <label class="btn-primary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px">📄 PDFを選択<input type="file" id="files-catreport-input" accept="application/pdf" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="handleCategoryPDF(event)"></label>
+              <button class="btn-secondary btn-sm" onclick="showGroup('plan');showSub('plan','plan-cat')">→ カテゴリ別計画タブを開く</button>
+            </div>
+            <div class="file-card-status" id="files-catreport-status">— 未取り込み —</div>
+          </div>
+
+          <div class="file-card" data-type="booklet">
+            <div class="file-card-head">
+              <span class="file-card-icon">📘</span>
+              <div>
+                <div class="file-card-title">お店作り冊子（月次）</div>
+                <div class="file-card-desc">本部の月次重点施策リスト。施策候補を自動抽出</div>
+              </div>
+            </div>
+            <div class="file-card-actions">
+              <label class="btn-primary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px">📄 PDFを選択<input type="file" id="files-booklet-input" accept="application/pdf" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="handleBookletPDF(event)"></label>
+              <button class="btn-secondary btn-sm" onclick="showGroup('plan');showSub('plan','plan-sessaku')">→ 施策・売場タブを開く</button>
+            </div>
+            <div class="file-card-status" id="files-booklet-status">— 未取り込み —</div>
+          </div>
+
+          <div class="file-card" data-type="syohou">
+            <div class="file-card-head">
+              <span class="file-card-icon">💊</span>
+              <div>
+                <div class="file-card-title">月次処方箋</div>
+                <div class="file-card-desc">AICOドライバ／処方箋設定値の月次一覧PDF</div>
+              </div>
+            </div>
+            <div class="file-card-actions">
+              <label class="btn-primary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px">📄 PDFを選択<input type="file" id="files-syohou-input" accept="application/pdf" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="handleSyohouPDF(event)"></label>
+              <button class="btn-secondary btn-sm" onclick="showGroup('plan');showSub('plan','plan-cat')">→ AICOドライバを開く</button>
+            </div>
+            <div class="file-card-status" id="files-syohou-status">— 未取り込み —</div>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top:18px;font-size:14px">📅 アップロード履歴</div>
+        <div id="files-history-list" style="margin-top:6px"></div>
+      </div>
+    </div>
+
+    <!-- ===== Tab 9: クラウド同期・その他計画 ===== -->
+    <div class="tab-panel" id="tab9">
       <div class="card">
         <div class="section-title">☁️ クラウド同期（端末間で自動共有）</div>
         <div class="input-hint" style="background:#fff8e1;border-left:3px solid #ff9800;padding:8px 12px;margin:8px 0;line-height:1.6">
@@ -1666,6 +1792,8 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
       </div>
     </div>
 
+        </div><!-- /sidebar-pane (other) -->
+      </div><!-- /layout-sidebar (other) -->
     </div><!-- /group-other -->
 
     <!-- ============================================================ -->
@@ -1836,7 +1964,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v18.4';
+const APP_VERSION='v18.5';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -2607,15 +2735,17 @@ let state={
     sessaku_booklet:{filename:'',uploaded_at:'',items:[]}},
   daily:{t_asa_u:0,t_asa_k:0,t_asa_u_nen:100,t_asa_k_nen:100,t_hiru_u:0,t_hiru_k:0,t_hiru_u_nen:100,t_hiru_k_nen:100,t_yu_u:0,t_yu_k:0,t_yu_u_nen:100,t_yu_k_nen:100,youbi:DAYS.map(d=>({day:d,nishin:0,nishin_diff:0,kyaku:0,kyaku_diff:0,tanka:0,tanka_diff:0}))},
   cats:CATS.reduce((o,c)=>({...o,[c]:{sm_u:0,mp_u:0,sw_u:0,kp_u:0,sw_uh:0,sm_a:0,mp_a:0,sw_a:0,kp_a:0,aico_u:0,aico_a:0,aico_ne:0,aico_hai:0,driver_h:1,driver_d:2,driver_hantei:'処方箋通',driver_riyu:''}}),{}),
-  // v18.4: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）の入力用ストア
+  // v18.5: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）の入力用ストア
   // 構造: catReport[section][row][col_curr|col_prev] = number   例 catReport.dept['米飯'].sales_curr
   catReport:{
     period:{curr_start:'',curr_end:'',prev_start:'',prev_end:''},
     dept:DEPT_ROWS.reduce((o,r)=>({...o,[r]:{}}),{}),
     alco:ALCO_ROWS.reduce((o,r)=>({...o,[r]:{}}),{})
   },
-  // v18.4: 処方箋/ドライバ次週計画（自動判定: 処方箋通／上方修正）
+  // v18.5: 処方箋/ドライバ次週計画（自動判定: 処方箋通／上方修正）
   aicoDriver:{},
+  // v18.5: 月次ファイル管理（一元アップロード履歴）
+  fileUploads:{seisan:[],catreport:[],booklet:[],syohou:[]},
   sessaku:[],
   layout:LAYOUT_AREAS.map(a=>({area:a,shoten:'',point:''})),
   ff_face:[],
@@ -2703,12 +2833,12 @@ const SUB_MAP={
     'plan-season':'tab7',
     'plan-order':'tab8'
   },
-  other:{},
+  other:{files:'tab-files','other-main':'tab9'},
   manual:{}
 };
 // グループ単位で初期表示するサブタブを記憶（戻ったときに復元）
-const GROUP_DEFAULT={jisseki:'seisan',plan:'plan-main',other:'',manual:''};
-const groupSubState={jisseki:'seisan',plan:'plan-main',other:'',manual:''};
+const GROUP_DEFAULT={jisseki:'seisan',plan:'plan-main',other:'files',manual:''};
+const groupSubState={jisseki:'seisan',plan:'plan-main',other:'files',manual:''};
 
 function showGroup(g){
   document.querySelectorAll('.group').forEach(p=>p.classList.remove('active'));
@@ -2743,7 +2873,8 @@ function triggerSubRender(panelId){
   if(panelId==='tab2'){try{renderDailyCharts();}catch(e){console.warn('daily charts',e)}}
   if(panelId==='tab-vs'){try{renderSnapList();renderVsCharts();}catch(e){console.warn('vs charts',e)}}
   if(panelId==='tab1')renderPuzzleTable();
-  if(panelId==='tab1-cat')renderCategoryTab();
+  if(panelId==='tab1-cat'){renderCategoryTab();try{renderCatGap();}catch(e){}}
+  if(panelId==='tab-files')try{renderFileUploads();}catch(e){console.warn(e);}
   if(panelId==='tab1-cn')calcCnSupport();
   if(panelId==='tab4'){renderSessaku();renderLayout();renderFFface();renderBookletList();}
   if(panelId==='tab5'){renderKensho();renderGaibuin();}
@@ -4017,6 +4148,7 @@ async function handleSeisanPDF(ev){
   if(file.size > 30*1024*1024){
     if(!confirm(`PDFサイズが ${(file.size/1024/1024).toFixed(1)}MB です。処理に時間がかかりますが続行しますか？`))return;
   }
+  try{ recordFileUpload('seisan', file); }catch(e){}
   ocrShowModal();
   try{
     ocrSetStep('PDFを読み込み中...','',5);
@@ -5290,7 +5422,7 @@ function renderWeeklyProgress(){
 }
 
 // ===== DAILY =====
-// v18.4: 月累計・先週実績の入力欄は廃止。互換のため stub だけ残す（古い保存データ等の影響を吸収）
+// v18.5: 月累計・先週実績の入力欄は廃止。互換のため stub だけ残す（古い保存データ等の影響を吸収）
 function calcDailyStats(){ /* deprecated: kept as no-op for backward compat */ }
 function calcTimeStats(){
   const au=num('t-asa-u'),hu=num('t-hiru-u'),yu=num('t-yu-u');
@@ -5334,7 +5466,7 @@ function saveYoubi(){
 
 // ===== CATEGORY TAB =====
 // ===== 週次お店づくりレポート（DEPT別／ALCOカテゴリ別） =====
-// v18.4: 本部の週次レポートPDFを取り込み、PDFを左に表示しながら手入力できる
+// v18.5: 本部の週次レポートPDFを取り込み、PDFを左に表示しながら手入力できる
 function _ensureCatReport(){
   if(!state.catReport)state.catReport={period:{curr_start:'',curr_end:'',prev_start:'',prev_end:''},dept:{},alco:{}};
   ['dept','alco'].forEach(sec=>{
@@ -5490,6 +5622,7 @@ async function handleCategoryPDF(ev){
   if(file.size>30*1024*1024){
     if(!confirm(`PDFサイズが ${(file.size/1024/1024).toFixed(1)}MB です。処理に時間がかかりますが続行しますか？`))return;
   }
+  try{ recordFileUpload('catreport', file); }catch(e){}
   ocrShowModal();
   document.getElementById('ocr-modal-title').textContent='📦 週次レポートPDFを取り込み中...';
   ocrCtx.mode='catreport';
@@ -6197,6 +6330,7 @@ function saveCat(cat,key,val){
 async function handleBookletPDF(ev){
   const file=ev.target.files[0];
   if(!file)return;
+  try{ recordFileUpload('booklet', file); }catch(e){}
   const prog=document.getElementById('booklet-progress');
   const stat=document.getElementById('booklet-status');
   if(prog){prog.style.display='';prog.textContent='読み込み中: '+file.name;}
@@ -6320,7 +6454,7 @@ function clearBooklet(){
 
 // ===== SESSAKU =====
 function addSessaku(type='本部施策'){
-  state.sessaku.push({id:Date.now(),name:'',cat:'',type,start:'',end:'',invest:0,effect:0,content:''});
+  state.sessaku.push({id:Date.now(),name:'',cat:'',type,start:'',end:'',invest:0,effect:0,effect_arari:0,content:'',floor_plan:'',orders:[]});
   renderSessaku();saveAll();
 }
 function delSessaku(id){state.sessaku=state.sessaku.filter(s=>s.id!==id);renderSessaku();updateROI();saveAll();}
@@ -6331,8 +6465,16 @@ function copySessaku(id){
 function renderSessaku(){
   const el=document.getElementById('sessaku-list');
   if(!el)return;
-  if(!state.sessaku.length){el.innerHTML='<div class="text-gray text-sm">施策はまだ登録されていません</div>';renderSessakuSummary();return;}
-  el.innerHTML=state.sessaku.map((s,i)=>`
+  if(!state.sessaku.length){el.innerHTML='<div class="text-gray text-sm">施策はまだ登録されていません</div>';renderSessakuSummary();renderCatGap();return;}
+  el.innerHTML=state.sessaku.map((s,i)=>{
+    const orders = Array.isArray(s.orders)?s.orders:[];
+    const ordersHtml = orders.length ? orders.map((o,oi)=>`
+      <div class="sessaku-order-row">
+        <input type="text" placeholder="商品名 (例: 弁当A)" value="${(o.item||'').replace(/"/g,'&quot;')}" oninput="updateSessakuOrder(${s.id},${oi},'item',this.value)">
+        <input type="text" inputmode="numeric" placeholder="個数" value="${o.count||''}" oninput="updateSessakuOrder(${s.id},${oi},'count',this.value)">
+        <button class="sessaku-order-del" onclick="removeSessakuOrder(${s.id},${oi})" title="削除">×</button>
+      </div>`).join('') : '<div style="font-size:11px;color:#9ca3af;padding:4px">— 発注アイテム未登録 —</div>';
+    return `
     <div class="card" style="margin-bottom:8px;border-left:4px solid ${s.type==='本部施策'?'var(--accent)':'var(--orange)'}">
       <div class="flex justify-between items-center mb-2">
         <span class="font-bold" style="color:var(--main);font-size:13px">${s.type==='本部施策'?'🏪':'🏬'} ${s.name||'施策 #'+(i+1)}</span>
@@ -6358,13 +6500,207 @@ function renderSessaku(){
         <div class="col"><div class="form-group"><label>開始日</label><input type="date" value="${s.start||''}" oninput="updateSessaku(${s.id},'start',this.value)"></div></div>
         <div class="col"><div class="form-group"><label>終了日</label><input type="date" value="${s.end||''}" oninput="updateSessaku(${s.id},'end',this.value)"></div></div>
         <div class="col"><div class="form-group"><label>投資額 <span class="unit-hint">${UNIT.label}</span></label><input type="text" value="${s.invest||''}" inputmode="numeric" placeholder="0" oninput="updateSessaku(${s.id},'invest',this.value)"></div></div>
-        <div class="col"><div class="form-group"><label>期待効果 <span class="unit-hint">${UNIT.label}</span></label><input type="text" value="${s.effect||''}" inputmode="numeric" placeholder="0" oninput="updateSessaku(${s.id},'effect',this.value)"></div></div>
+        <div class="col"><div class="form-group"><label>期待売上増 <span class="unit-hint">${UNIT.label}</span></label><input type="text" value="${s.effect||''}" inputmode="numeric" placeholder="0" oninput="updateSessaku(${s.id},'effect',this.value)"></div></div>
+        <div class="col"><div class="form-group"><label>期待粗利増 <span class="unit-hint">${UNIT.label}</span></label><input type="text" value="${s.effect_arari||''}" inputmode="numeric" placeholder="0" oninput="updateSessaku(${s.id},'effect_arari',this.value)"></div></div>
       </div>
-      <div class="form-group"><label>取り組み内容</label><textarea rows="2" placeholder="具体的な取り組み" oninput="updateSessaku(${s.id},'content',this.value)">${s.content||''}</textarea></div>
-    </div>`).join('');
+      <div class="row">
+        <div class="col" style="flex:1 1 100%"><div class="form-group"><label>取り組み内容（具体的な実施内容）</label><textarea rows="2" placeholder="例：FF売場に弁当Aを20フェイス展開、店内POP3点を作成" oninput="updateSessaku(${s.id},'content',this.value)">${s.content||''}</textarea></div></div>
+      </div>
+      <div class="row">
+        <div class="col" style="flex:1 1 100%"><div class="form-group"><label>売場の作り方</label><textarea rows="2" placeholder="例：レジ前 → エンド1 で関連陳列。価格訴求POPで惣菜と組合せ売り" oninput="updateSessaku(${s.id},'floor_plan',this.value)">${s.floor_plan||''}</textarea></div></div>
+      </div>
+      <div class="sessaku-orders">
+        <div class="sessaku-orders-head">
+          <span>📦 発注アイテム（何を何個）</span>
+          <button class="btn-secondary btn-sm" onclick="addSessakuOrder(${s.id})" style="font-size:11px;padding:3px 8px">＋追加</button>
+        </div>
+        <div id="sessaku-orders-${s.id}">${ordersHtml}</div>
+      </div>
+    </div>`;
+  }).join('');
   fmtYenInputs(document.getElementById('sessaku-list'));
   renderSessakuSummary();
+  renderCatGap();
 }
+
+// 施策の発注アイテム操作
+function addSessakuOrder(id){
+  const s=state.sessaku.find(x=>x.id===id);
+  if(!s)return;
+  if(!Array.isArray(s.orders))s.orders=[];
+  s.orders.push({item:'',count:0});
+  renderSessaku();saveAll();
+}
+function updateSessakuOrder(id,oi,key,val){
+  const s=state.sessaku.find(x=>x.id===id);
+  if(!s||!Array.isArray(s.orders)||!s.orders[oi])return;
+  s.orders[oi][key] = key==='count'? (parseFloat((val||'').toString().replace(/[^\d.\-]/g,''))||0) : val;
+  saveAll();
+}
+function removeSessakuOrder(id,oi){
+  const s=state.sessaku.find(x=>x.id===id);
+  if(!s||!Array.isArray(s.orders))return;
+  s.orders.splice(oi,1);
+  renderSessaku();saveAll();
+}
+
+// ===== カテゴリ計画 vs 施策効果ギャップ =====
+function _catGapMatchKey(catName){
+  // sessaku の cat 名はそのまま使う（前後 trim）。発注がある施策の場合は発注合計も寄与とは別に表示
+  return (catName||'').trim();
+}
+function renderCatGap(){
+  const tbl=document.getElementById('catgap-table');
+  if(!tbl)return;
+  // 各カテゴリの「計画売上(月)」「実績(月)」「施策効果合計」「ギャップ」を集計
+  const planMap={}, actMap={}, effMap={}, ordersMap={};
+  CATS.forEach(c=>{
+    planMap[c] = (state.cats?.[c]?.kp_u || state.cats?.[c]?.mp_u || 0); // 当週計画 or 当月計画
+    // 実績は週次レポート(catReport)から: ALCO優先 → DEPT
+    const ar = state.catReport?.alco?.[c]?.sales_curr;
+    const dr = state.catReport?.dept?.[c]?.sales_curr;
+    actMap[c] = ar||dr||0;
+    effMap[c] = 0;
+    ordersMap[c] = [];
+  });
+  (state.sessaku||[]).forEach(s=>{
+    const c = _catGapMatchKey(s.cat);
+    if(!c)return;
+    if(effMap[c]==null){effMap[c]=0;}
+    effMap[c] += (parseFloat(s.effect)||0);
+    if(!ordersMap[c])ordersMap[c]=[];
+    if(Array.isArray(s.orders))ordersMap[c].push(...s.orders.filter(o=>(o.item||'').trim()).map(o=>({...o,from:s.name||'施策'})));
+  });
+
+  // 表示するカテゴリ（計画 or 実績 or 施策効果のいずれかが>0、または施策が紐付いているもの）
+  const visibleCats = CATS.filter(c=> (planMap[c]||0)>0 || (actMap[c]||0)>0 || (effMap[c]||0)>0 );
+  if(!visibleCats.length){
+    tbl.innerHTML='<thead><tr><th>カテゴリ</th><th>計画</th><th>実績</th><th>施策効果</th><th>達成見込み</th><th>ギャップ</th><th>達成度</th><th>判定</th></tr></thead><tbody><tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:14px">カテゴリ別計画／実績／施策効果のいずれも未入力です。</td></tr></tbody>';
+    document.getElementById('catgap-summary').innerHTML='<div style="color:#9ca3af">カテゴリ別計画・週次レポート実績・施策の期待効果のいずれかを入力するとここに集計されます。</div>';
+    return;
+  }
+  let countOK=0,countWarn=0,countBad=0,sumPlan=0,sumAct=0,sumEff=0;
+  let html='<thead><tr><th class="row-name">カテゴリ</th><th>計画売上</th><th>現状実績</th><th>施策効果合計</th><th>達成見込み<br>(実績+効果)</th><th>ギャップ<br>(計画−見込)</th><th class="bar-cell">達成度</th><th>判定</th><th>紐付施策／発注</th></tr></thead><tbody>';
+  visibleCats.forEach(c=>{
+    const plan=planMap[c]||0, act=actMap[c]||0, eff=effMap[c]||0;
+    const expected=act+eff;
+    const gap=plan-expected;
+    const pct=plan>0?(expected/plan*100):null;
+    sumPlan+=plan;sumAct+=act;sumEff+=eff;
+    let klass='', label='';
+    if(pct==null){ klass=''; label='—'; }
+    else if(pct>=100){ klass='row-good'; label='🟢 達成見込み'; countOK++; }
+    else if(pct>=90){ klass='row-warn'; label='🟡 一部不足'; countWarn++; }
+    else { klass='row-bad'; label='🔴 大きく不足'; countBad++; }
+    const barWidth = Math.min(100, Math.max(0, pct||0));
+    const sessakuList = (state.sessaku||[]).filter(s=>_catGapMatchKey(s.cat)===c).map(s=>s.name||'施策').join('・') || '—';
+    const ordersText = (ordersMap[c]||[]).map(o=>`${o.item}×${o.count||0}`).join('・') || '—';
+    html += `<tr class="${klass}">
+      <td class="row-name">${c}</td>
+      <td>${_fmtYen(plan)}</td>
+      <td>${_fmtYen(act)}</td>
+      <td>${_fmtYen(eff)}</td>
+      <td><b>${_fmtYen(expected)}</b></td>
+      <td style="color:${gap>0?'#dc2626':'#059669'};font-weight:700">${gap>=0?'+':''}${_fmtYen(Math.abs(gap)).replace('¥','')==='—'?'—':(gap>=0?'+':'-')+'¥'+Math.abs(Math.round(gap)).toLocaleString()}</td>
+      <td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:${barWidth}%"></div><span class="bar-text">${pct==null?'—':pct.toFixed(0)+'%'}</span></div></td>
+      <td>${label}</td>
+      <td style="text-align:left;font-size:11px"><div><b>施策:</b> ${sessakuList}</div><div style="color:#6b7280"><b>発注:</b> ${ordersText}</div></td>
+    </tr>`;
+  });
+  // 合計行
+  const totalExpected=sumAct+sumEff, totalGap=sumPlan-totalExpected;
+  const totalPct=sumPlan>0?(totalExpected/sumPlan*100):null;
+  html += `<tr style="background:#1e3a5f;color:#fff;font-weight:700">
+    <td class="row-name" style="background:#1e3a5f;color:#fff">合計</td>
+    <td>${_fmtYen(sumPlan)}</td>
+    <td>${_fmtYen(sumAct)}</td>
+    <td>${_fmtYen(sumEff)}</td>
+    <td>${_fmtYen(totalExpected)}</td>
+    <td>${totalGap>=0?'+':''}${_fmtYen(Math.abs(totalGap)).replace('¥','')==='—'?'—':(totalGap>=0?'+':'-')+'¥'+Math.abs(Math.round(totalGap)).toLocaleString()}</td>
+    <td><div class="bar-bg" style="background:#475569"><div class="bar-fill" style="width:${Math.min(100,totalPct||0)}%"></div><span class="bar-text">${totalPct==null?'—':totalPct.toFixed(0)+'%'}</span></div></td>
+    <td colspan="2">${totalPct==null?'—':totalPct>=100?'🟢 達成見込み':totalPct>=90?'🟡 一部不足':'🔴 大きく不足'}</td>
+  </tr>`;
+  html += '</tbody>';
+  tbl.innerHTML=html;
+  // サマリー
+  const sum=document.getElementById('catgap-summary');
+  if(sum){
+    sum.innerHTML = `
+      <div>🟢 達成見込み <b>${countOK}</b> 件</div>
+      <div>🟡 一部不足 <b>${countWarn}</b> 件</div>
+      <div>🔴 大きく不足 <b>${countBad}</b> 件</div>
+      <div style="flex:1;min-width:240px;text-align:right">
+        計画 ${_fmtYen(sumPlan)} ／ 実績 ${_fmtYen(sumAct)} ／ 施策効果 ${_fmtYen(sumEff)}<br>
+        <b style="font-size:14px;color:${totalGap>0?'#dc2626':'#059669'}">${totalGap>=0?'未達':'超過'} ${totalGap>=0?'+':''}${_fmtYen(Math.abs(totalGap)).replace('¥','')==='—'?'—':(totalGap>=0?'-':'+')+'¥'+Math.abs(Math.round(totalGap)).toLocaleString()}</b>
+      </div>`;
+  }
+}
+
+// ===== 月次ファイル管理（一元アップロード履歴） =====
+// state.fileUploads = {seisan:[{name,size,date}], catreport:[...], booklet:[...], syohou:[...]}
+function _ensureFileUploads(){
+  if(!state.fileUploads)state.fileUploads={seisan:[],catreport:[],booklet:[],syohou:[]};
+  ['seisan','catreport','booklet','syohou'].forEach(t=>{ if(!Array.isArray(state.fileUploads[t]))state.fileUploads[t]=[]; });
+}
+function recordFileUpload(type, file){
+  _ensureFileUploads();
+  state.fileUploads[type].unshift({name:file.name||'(無名)',size:file.size||0,date:new Date().toISOString()});
+  // 直近 10 件まで保持
+  if(state.fileUploads[type].length>10)state.fileUploads[type].length=10;
+  renderFileUploads();
+}
+function renderFileUploads(){
+  _ensureFileUploads();
+  const set=(id,html)=>{ const e=document.getElementById(id); if(e)e.innerHTML=html; };
+  ['seisan','catreport','booklet','syohou'].forEach(t=>{
+    const arr=state.fileUploads[t]||[];
+    const last=arr[0];
+    const elm=document.getElementById('files-'+t+'-status');
+    if(elm){
+      if(last){
+        elm.classList.add('ok');
+        const dt=new Date(last.date).toLocaleString('ja-JP',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+        elm.innerHTML=`✅ 最新：${last.name} <span style="color:#9ca3af">／ ${dt} ／ ${(last.size/1024/1024).toFixed(2)}MB</span>`;
+      }else{
+        elm.classList.remove('ok');
+        elm.textContent='— 未取り込み —';
+      }
+    }
+  });
+  // 履歴一覧
+  const h=document.getElementById('files-history-list');
+  if(h){
+    const allRows=[];
+    ['seisan','catreport','booklet','syohou'].forEach(t=>{
+      (state.fileUploads[t]||[]).forEach(f=>allRows.push({...f,type:t}));
+    });
+    allRows.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    if(!allRows.length){
+      h.innerHTML='<div class="text-gray text-sm" style="padding:10px;text-align:center">アップロード履歴はまだありません</div>';
+      return;
+    }
+    const labels={seisan:'📒 精算書',catreport:'📦 週次レポート',booklet:'📘 お店作り冊子',syohou:'💊 月次処方箋'};
+    let html='<div class="overflow-auto"><table class="ocr-table" style="font-size:12px"><thead><tr><th>種別</th><th style="text-align:left">ファイル名</th><th>日時</th><th>サイズ</th></tr></thead><tbody>';
+    allRows.forEach(r=>{
+      const dt=new Date(r.date).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+      html+=`<tr><td>${labels[r.type]||r.type}</td><td style="text-align:left">${(r.name||'').replace(/</g,'&lt;')}</td><td>${dt}</td><td>${(r.size/1024/1024).toFixed(2)}MB</td></tr>`;
+    });
+    html+='</tbody></table></div>';
+    h.innerHTML=html;
+  }
+}
+
+// 月次処方箋PDFハンドラ（仮：当面はファイル登録のみ。AICOドライバ自動入力は後続実装）
+async function handleSyohouPDF(ev){
+  const file=ev.target.files?.[0];
+  ev.target.value='';
+  if(!file)return;
+  recordFileUpload('syohou', file);
+  saveAll(true);
+  alert(`💊 月次処方箋PDF「${file.name}」を取り込み履歴に登録しました。\n\nAICOドライバ・処方箋設定値の自動入力は後続バージョンで対応予定です。\n現状は「🚚 処方箋/ドライバ次週計画」タブで手動入力してください。`);
+}
+
+
 function updateSessaku(id,key,val){
   const s=state.sessaku.find(x=>x.id===id);
   if(s)s[key]=(key==='invest'||key==='effect')?parseFloat(val)||0:val;
@@ -6837,7 +7173,7 @@ function collectFormValues(){
   const jyEl=document.getElementById('m-jyokyo-nenhi');if(jyEl)state.monthly.jyokyo_nenhi=parseFloat(jyEl.value)||0;
   const znEl=document.getElementById('m-zennen-nishin');if(znEl)state.monthly.zennen_nishin=parseNum(znEl.value);
   const kEl=document.getElementById('kaizen-memo');if(kEl)state.kaizen_memo=kEl.value;
-  // v18.4: 月累計・先週は廃止。時間帯別のみ保存
+  // v18.5: 月累計・先週は廃止。時間帯別のみ保存
   ['t_asa_u','t_asa_k','t_asa_u_nen','t_asa_k_nen','t_hiru_u','t_hiru_k','t_hiru_u_nen','t_hiru_k_nen','t_yu_u','t_yu_k','t_yu_u_nen','t_yu_k_nen'].forEach(k=>{
     const el=document.getElementById(k.replace(/_/g,'-'));if(el)state.daily[k]=parseNum(el.value);
   });
@@ -6875,14 +7211,21 @@ function loadAll(){
     }
     if(s.daily)Object.assign(state.daily,s.daily);
     if(s.cats)Object.keys(s.cats).forEach(k=>{state.cats[k]=Object.assign(state.cats[k]||{},s.cats[k]);});
-    // v18.4: 処方箋/ドライバ次週計画
+    // v18.5: 処方箋/ドライバ次週計画
     if(s.aicoDriver){
       state.aicoDriver=state.aicoDriver||{};
       Object.keys(s.aicoDriver).forEach(cat=>{
         state.aicoDriver[cat]=Object.assign({},state.aicoDriver[cat]||{},s.aicoDriver[cat]||{});
       });
     }
-    // v18.4: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）
+    // v18.5: 月次ファイル管理（アップロード履歴）
+    if(s.fileUploads){
+      state.fileUploads=state.fileUploads||{seisan:[],catreport:[],booklet:[],syohou:[]};
+      ['seisan','catreport','booklet','syohou'].forEach(t=>{
+        if(Array.isArray(s.fileUploads[t]))state.fileUploads[t]=s.fileUploads[t].slice(0,10);
+      });
+    }
+    // v18.5: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）
     if(s.catReport){
       if(!state.catReport)state.catReport={period:{},dept:{},alco:{}};
       if(s.catReport.period)state.catReport.period=Object.assign(state.catReport.period||{},s.catReport.period);
@@ -6940,7 +7283,7 @@ function restoreForm(){
   if(!state.monthly.target_uriage&&state.seisan.uriage){const el=document.getElementById('m-target-uriage');if(el)el.value=state.seisan.uriage;}
   const jEl=document.getElementById('m-juten-sessaku');if(jEl)jEl.value=state.monthly.juten_sessaku||'';
   const kEl=document.getElementById('kaizen-memo');if(kEl)kEl.value=state.kaizen_memo||'';
-  // v18.4: 月累計・先週の復元は廃止（state.daily.tsuki_*/sen_* は localStorage に残るが UI からは参照しない）
+  // v18.5: 月累計・先週の復元は廃止（state.daily.tsuki_*/sen_* は localStorage に残るが UI からは参照しない）
   ['t_asa_u','t_asa_k','t_asa_u_nen','t_asa_k_nen','t_hiru_u','t_hiru_k','t_hiru_u_nen','t_hiru_k_nen','t_yu_u','t_yu_k','t_yu_u_nen','t_yu_k_nen'].forEach(k=>{
     const el=document.getElementById(k.replace(/_/g,'-'));if(el&&state.daily[k])el.value=state.daily[k];
   });
