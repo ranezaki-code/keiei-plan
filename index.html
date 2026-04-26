@@ -613,7 +613,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v19.2</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v19.3</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -1299,9 +1299,20 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
       <div class="card">
         <div class="flex justify-between items-center mb-2" style="flex-wrap:wrap">
           <div class="section-title" style="margin:0">📜 提案履歴</div>
-          <div style="font-size:11px;color:#6b7280">最新 30 件まで保持</div>
+          <div class="flex gap-2"><button class="btn-secondary btn-sm" onclick="openAIProposalCompare()" style="background:#7c3aed;color:#fff">📊 提案を比較</button><span style="font-size:11px;color:#6b7280;align-self:center">最新 30 件まで保持</span></div>
         </div>
         <div id="ai-history-list"></div>
+      </div>
+
+      <!-- ===== AI提案 比較ビュー ===== -->
+      <div class="card" id="ai-compare-card" style="display:none">
+        <div class="flex justify-between items-center mb-2">
+          <div class="section-title" style="margin:0">📊 AI提案 比較ビュー</div>
+          <button class="btn-secondary btn-sm" onclick="closeAIProposalCompare()">閉じる</button>
+        </div>
+        <div class="input-hint">最新 5 件の提案を主要KPIで横並び比較。差分は赤/緑で表示。</div>
+        <div class="overflow-auto"><table class="mgmt-compare-table" id="ai-compare-table"></table></div>
+        <div class="chart-card" style="margin-top:10px"><div class="chart-title">主要KPI 推移</div><div class="chart-canvas-wrap tall"><canvas id="ai-compare-chart"></canvas></div></div>
       </div>
 
       <div class="card">
@@ -1543,19 +1554,31 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
               <tr><td>⑦ 見切・処分支援</td><td id="cn-supp-mikiri" class="text-right">¥0</td><td id="cn-mikiri-tier">—</td></tr>
               <tr><td>⑧ 光熱費支援（50%・上限25万）</td><td id="cn-supp-konetsu" class="text-right">¥0</td><td id="cn-konetsu-note">—</td></tr>
               <tr><td>⑨ 経営助成金（5Cn初年度のみ）</td><td id="cn-supp-josei" class="text-right">¥0</td><td>5万円/月 × 12ヶ月</td></tr>
-              <tr><td>⑩ その他雑益</td><td id="cn-zatsu-other-show" class="text-right">¥0</td><td>—</td></tr>
-              <tr class="cn-row-sub"><td>⑪ 雑益合計（⑦+⑧+⑨+⑩）</td><td id="cn-zatsu-total" class="text-right">¥0</td><td>本部支援＋その他</td></tr>
+              <tr><td>⑩ 🏆 世界一挑戦支援</td><td id="cn-supp-sekaiichi" class="text-right">¥0</td><td id="cn-sekaiichi-note">下のチャレンジ表で算出</td></tr>
+              <tr><td>⑪ その他雑益</td><td id="cn-zatsu-other-show" class="text-right">¥0</td><td>—</td></tr>
+              <tr class="cn-row-sub"><td>⑫ 雑益合計（⑦+⑧+⑨+⑩+⑪）</td><td id="cn-zatsu-total" class="text-right">¥0</td><td>本部支援＋その他</td></tr>
               <tr><td colspan="3" class="cn-section-mini">─── 営業費 ───</td></tr>
-              <tr><td>⑫ 水道光熱費</td><td id="cn-out-konetsu" class="text-right">¥0</td><td>—</td></tr>
-              <tr><td>⑬ その他営業費</td><td id="cn-out-other" class="text-right">¥0</td><td>—</td></tr>
-              <tr class="cn-row-sub"><td>⑭ 営業費計</td><td id="cn-eigyo-total" class="text-right">¥0</td><td>—</td></tr>
-              <tr class="cn-row-final"><td>⑮ 店利益（⑥−⑭+⑪）</td><td id="cn-tenrieki" class="text-right">¥0</td><td id="cn-tenrieki-note">支援込みの最終利益</td></tr>
+              <tr><td>⑬ 水道光熱費</td><td id="cn-out-konetsu" class="text-right">¥0</td><td>—</td></tr>
+              <tr><td>⑭ その他営業費</td><td id="cn-out-other" class="text-right">¥0</td><td>—</td></tr>
+              <tr class="cn-row-sub"><td>⑮ 営業費計</td><td id="cn-eigyo-total" class="text-right">¥0</td><td>—</td></tr>
+              <tr class="cn-row-final"><td>⑯ 店利益（⑥−⑮+⑫）</td><td id="cn-tenrieki" class="text-right">¥0</td><td id="cn-tenrieki-note">支援込みの最終利益</td></tr>
               <tr><td colspan="3" class="cn-section-mini">─── 参考：支援なしのケース ───</td></tr>
               <tr><td>店利益（雑益＝0で再計算）</td><td id="cn-tenrieki-nosupp" class="text-right">¥0</td><td>支援を含まない場合</td></tr>
               <tr class="cn-row-key"><td>支援による利益増（⑮−左）</td><td id="cn-tenrieki-diff" class="text-right">¥0</td><td>本部支援の効果額</td></tr>
             </tbody>
           </table>
         </div>
+      </div>
+
+      <!-- ===== 🏆 世界一挑戦支援（カテゴリ別チャレンジによる本部支援） ===== -->
+      <div class="card" id="sekaiichi-card">
+        <div class="flex justify-between items-center mb-2" style="flex-wrap:wrap;gap:6px">
+          <div class="section-title" style="margin:0">🏆 世界一挑戦 支援算出<button class="help-btn" data-help-title="世界一挑戦支援の使い方" data-help="<b>世界一挑戦</b>は、ローソンの「カテゴリ売上前年比」「客数前年比」等を達成すると本部支援が加算される制度です。<br><br><b>使い方</b><br>① 「＋ チャレンジを追加」で挑戦項目を登録（例: 弁当売上 前年比105%以上）<br>② 対象指標・目標値を入力<br>③ 当月の実績値を入力 → 達成率が自動算出<br>④ 段階別の支援額表（しきい値→金額）を設定 → 達成度に応じた支援額が自動算出<br>⑤ 全チャレンジの支援額合計が「FC-Cn支援算出」の合計に加算される<br><br><b>注意</b><br>本機能は本部規定の代替計算ではありません。最終的な支援金額は本部基準にしたがってください。本機能は社内シミュレーション用です。">?</button></div>
+          <div class="flex gap-2"><button class="btn-secondary btn-sm" onclick="addSekaiichiChallenge()">＋ チャレンジを追加</button></div>
+        </div>
+        <div id="sekaiichi-list"></div>
+        <div id="sekaiichi-summary" style="margin-top:10px;padding:10px;background:#f8fafc;border:1px solid var(--border);border-radius:6px;font-size:12px"></div>
+        <div class="input-hint" style="margin-top:6px">💡 達成率に応じた段階制の支援額表を設定できます。最高ティアに到達すると最大支援額が出ます。</div>
       </div>
 
       <!-- ===== 施策インパクト試算 & 投資最適化 ===== -->
@@ -2061,7 +2084,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v19.2';
+const APP_VERSION='v19.3';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -2832,25 +2855,27 @@ let state={
     sessaku_booklet:{filename:'',uploaded_at:'',items:[]}},
   daily:{t_asa_u:0,t_asa_k:0,t_asa_u_nen:100,t_asa_k_nen:100,t_hiru_u:0,t_hiru_k:0,t_hiru_u_nen:100,t_hiru_k_nen:100,t_yu_u:0,t_yu_k:0,t_yu_u_nen:100,t_yu_k_nen:100,youbi:DAYS.map(d=>({day:d,nishin:0,nishin_diff:0,kyaku:0,kyaku_diff:0,tanka:0,tanka_diff:0}))},
   cats:CATS.reduce((o,c)=>({...o,[c]:{sm_u:0,mp_u:0,sw_u:0,kp_u:0,sw_uh:0,sm_a:0,mp_a:0,sw_a:0,kp_a:0,aico_u:0,aico_a:0,aico_ne:0,aico_hai:0,driver_h:1,driver_d:2,driver_hantei:'処方箋通',driver_riyu:''}}),{}),
-  // v19.2: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）の入力用ストア
+  // v19.3: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）の入力用ストア
   // 構造: catReport[section][row][col_curr|col_prev] = number   例 catReport.dept['米飯'].sales_curr
   catReport:{
     period:{curr_start:'',curr_end:'',prev_start:'',prev_end:''},
     dept:DEPT_ROWS.reduce((o,r)=>({...o,[r]:{}}),{}),
     alco:ALCO_ROWS.reduce((o,r)=>({...o,[r]:{}}),{})
   },
-  // v19.2: 処方箋/ドライバ次週計画（自動判定: 処方箋通／上方修正）
+  // v19.3: 処方箋/ドライバ次週計画（自動判定: 処方箋通／上方修正）
   aicoDriver:{},
-  // v19.2: 月次ファイル管理（一元アップロード履歴） + v19.2: external（外部要因）追加
+  // v19.3: 月次ファイル管理（一元アップロード履歴） + v19.3: external（外部要因）追加
   fileUploads:{seisan:[],catreport:[],booklet:[],syohou:[],external:[]},
-  // v19.2: 外部要因テキスト（PDF抽出・要約）
+  // v19.3: 外部要因テキスト（PDF抽出・要約）
   externalFactors:[],
-  // v19.2: AI計画提案
+  // v19.3: AI計画提案
   aiProposals:[],
   aiPromptCustom:'',
-  // v19.2: Q&A メモ（NotebookLM代替）
+  // v19.3: Q&A メモ（NotebookLM代替）
   qaLog:[],
-  // v19.2: 月別データアーカイブ（対象月切替時に過去月のデータを保持）
+  // v19.3: 世界一挑戦支援
+  sekaiichi:{challenges:[]},
+  // v19.3: 月別データアーカイブ（対象月切替時に過去月のデータを保持）
   byMonth:{},
   sessaku:[],
   layout:LAYOUT_AREAS.map(a=>({area:a,shoten:'',point:''})),
@@ -2985,7 +3010,7 @@ function triggerSubRender(panelId){
   if(panelId==='tab-qa')try{renderQALog();}catch(e){console.warn(e);}
   if(panelId==='tab1-cat'){renderCategoryTab();try{renderCatGap();}catch(e){}}
   if(panelId==='tab-files')try{renderFileUploads();}catch(e){console.warn(e);}
-  if(panelId==='tab1-cn')calcCnSupport();
+  if(panelId==='tab1-cn'){calcCnSupport();try{renderSekaiichi();}catch(e){console.warn(e);}}
   if(panelId==='tab4'){renderSessaku();renderLayout();renderFFface();renderBookletList();}
   if(panelId==='tab5'){renderKensho();renderGaibuin();}
   if(panelId==='tab6')renderQSC();
@@ -3008,11 +3033,11 @@ function showTab(n){
 }
 
 // グローバル月セレクタ
-// ===== v19.2: 月別データアーカイブ =====
+// ===== v19.3: 月別データアーカイブ =====
 // state.byMonth = { 'YYYY-MM': { seisan, seisan_prev, seisan_lastyear, monthly, cats,
 //                                 catReport, aicoDriver, sessaku, fileUploads, daily } }
 // 対象月を切り替えると、現在の月別データを archive に退避し、新しい月のデータを読み込む。
-const MONTHLY_SLICES = ['seisan','seisan_prev','seisan_lastyear','monthly','cats','catReport','aicoDriver','sessaku','fileUploads','daily','externalFactors','kensho_ext','aiProposals','qaLog'];
+const MONTHLY_SLICES = ['seisan','seisan_prev','seisan_lastyear','monthly','cats','catReport','aicoDriver','sessaku','fileUploads','daily','externalFactors','kensho_ext','aiProposals','qaLog','sekaiichi'];
 
 function _emptySliceFor(slice){
   switch(slice){
@@ -3029,6 +3054,7 @@ function _emptySliceFor(slice){
     case 'kensho_ext':     return [];
     case 'aiProposals':    return [];
     case 'qaLog':          return [];
+    case 'sekaiichi':      return {challenges:[]};
     case 'daily':          return {t_asa_u:0,t_asa_k:0,t_asa_u_nen:100,t_asa_k_nen:100,t_hiru_u:0,t_hiru_k:0,t_hiru_u_nen:100,t_hiru_k_nen:100,t_yu_u:0,t_yu_k:0,t_yu_u_nen:100,t_yu_k_nen:100,youbi:DAYS.map(d=>({day:d,nishin:0,nishin_diff:0,kyaku:0,kyaku_diff:0,tanka:0,tanka_diff:0}))};
   }
   return {};
@@ -3378,10 +3404,13 @@ function calcCnSupport(){
   // ⑨ 経営助成金（FC-5Cn 初年度のみ 5万円/月）
   const suppJosei=(type==='5cn'&&firstYear)?50000:0;
 
-  // ⑪ 雑益合計
-  const zatsuTotal=suppMikiri+suppKonetsu+suppJosei+zatsuOther;
+  // ⑩ 🏆 世界一挑戦支援
+  const suppSekaiichi=(typeof sekaiichiTotalSupport==='function')?sekaiichiTotalSupport():0;
 
-  // ⑭ 営業費計（水道光熱費＋その他営業費）
+  // ⑫ 雑益合計
+  const zatsuTotal=suppMikiri+suppKonetsu+suppJosei+suppSekaiichi+zatsuOther;
+
+  // ⑮ 営業費計（水道光熱費＋その他営業費）
   const eigyoTotal=konetsu+eigyoOther;
 
   // ⑮ 店利益 = フランチャイジー収入（最低保証後）− 営業費計 + 雑益
@@ -3414,6 +3443,8 @@ function calcCnSupport(){
   set('cn-supp-konetsu',suppKonetsu);
   setText('cn-konetsu-note',konetsu*0.5>250000?'⚠ 上限25万円適用':`${konetsu?'光熱費の50%':'—'}`);
   set('cn-supp-josei',suppJosei);
+  set('cn-supp-sekaiichi',suppSekaiichi);
+  setText('cn-sekaiichi-note', suppSekaiichi>0?`🏆 ${state.sekaiichi?.challenges?.filter(c=>_sekaiichiResolve(c).tierIdx>=0).length||0} 件達成`:'チャレンジ未登録または未達成');
   set('cn-zatsu-other-show',zatsuOther);
   set('cn-zatsu-total',zatsuTotal);
   set('cn-out-konetsu',konetsu);
@@ -3480,11 +3511,12 @@ function simCn(inputs){
   const suppMikiri = supp_baikai * cr;
   const suppKonetsu = Math.min(konetsu*0.5, 250000);
   const suppJosei = (type==='5cn' && firstYear) ? 50000 : 0;
-  const zatsuTotal = suppMikiri + suppKonetsu + suppJosei + zatsuOther;
+  const suppSekaiichi = (typeof sekaiichiTotalSupport==='function')?sekaiichiTotalSupport():0;
+  const zatsuTotal = suppMikiri + suppKonetsu + suppJosei + suppSekaiichi + zatsuOther;
   const eigyoTotal = konetsu + eigyoOther;
   const tenrieki = fcinFinal - eigyoTotal + zatsuTotal;
 
-  return {A, B, grossA, charge, fcin, fcinFinal, minGuarantee, suppMikiri, suppKonetsu, suppJosei, zatsuTotal, eigyoTotal, tenrieki, mikiritsu:r};
+  return {A, B, grossA, charge, fcin, fcinFinal, minGuarantee, suppMikiri, suppKonetsu, suppJosei, suppSekaiichi, zatsuTotal, eigyoTotal, tenrieki, mikiritsu:r};
 }
 
 function getCnBaseline(){
@@ -3870,18 +3902,36 @@ function renderSeisanCharts(){
   const sum=(b,r)=>{try{return sumCalc(SEISAN_ROWS.find(x=>x.key===r),b||{})}catch(e){return 0}};
   const u=(b)=>(b.uriage||0)+(b.sonotauriage||0);
 
-  // 主要KPI（売上／粗利／店利益）3列バー
+  // 主要KPI（売上／粗利／店利益）3列バー + AI推奨値オーバーレイ
   {
     const ctx=document.getElementById('chart-seisan-kpi');
     if(ctx){
       _chartDestroy('chart-seisan-kpi');
+      // v19.3: 採用済みAI提案があればオーバーレイ
+      const aiP = (typeof _latestAdoptedAIProposal==='function') ? _latestAdoptedAIProposal() : null;
+      const aiPr = aiP?.proposal || null;
+      const datasets = [
+        {label:'当月',backgroundColor:_chartColors.curr,data:[u(s),sum(s,'arari'),sum(s,'_tenrieki')]},
+        {label:'先月',backgroundColor:_chartColors.prev,data:[u(p),sum(p,'arari'),sum(p,'_tenrieki')]},
+        {label:'前年',backgroundColor:_chartColors.ly,data:[u(l),sum(l,'arari'),sum(l,'_tenrieki')]}
+      ];
+      if(aiPr){
+        datasets.push({
+          type:'line',
+          label:'🤖 AI推奨' + (aiP.status==='adopted'?'(採用)':'(参考)'),
+          data:[aiPr.target_uriage||null, aiPr.target_arari||null, aiPr.target_tenrieki||null],
+          borderColor:'#7c3aed',
+          backgroundColor:'rgba(124,58,237,0.15)',
+          borderWidth:3,
+          borderDash:[6,4],
+          pointRadius:8,
+          pointStyle:'star',
+          pointBackgroundColor:'#7c3aed',
+          fill:false
+        });
+      }
       _chartSet('chart-seisan-kpi', new Chart(ctx,{type:'bar',
-        data:{labels:['売上高','粗利','店利益'],
-          datasets:[
-            {label:'当月',backgroundColor:_chartColors.curr,data:[u(s),sum(s,'arari'),sum(s,'_tenrieki')]},
-            {label:'先月',backgroundColor:_chartColors.prev,data:[u(p),sum(p,'arari'),sum(p,'_tenrieki')]},
-            {label:'前年',backgroundColor:_chartColors.ly,data:[u(l),sum(l,'arari'),sum(l,'_tenrieki')]}
-          ]},
+        data:{labels:['売上高','粗利','店利益'],datasets},
         options:{responsive:true,maintainAspectRatio:false,
           plugins:{legend:{position:'top',labels:{font:{size:11}}},
             tooltip:{callbacks:{label:c=>c.dataset.label+': ¥'+(c.parsed.y||0).toLocaleString()}}},
@@ -4161,7 +4211,165 @@ function renderVsCharts(){
   }
 }
 
-// ===== v19.2: AI計画提案 =====
+// ===== v19.3: 世界一挑戦支援 =====
+// state.sekaiichi.challenges[] = { id, name, metric, target, current, tiers:[{threshold_pct, amount}], note }
+// 達成率 = current / target * 100
+// 達成率が tier.threshold_pct 以上の最大ティアの amount を支援額とする
+function _ensureSekaiichi(){
+  if(!state.sekaiichi)state.sekaiichi={challenges:[]};
+  if(!Array.isArray(state.sekaiichi.challenges))state.sekaiichi.challenges=[];
+}
+function addSekaiichiChallenge(){
+  _ensureSekaiichi();
+  state.sekaiichi.challenges.push({
+    id:Date.now(),
+    name:'',
+    metric:'売上前年比',
+    target:0,
+    current:0,
+    tiers:[
+      {threshold_pct:100, amount:0},
+      {threshold_pct:105, amount:0},
+      {threshold_pct:110, amount:0}
+    ],
+    note:''
+  });
+  renderSekaiichi();
+  saveAll();
+}
+function removeSekaiichiChallenge(id){
+  if(!confirm('このチャレンジを削除しますか？'))return;
+  _ensureSekaiichi();
+  state.sekaiichi.challenges = state.sekaiichi.challenges.filter(c=>c.id!==id);
+  renderSekaiichi();
+  saveAll(true);
+}
+function updateSekaiichiField(id, field, val){
+  _ensureSekaiichi();
+  const c = state.sekaiichi.challenges.find(x=>x.id===id);
+  if(!c)return;
+  if(field==='target'||field==='current'){
+    c[field] = parseFloat((val||'').toString().replace(/[^\d.\-]/g,''))||0;
+  }else{
+    c[field] = val;
+  }
+  renderSekaiichi();
+  saveAll();
+}
+function addSekaiichiTier(id){
+  _ensureSekaiichi();
+  const c = state.sekaiichi.challenges.find(x=>x.id===id);
+  if(!c)return;
+  if(!Array.isArray(c.tiers))c.tiers=[];
+  c.tiers.push({threshold_pct:100,amount:0});
+  renderSekaiichi();
+  saveAll();
+}
+function removeSekaiichiTier(id, ti){
+  _ensureSekaiichi();
+  const c = state.sekaiichi.challenges.find(x=>x.id===id);
+  if(!c||!Array.isArray(c.tiers))return;
+  c.tiers.splice(ti,1);
+  renderSekaiichi();
+  saveAll();
+}
+function updateSekaiichiTier(id, ti, field, val){
+  _ensureSekaiichi();
+  const c = state.sekaiichi.challenges.find(x=>x.id===id);
+  if(!c||!Array.isArray(c.tiers)||!c.tiers[ti])return;
+  c.tiers[ti][field] = parseFloat((val||'').toString().replace(/[^\d.\-]/g,''))||0;
+  renderSekaiichi();
+  saveAll();
+}
+
+function _sekaiichiResolve(c){
+  const target = +c.target||0, current = +c.current||0;
+  if(target<=0)return {pct:null, amount:0, tierIdx:-1};
+  const pct = current/target*100;
+  const tiers = (c.tiers||[]).slice().sort((a,b)=>(+a.threshold_pct||0)-(+b.threshold_pct||0));
+  let amt=0, tierIdx=-1;
+  tiers.forEach((t,i)=>{
+    if(pct >= (+t.threshold_pct||0)){
+      amt = +t.amount||0;
+      tierIdx = i;
+    }
+  });
+  return {pct, amount:amt, tierIdx};
+}
+
+function sekaiichiTotalSupport(){
+  _ensureSekaiichi();
+  return state.sekaiichi.challenges.reduce((s,c)=>s + _sekaiichiResolve(c).amount, 0);
+}
+
+function renderSekaiichi(){
+  _ensureSekaiichi();
+  const list = document.getElementById('sekaiichi-list');
+  if(!list)return;
+  const cs = state.sekaiichi.challenges;
+  if(!cs.length){
+    list.innerHTML='<div class="text-gray text-sm" style="padding:14px;text-align:center;border:1px dashed var(--border);border-radius:6px">チャレンジが登録されていません。「＋ チャレンジを追加」を押してください。</div>';
+    const sumEl=document.getElementById('sekaiichi-summary');if(sumEl)sumEl.innerHTML='';
+    return;
+  }
+  list.innerHTML = cs.map(c=>{
+    const r = _sekaiichiResolve(c);
+    const pctText = r.pct==null ? '—' : r.pct.toFixed(1)+'%';
+    const status = r.pct==null ? '⚪ 未設定' : (r.tierIdx>=0 ? '🟢 達成（ティア'+(r.tierIdx+1)+'）' : '🔴 未達');
+    const tierRows = (c.tiers||[]).map((t,ti)=>{
+      const reached = r.pct!=null && r.pct >= (+t.threshold_pct||0);
+      return `<tr style="${reached?'background:#dcfce7;font-weight:700':''}">
+        <td><input type="text" inputmode="decimal" value="${t.threshold_pct||''}" oninput="updateSekaiichiTier(${c.id},${ti},'threshold_pct',this.value)" style="width:60px;text-align:right">%以上</td>
+        <td><input type="text" inputmode="numeric" value="${t.amount||''}" oninput="updateSekaiichiTier(${c.id},${ti},'amount',this.value)" style="width:100px;text-align:right">円</td>
+        <td>${reached?'✅':''}</td>
+        <td><button class="btn-danger btn-sm" style="padding:1px 6px;font-size:10px" onclick="removeSekaiichiTier(${c.id},${ti})">×</button></td>
+      </tr>`;
+    }).join('');
+    return `<div style="border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;background:#fff">
+      <div class="flex justify-between items-center mb-2" style="flex-wrap:wrap;gap:6px">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <input type="text" value="${(c.name||'').replace(/"/g,'&quot;')}" placeholder="チャレンジ名" oninput="updateSekaiichiField(${c.id},'name',this.value)" style="font-weight:700;width:200px">
+          <select onchange="updateSekaiichiField(${c.id},'metric',this.value)" style="width:auto;font-size:12px">
+            ${['売上前年比','粗利前年比','客数前年比','カテゴリ売上','客単価','見切率改善'].map(m=>`<option ${c.metric===m?'selected':''}>${m}</option>`).join('')}
+          </select>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <span class="${r.pct!=null && r.tierIdx>=0?'pct-good':'pct-bad'}" style="font-weight:700;font-size:14px">${pctText}</span>
+          <span style="font-size:11px">${status}</span>
+          <span style="background:#fffbeb;border:1px solid #fde68a;padding:2px 8px;border-radius:10px;font-weight:700;color:#b45309;font-size:12px">支援 ¥${r.amount.toLocaleString()}</span>
+          <button class="btn-danger btn-sm" onclick="removeSekaiichiChallenge(${c.id})" style="padding:2px 8px;font-size:10px">削除</button>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col"><div class="form-group"><label>目標値（前年実績 等）</label><input type="text" inputmode="numeric" value="${c.target||''}" oninput="updateSekaiichiField(${c.id},'target',this.value)" placeholder="例: 12000000"></div></div>
+        <div class="col"><div class="form-group"><label>当月実績値</label><input type="text" inputmode="numeric" value="${c.current||''}" oninput="updateSekaiichiField(${c.id},'current',this.value)" placeholder="例: 12500000"></div></div>
+      </div>
+      <div style="margin-top:6px"><b style="font-size:12px;color:#1e3a5f">📊 段階別支援額表</b>
+        <table class="ocr-table" style="font-size:11px;margin-top:4px"><thead><tr><th>達成率しきい値</th><th>支援額</th><th>到達</th><th></th></tr></thead><tbody>${tierRows||'<tr><td colspan="4" style="color:#9ca3af">ティア未設定</td></tr>'}</tbody></table>
+        <button class="btn-secondary btn-sm" onclick="addSekaiichiTier(${c.id})" style="margin-top:4px;font-size:11px;padding:3px 8px">＋ ティア追加</button>
+      </div>
+      <div class="form-group" style="margin-top:6px"><label>メモ</label><textarea rows="1" oninput="updateSekaiichiField(${c.id},'note',this.value)" placeholder="算定根拠／特記事項">${(c.note||'').replace(/</g,'&lt;')}</textarea></div>
+    </div>`;
+  }).join('');
+
+  // サマリー
+  const sum=document.getElementById('sekaiichi-summary');
+  if(sum){
+    const total = sekaiichiTotalSupport();
+    const achieved = cs.filter(c=>_sekaiichiResolve(c).tierIdx>=0).length;
+    sum.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center">
+      <div>🏆 達成チャレンジ <b>${achieved}</b> / ${cs.length} 件</div>
+      <div style="flex:1"></div>
+      <div style="font-size:14px"><b>世界一挑戦 支援額合計：<span style="color:#b45309">¥${total.toLocaleString()}</span></b></div>
+    </div>
+    <div style="font-size:11px;color:#6b7280;margin-top:4px">この合計は FC-Cn 支援算出表の「⑭ 加盟店サポート総額」に自動加算されます。</div>`;
+  }
+
+  // FC-Cn 集計を再計算
+  try{ if(typeof calcCnSupport==='function')calcCnSupport(); }catch(e){}
+}
+
+// ===== v19.3: AI計画提案 =====
 // 現在の state を集約して Claude に渡し、構造化された計画提案を取得する
 // 設計方針:
 //   - すべての関連state を 1つの JSON にまとめる（snapshot）
@@ -4540,6 +4748,8 @@ function adoptAIProposal(id){
   // 月次目標タブに値が入っているはずなので restoreForm を呼んで反映
   try{ restoreForm && restoreForm(); }catch(e){}
   try{ calcMonthly && calcMonthly(); }catch(e){}
+  // v19.3: チャートのAI推奨値オーバーレイも更新
+  try{ renderSeisanCharts && renderSeisanCharts(); }catch(e){}
   showToast('✅ 提案を採用し月次目標に反映しました');
 }
 
@@ -4596,7 +4806,95 @@ function duplicateAIProposalAsCustomPrompt(id){
   showToast('📝 プロンプトをカスタム欄にコピーしました');
 }
 
-// ===== v19.2: Q&A メモ機能（NotebookLM代替） =====
+// ===== v19.3: AI提案比較ビュー =====
+function openAIProposalCompare(){
+  const card=document.getElementById('ai-compare-card');
+  if(card)card.style.display='';
+  renderAIProposalCompare();
+  card?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function closeAIProposalCompare(){
+  const card=document.getElementById('ai-compare-card');
+  if(card)card.style.display='none';
+}
+function renderAIProposalCompare(){
+  const arr = (state.aiProposals||[]).slice(0,5);
+  const t = document.getElementById('ai-compare-table');
+  if(!t)return;
+  if(!arr.length){
+    t.innerHTML='<thead><tr><th>項目</th><th>—</th></tr></thead><tbody><tr><td colspan="2" style="text-align:center;color:#9ca3af">提案がありません</td></tr></tbody>';
+    return;
+  }
+  const rows = [
+    {key:'target_uriage', label:'推奨売上', fmt:'yen'},
+    {key:'target_arari', label:'推奨粗利', fmt:'yen'},
+    {key:'target_arari_rate', label:'粗利率', fmt:'pct'},
+    {key:'target_eigyokei', label:'営業費計', fmt:'yen'},
+    {key:'target_tenrieki', label:'店利益', fmt:'yen', highlight:true},
+    {key:'target_urihen_r', label:'売変率', fmt:'pct'},
+    {key:'confidence', label:'信頼度', fmt:'text'}
+  ];
+  let html = '<thead><tr><th class="row-name">項目</th>';
+  arr.forEach((p,i)=>{
+    const dt=new Date(p.date).toLocaleDateString('ja-JP',{month:'2-digit',day:'2-digit'});
+    const cls = p.status==='adopted'?'g-curr':p.status==='rejected'?'g-prev':'';
+    html += `<th class="${cls}">${i===0?'🆕 ':''}#${arr.length-i}<br><span style="font-weight:400;font-size:10px">${dt} ${p.scope==='week'?'週':'月'}</span></th>`;
+  });
+  html += '</tr></thead><tbody>';
+  rows.forEach(r=>{
+    html += `<tr><td class="row-name">${r.label}${r.highlight?' ⭐':''}</td>`;
+    let prevVal=null;
+    arr.forEach((p,i)=>{
+      const v = (p.proposal||{})[r.key];
+      let cell = '—', cls = '';
+      if(v!=null){
+        if(r.fmt==='yen'){cell = '¥'+Math.round(v).toLocaleString();}
+        else if(r.fmt==='pct'){cell = (typeof v==='number'?v.toFixed(1):v)+'%';}
+        else cell = String(v);
+        if(prevVal!=null && typeof v==='number' && typeof prevVal==='number' && r.fmt!=='text'){
+          const diff = v-prevVal;
+          if(diff!==0){
+            cls = diff>0?'pct-good':'pct-bad';
+            cell += `<br><span style="font-size:9px">${diff>0?'+':''}${r.fmt==='pct'?diff.toFixed(1)+'pt':_aiFmtYen(diff).replace('¥','¥')}</span>`;
+          }
+        }
+      }
+      html += `<td class="${cls}" style="${r.highlight?'background:#fffbeb;font-weight:700':''}">${cell}</td>`;
+      if(typeof v==='number')prevVal=v;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  t.innerHTML = html;
+
+  // チャート
+  if(typeof Chart==='undefined')return;
+  const ctx=document.getElementById('ai-compare-chart');
+  if(!ctx)return;
+  if(window._aiCompareChart){try{window._aiCompareChart.destroy()}catch(e){}}
+  const labels = arr.slice().reverse().map((p,i)=>{
+    const dt=new Date(p.date).toLocaleDateString('ja-JP',{month:'2-digit',day:'2-digit'});
+    return `#${i+1} ${dt}`;
+  });
+  const ds = (key,lbl,color)=>({label:lbl,data:arr.slice().reverse().map(p=>(p.proposal||{})[key]||null),borderColor:color,backgroundColor:color+'33',tension:0.25,pointRadius:5});
+  window._aiCompareChart = new Chart(ctx,{type:'line',
+    data:{labels,datasets:[
+      ds('target_uriage','推奨売上','#2196f3'),
+      ds('target_arari','推奨粗利','#10b981'),
+      ds('target_tenrieki','店利益','#f59e0b')
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{font:{size:11}}}},
+      scales:{y:{ticks:{font:{size:10},callback:v=>'¥'+(v>=1e8?(v/1e8).toFixed(1)+'億':v>=1e4?(v/1e4).toFixed(0)+'万':v.toLocaleString())}}}}
+  });
+}
+
+// ===== v19.3: AI推奨値を精算書チャートにオーバーレイ =====
+function _latestAdoptedAIProposal(){
+  return (state.aiProposals||[]).find(p=>p.status==='adopted') || (state.aiProposals||[])[0] || null;
+}
+
+// ===== v19.3: Q&A メモ機能（NotebookLM代替） =====
 function _qaBuildContext(level){
   const s = state.seisan||{};
   const sumKey = (b,r)=>{ try{return sumCalc(SEISAN_ROWS.find(x=>x.key===r),b||{})}catch(e){return 0} };
@@ -6260,7 +6558,7 @@ function renderWeeklyProgress(){
 }
 
 // ===== DAILY =====
-// v19.2: 月累計・先週実績の入力欄は廃止。互換のため stub だけ残す（古い保存データ等の影響を吸収）
+// v19.3: 月累計・先週実績の入力欄は廃止。互換のため stub だけ残す（古い保存データ等の影響を吸収）
 function calcDailyStats(){ /* deprecated: kept as no-op for backward compat */ }
 function calcTimeStats(){
   const au=num('t-asa-u'),hu=num('t-hiru-u'),yu=num('t-yu-u');
@@ -6304,7 +6602,7 @@ function saveYoubi(){
 
 // ===== CATEGORY TAB =====
 // ===== 週次お店づくりレポート（DEPT別／ALCOカテゴリ別） =====
-// v19.2: 本部の週次レポートPDFを取り込み、PDFを左に表示しながら手入力できる
+// v19.3: 本部の週次レポートPDFを取り込み、PDFを左に表示しながら手入力できる
 function _ensureCatReport(){
   if(!state.catReport)state.catReport={period:{curr_start:'',curr_end:'',prev_start:'',prev_end:''},dept:{},alco:{}};
   ['dept','alco'].forEach(sec=>{
@@ -7106,11 +7404,11 @@ function renderCategoryTab(){
   try{ renderCatReport(); }catch(e){ console.warn(e); }
   try{ renderMgmtCompare(); }catch(e){ console.warn(e); }
   try{ renderAicoDriver(); }catch(e){ console.warn(e); }
-  // v19.2: 旧「カテゴリ別計画（売上/粗利/AICO）」UI は撤去。
+  // v19.3: 旧「カテゴリ別計画（売上/粗利/AICO）」UI は撤去。
   // データ自体は state.cats に残るので互換のため saveCat は維持。
 }
 // 後方互換: 既存の onclick 等から呼ばれても落ちないように noop
-function switchCatView(_v){ /* removed in v19.2 */ }
+function switchCatView(_v){ /* removed in v19.3 */ }
 function saveCat(cat,key,val){
   if(!state.cats[cat])state.cats[cat]={};
   state.cats[cat][key]=isNaN(val)?val:parseFloat(val)||0;
@@ -8079,7 +8377,7 @@ function collectFormValues(){
   const jyEl=document.getElementById('m-jyokyo-nenhi');if(jyEl)state.monthly.jyokyo_nenhi=parseFloat(jyEl.value)||0;
   const znEl=document.getElementById('m-zennen-nishin');if(znEl)state.monthly.zennen_nishin=parseNum(znEl.value);
   const kEl=document.getElementById('kaizen-memo');if(kEl)state.kaizen_memo=kEl.value;
-  // v19.2: 月累計・先週は廃止。時間帯別のみ保存
+  // v19.3: 月累計・先週は廃止。時間帯別のみ保存
   ['t_asa_u','t_asa_k','t_asa_u_nen','t_asa_k_nen','t_hiru_u','t_hiru_k','t_hiru_u_nen','t_hiru_k_nen','t_yu_u','t_yu_k','t_yu_u_nen','t_yu_k_nen'].forEach(k=>{
     const el=document.getElementById(k.replace(/_/g,'-'));if(el)state.daily[k]=parseNum(el.value);
   });
@@ -8117,32 +8415,37 @@ function loadAll(){
     }
     if(s.daily)Object.assign(state.daily,s.daily);
     if(s.cats)Object.keys(s.cats).forEach(k=>{state.cats[k]=Object.assign(state.cats[k]||{},s.cats[k]);});
-    // v19.2: 処方箋/ドライバ次週計画
+    // v19.3: 処方箋/ドライバ次週計画
     if(s.aicoDriver){
       state.aicoDriver=state.aicoDriver||{};
       Object.keys(s.aicoDriver).forEach(cat=>{
         state.aicoDriver[cat]=Object.assign({},state.aicoDriver[cat]||{},s.aicoDriver[cat]||{});
       });
     }
-    // v19.2: 月次ファイル管理（アップロード履歴）
+    // v19.3: 月次ファイル管理（アップロード履歴）
     if(s.fileUploads){
       state.fileUploads=state.fileUploads||{seisan:[],catreport:[],booklet:[],syohou:[]};
       ['seisan','catreport','booklet','syohou','external'].forEach(t=>{
         if(Array.isArray(s.fileUploads[t]))state.fileUploads[t]=s.fileUploads[t].slice(0,10);
       });
     }
-    // v19.2: 月別データアーカイブ
+    // v19.3: 月別データアーカイブ
     if(s.byMonth && typeof s.byMonth==='object'){
       state.byMonth = s.byMonth;
     }
-    // v19.2: 外部要因テキスト要約
+    // v19.3: 外部要因テキスト要約
     if(Array.isArray(s.externalFactors))state.externalFactors=s.externalFactors;
-    // v19.2: AI計画提案
+    // v19.3: AI計画提案
     if(Array.isArray(s.aiProposals))state.aiProposals=s.aiProposals;
     if(typeof s.aiPromptCustom==='string')state.aiPromptCustom=s.aiPromptCustom;
-    // v19.2: Q&Aログ
+    // v19.3: Q&Aログ
     if(Array.isArray(s.qaLog))state.qaLog=s.qaLog;
-    // v19.2: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）
+    // v19.3: 世界一挑戦支援
+    if(s.sekaiichi&&typeof s.sekaiichi==='object'){
+      if(!state.sekaiichi)state.sekaiichi={challenges:[]};
+      if(Array.isArray(s.sekaiichi.challenges))state.sekaiichi.challenges=s.sekaiichi.challenges;
+    }
+    // v19.3: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）
     if(s.catReport){
       if(!state.catReport)state.catReport={period:{},dept:{},alco:{}};
       if(s.catReport.period)state.catReport.period=Object.assign(state.catReport.period||{},s.catReport.period);
@@ -8200,7 +8503,7 @@ function restoreForm(){
   if(!state.monthly.target_uriage&&state.seisan.uriage){const el=document.getElementById('m-target-uriage');if(el)el.value=state.seisan.uriage;}
   const jEl=document.getElementById('m-juten-sessaku');if(jEl)jEl.value=state.monthly.juten_sessaku||'';
   const kEl=document.getElementById('kaizen-memo');if(kEl)kEl.value=state.kaizen_memo||'';
-  // v19.2: 月累計・先週の復元は廃止（state.daily.tsuki_*/sen_* は localStorage に残るが UI からは参照しない）
+  // v19.3: 月累計・先週の復元は廃止（state.daily.tsuki_*/sen_* は localStorage に残るが UI からは参照しない）
   ['t_asa_u','t_asa_k','t_asa_u_nen','t_asa_k_nen','t_hiru_u','t_hiru_k','t_hiru_u_nen','t_hiru_k_nen','t_yu_u','t_yu_k','t_yu_u_nen','t_yu_k_nen'].forEach(k=>{
     const el=document.getElementById(k.replace(/_/g,'-'));if(el&&state.daily[k])el.value=state.daily[k];
   });
