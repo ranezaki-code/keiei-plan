@@ -511,7 +511,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v18.0</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v18.1</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -537,7 +537,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
       <div class="layout-sidebar">
         <nav class="sidebar-rail">
           <button class="sidebar-btn active" data-sub="seisan" onclick="showSub('jisseki','seisan')">📒 精算書</button>
-          <button class="sidebar-btn" data-sub="daily" onclick="showSub('jisseki','daily')">📊 日販・客数</button>
+          <button class="sidebar-btn" data-sub="daily" onclick="showSub('jisseki','daily')">📊 時間帯・曜日別実績</button>
           <button class="sidebar-btn" data-sub="vs" onclick="showSub('jisseki','vs')">📈 計画 vs 実績</button>
         </nav>
         <div class="sidebar-pane">
@@ -647,34 +647,19 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
       </div>
     </div>
 
-    <!-- ===== Tab 2: 日販・客数（実績グループの2枚目） ===== -->
+    <!-- ===== Tab 2: 時間帯・曜日別実績（実績グループの2枚目／月1回入力） ===== -->
     <div class="tab-panel" id="tab2">
-      <div class="card">
-        <div class="section-title">月累計・先週実績</div>
-        <div class="overflow-auto">
-        <table>
-          <thead><tr><th>区分</th><th>売上</th><th>前年比%</th><th>客数（人）</th><th>前年比%</th><th>客単価</th></tr></thead>
-          <tbody>
-            <tr><td class="font-bold">月累計</td>
-              <td><input type="text" id="d-tsuki-uriage" inputmode="numeric" placeholder="0" oninput="calcDailyStats()"></td>
-              <td><input type="text" id="d-tsuki-uriage-nen" inputmode="decimal" placeholder="100" step="0.1" oninput="calcDailyStats()"></td>
-              <td><input type="text" id="d-tsuki-kyaku" inputmode="numeric" data-nounit placeholder="0" oninput="calcDailyStats()"></td>
-              <td><input type="text" id="d-tsuki-kyaku-nen" inputmode="decimal" placeholder="100" step="0.1" oninput="calcDailyStats()"></td>
-              <td id="d-tsuki-tanka" class="font-bold">¥—</td>
-            </tr>
-            <tr><td class="font-bold">先週実績</td>
-              <td><input type="text" id="d-sen-uriage" inputmode="numeric" placeholder="0" oninput="calcDailyStats()"></td>
-              <td><input type="text" id="d-sen-uriage-nen" inputmode="decimal" placeholder="100" step="0.1" oninput="calcDailyStats()"></td>
-              <td><input type="text" id="d-sen-kyaku" inputmode="numeric" data-nounit placeholder="0" oninput="calcDailyStats()"></td>
-              <td><input type="text" id="d-sen-kyaku-nen" inputmode="decimal" placeholder="100" step="0.1" oninput="calcDailyStats()"></td>
-              <td id="d-sen-tanka" class="font-bold">¥—</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="card" style="background:linear-gradient(135deg,#dbeafe 0%,#fef3c7 100%);border:1px solid #93c5fd">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:22px">📅</span>
+          <div style="flex:1;min-width:200px">
+            <div style="font-weight:700;color:#1e3a5f;font-size:14px">月1回、本部の月次レポートから入力</div>
+            <div style="font-size:11px;color:#475569;margin-top:2px">精算書と同じく月次の確定値を入力します。週次の振り返りは「🔍 先週検証」タブで行います。</div>
+          </div>
         </div>
       </div>
       <div class="card">
-        <div class="section-title">時間帯別実績</div>
+        <div class="section-title">時間帯別実績<span style="font-size:11px;color:#6b7280;font-weight:400;margin-left:6px">（月次集計値）</span></div>
         <div class="overflow-auto">
         <table>
           <thead><tr><th>時間帯</th><th>売上</th><th>前年比%</th><th>構成比</th><th>客数</th><th>前年比%</th><th>構成比</th></tr></thead>
@@ -708,18 +693,18 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
         </div>
       </div>
       <div class="card">
-        <div class="section-title">曜日別4週平均実績</div>
+        <div class="section-title">曜日別4週平均実績<span style="font-size:11px;color:#6b7280;font-weight:400;margin-left:6px">（直近4週平均／月次集計）</span></div>
         <div class="overflow-auto">
         <table id="youbi-grid">
-          <thead><tr><th>曜日</th><th>日販</th><th>先週差</th><th>客数</th><th>先週差</th><th>客単価</th><th>先週差</th></tr></thead>
+          <thead><tr><th>曜日</th><th>日販</th><th>前月差</th><th>客数</th><th>前月差</th><th>客単価</th><th>前月差</th></tr></thead>
           <tbody id="youbi-body"></tbody>
         </table>
         </div>
       </div>
 
-      <!-- ===== グラフ：日販・客数をリアルタイム可視化 ===== -->
+      <!-- ===== グラフ：時間帯・曜日別実績の可視化 ===== -->
       <div class="card">
-        <div class="section-title">📊 日販・客数グラフ <span style="font-size:11px;color:#6b7280;font-weight:400">— 入力に応じてリアルタイム更新</span></div>
+        <div class="section-title">📊 月次実績グラフ <span style="font-size:11px;color:#6b7280;font-weight:400">— 入力に応じてリアルタイム更新</span></div>
         <div class="chart-grid">
           <div class="chart-card">
             <div class="chart-title">時間帯別 売上構成<span class="chart-sub">朝／昼／夕</span></div>
@@ -730,11 +715,11 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
             <div class="chart-canvas-wrap"><canvas id="chart-time-kyaku"></canvas></div>
           </div>
           <div class="chart-card">
-            <div class="chart-title">月累計 vs 先週<span class="chart-sub">売上・客数・客単価の前年比</span></div>
-            <div class="chart-canvas-wrap"><canvas id="chart-daily-yoy"></canvas></div>
+            <div class="chart-title">時間帯別 前年比<span class="chart-sub">売上・客数（弱い時間帯を発見）</span></div>
+            <div class="chart-canvas-wrap"><canvas id="chart-time-yoy"></canvas></div>
           </div>
           <div class="chart-card">
-            <div class="chart-title">曜日別 日販トレンド<span class="chart-sub">4週平均</span></div>
+            <div class="chart-title">曜日別 日販トレンド<span class="chart-sub">直近4週平均</span></div>
             <div class="chart-canvas-wrap"><canvas id="chart-youbi"></canvas></div>
           </div>
         </div>
@@ -1747,7 +1732,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v18.0';
+const APP_VERSION='v18.1';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -2360,7 +2345,7 @@ function scaleStateNums(ratio) {
   ['target_kyuyo','target_mikiri','target_loss','target_hoso','target_konetsu','target_zappi','target_mikiri_shien','target_denki_shien','target_zatsuyeki'].forEach(k=>{state.monthly[k]=sc(state.monthly[k]);});
   state.monthly.zennen_nishin=sc(state.monthly.zennen_nishin);
   state.monthly.weekly_zennen=state.monthly.weekly_zennen.map(sc);
-  ['tsuki_uriage','sen_uriage','t_asa_u','t_hiru_u','t_yu_u'].forEach(k => { state.daily[k] = sc(state.daily[k]); });
+  ['t_asa_u','t_hiru_u','t_yu_u'].forEach(k => { state.daily[k] = sc(state.daily[k]); });
   state.daily.youbi.forEach(y => { y.nishin = sc(y.nishin); y.nishin_diff = sc(y.nishin_diff); y.tanka = sc(y.tanka); y.tanka_diff = sc(y.tanka_diff); });
   const catKeys = ['sm_u','mp_u','sw_u','kp_u','sw_uh','sm_a','mp_a','sw_a','kp_a','aico_u','aico_a','aico_ne','aico_hai'];
   Object.values(state.cats).forEach(cat => { catKeys.forEach(k => { cat[k] = sc(cat[k]); }); });
@@ -2500,7 +2485,7 @@ let state={
     target_mikiri_shien:0,target_denki_shien:0,target_zatsuyeki:0,
     jyokyo_nenhi:0,zennen_nishin:0,weekly_sessaku:['','','',''],weekly_juten:[[],[],[],[]],weekly_zennen:[0,0,0,0],week_ratio:[23,26,26,25],
     sessaku_booklet:{filename:'',uploaded_at:'',items:[]}},
-  daily:{tsuki_uriage:0,tsuki_kyaku:0,tsuki_uriage_nen:100,tsuki_kyaku_nen:100,sen_uriage:0,sen_kyaku:0,sen_uriage_nen:100,sen_kyaku_nen:100,t_asa_u:0,t_asa_k:0,t_asa_u_nen:100,t_asa_k_nen:100,t_hiru_u:0,t_hiru_k:0,t_hiru_u_nen:100,t_hiru_k_nen:100,t_yu_u:0,t_yu_k:0,t_yu_u_nen:100,t_yu_k_nen:100,youbi:DAYS.map(d=>({day:d,nishin:0,nishin_diff:0,kyaku:0,kyaku_diff:0,tanka:0,tanka_diff:0}))},
+  daily:{t_asa_u:0,t_asa_k:0,t_asa_u_nen:100,t_asa_k_nen:100,t_hiru_u:0,t_hiru_k:0,t_hiru_u_nen:100,t_hiru_k_nen:100,t_yu_u:0,t_yu_k:0,t_yu_u_nen:100,t_yu_k_nen:100,youbi:DAYS.map(d=>({day:d,nishin:0,nishin_diff:0,kyaku:0,kyaku_diff:0,tanka:0,tanka_diff:0}))},
   cats:CATS.reduce((o,c)=>({...o,[c]:{sm_u:0,mp_u:0,sw_u:0,kp_u:0,sw_uh:0,sm_a:0,mp_a:0,sw_a:0,kp_a:0,aico_u:0,aico_a:0,aico_ne:0,aico_hai:0,driver_h:1,driver_d:2,driver_hantei:'処方箋通',driver_riyu:''}}),{}),
   sessaku:[],
   layout:LAYOUT_AREAS.map(a=>({area:a,shoten:'',point:''})),
@@ -3566,21 +3551,20 @@ function renderDailyCharts(){
     }
   }
 
-  // 月累計 vs 先週（売上・客数の前年比）
+  // 時間帯別 前年比（朝/昼/夕、売上・客数）
   {
-    const ctx=document.getElementById('chart-daily-yoy');
+    const ctx=document.getElementById('chart-time-yoy');
     if(ctx){
-      const tu_n=num('d-tsuki-uriage-nen'), tk_n=num('d-tsuki-kyaku-nen');
-      const su_n=num('d-sen-uriage-nen'),  sk_n=num('d-sen-kyaku-nen');
-      _chartDestroy('chart-daily-yoy');
-      _chartSet('chart-daily-yoy', new Chart(ctx,{type:'bar',
-        data:{labels:['売上 前年比','客数 前年比'],
+      _chartDestroy('chart-time-yoy');
+      _chartSet('chart-time-yoy', new Chart(ctx,{type:'bar',
+        data:{labels:['朝(0-9)','昼(9-16)','夕(16-24)'],
           datasets:[
-            {label:'月累計',backgroundColor:_chartColors.curr,data:[tu_n,tk_n]},
-            {label:'先週',backgroundColor:_chartColors.prev,data:[su_n,sk_n]}
+            {label:'売上 前年比%',backgroundColor:_chartColors.curr,data:[aun,hun,yun]},
+            {label:'客数 前年比%',backgroundColor:_chartColors.actual,data:[akn,hkn,ykn]}
           ]},
         options:{responsive:true,maintainAspectRatio:false,
-          plugins:{legend:{position:'top',labels:{font:{size:11}}}},
+          plugins:{legend:{position:'top',labels:{font:{size:11}}},
+            tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y||0).toFixed(1)+'%'}}},
           scales:{y:{beginAtZero:true,ticks:{font:{size:10},callback:v=>v+'%'},
             grid:{color:c=>c.tick.value===100?'#1e3a5f':'#e5e7eb'}}}}
       }));
@@ -5177,14 +5161,8 @@ function renderWeeklyProgress(){
 }
 
 // ===== DAILY =====
-function calcDailyStats(){
-  const tu=man('d-tsuki-uriage'),tk=num('d-tsuki-kyaku');
-  setText('d-tsuki-tanka',tu&&tk?fmt(tu/tk):'¥—');
-  const su=man('d-sen-uriage'),sk=num('d-sen-kyaku');
-  setText('d-sen-tanka',su&&sk?fmt(su/sk):'¥—');
-  try{renderDailyCharts();}catch(e){}
-  saveAll();
-}
+// v18.1: 月累計・先週実績の入力欄は廃止。互換のため stub だけ残す（古い保存データ等の影響を吸収）
+function calcDailyStats(){ /* deprecated: kept as no-op for backward compat */ }
 function calcTimeStats(){
   const au=num('t-asa-u'),hu=num('t-hiru-u'),yu=num('t-yu-u');
   const ak=num('t-asa-k'),hk=num('t-hiru-k'),yk=num('t-yu-k');
@@ -5929,9 +5907,7 @@ function collectFormValues(){
   const jyEl=document.getElementById('m-jyokyo-nenhi');if(jyEl)state.monthly.jyokyo_nenhi=parseFloat(jyEl.value)||0;
   const znEl=document.getElementById('m-zennen-nishin');if(znEl)state.monthly.zennen_nishin=parseNum(znEl.value);
   const kEl=document.getElementById('kaizen-memo');if(kEl)state.kaizen_memo=kEl.value;
-  ['tsuki_uriage','tsuki_kyaku','tsuki_uriage_nen','tsuki_kyaku_nen','sen_uriage','sen_kyaku','sen_uriage_nen','sen_kyaku_nen'].forEach(k=>{
-    const el=document.getElementById('d-'+k.replace(/_/g,'-'));if(el)state.daily[k]=parseNum(el.value);
-  });
+  // v18.1: 月累計・先週は廃止。時間帯別のみ保存
   ['t_asa_u','t_asa_k','t_asa_u_nen','t_asa_k_nen','t_hiru_u','t_hiru_k','t_hiru_u_nen','t_hiru_k_nen','t_yu_u','t_yu_k','t_yu_u_nen','t_yu_k_nen'].forEach(k=>{
     const el=document.getElementById(k.replace(/_/g,'-'));if(el)state.daily[k]=parseNum(el.value);
   });
@@ -6014,9 +5990,7 @@ function restoreForm(){
   if(!state.monthly.target_uriage&&state.seisan.uriage){const el=document.getElementById('m-target-uriage');if(el)el.value=state.seisan.uriage;}
   const jEl=document.getElementById('m-juten-sessaku');if(jEl)jEl.value=state.monthly.juten_sessaku||'';
   const kEl=document.getElementById('kaizen-memo');if(kEl)kEl.value=state.kaizen_memo||'';
-  ['tsuki_uriage','tsuki_kyaku','tsuki_uriage_nen','tsuki_kyaku_nen','sen_uriage','sen_kyaku','sen_uriage_nen','sen_kyaku_nen'].forEach(k=>{
-    const el=document.getElementById('d-'+k.replace(/_/g,'-'));if(el&&state.daily[k])el.value=state.daily[k];
-  });
+  // v18.1: 月累計・先週の復元は廃止（state.daily.tsuki_*/sen_* は localStorage に残るが UI からは参照しない）
   ['t_asa_u','t_asa_k','t_asa_u_nen','t_asa_k_nen','t_hiru_u','t_hiru_k','t_hiru_u_nen','t_hiru_k_nen','t_yu_u','t_yu_k','t_yu_u_nen','t_yu_k_nen'].forEach(k=>{
     const el=document.getElementById(k.replace(/_/g,'-'));if(el&&state.daily[k])el.value=state.daily[k];
   });
