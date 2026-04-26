@@ -315,6 +315,39 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .cat-report-table input[type=text]{width:80px;padding:3px 4px;font-size:11px;text-align:right;border:1px solid #e5e7eb}
 .cat-report-table input.col-pct{width:55px}
 .cat-report-table tr:hover td:not(.row-name){filter:brightness(0.96)}
+/* 経営計画 月次比較テーブル */
+.mgmt-compare-table{font-size:11px;width:100%;border-collapse:collapse}
+.mgmt-compare-table th,.mgmt-compare-table td{border:1px solid var(--border);padding:4px 8px;text-align:right;white-space:nowrap}
+.mgmt-compare-table th{background:#f3f4f6;font-weight:700;text-align:center;position:sticky;top:0;z-index:1}
+.mgmt-compare-table td.row-name{text-align:left;font-weight:700;background:#fff;position:sticky;left:0;z-index:1;min-width:140px;font-size:12px}
+.mgmt-compare-table th.g-prev{background:#fce7f3}
+.mgmt-compare-table th.g-curr{background:#dbeafe}
+.mgmt-compare-table th.g-ly{background:#fef3c7}
+.mgmt-compare-table td.g-prev{background:#fdf2f8}
+.mgmt-compare-table td.g-curr{background:#f0f9ff}
+.mgmt-compare-table td.g-ly{background:#fffbeb}
+.mgmt-compare-table tr.section-row td{background:#1e3a5f;color:#fff;font-weight:700;text-align:left;padding:6px 8px}
+.mgmt-compare-table .pct-good{color:#059669;font-weight:700}
+.mgmt-compare-table .pct-bad{color:#dc2626;font-weight:700}
+/* 処方箋/ドライバ table */
+.aico-driver-table{font-size:11px;width:100%;border-collapse:collapse}
+.aico-driver-table th,.aico-driver-table td{border:1px solid var(--border);padding:3px 4px;text-align:center;white-space:nowrap}
+.aico-driver-table th{background:#f3f4f6;font-weight:700;font-size:10px;position:sticky;top:0;z-index:1}
+.aico-driver-table th.g-syohou{background:#fce7f3}
+.aico-driver-table th.g-day{background:#e0f2fe}
+.aico-driver-table th.g-hokyo{background:#fef3c7}
+.aico-driver-table th.g-judge{background:#1e3a5f;color:#fff}
+.aico-driver-table td.row-name{text-align:right;font-weight:700;background:#fff;position:sticky;left:0;z-index:1;min-width:130px;font-size:12px}
+.aico-driver-table td.g-syohou{background:#fdf2f8}
+.aico-driver-table td.g-day{background:#f0f9ff}
+.aico-driver-table td.g-day.over{background:#fee2e2}
+.aico-driver-table td.g-hokyo{background:#fffbeb}
+.aico-driver-table input[type=text]{width:38px;padding:2px 3px;font-size:11px;text-align:center;border:1px solid #e5e7eb}
+.aico-driver-table input.col-pct{width:38px}
+.aico-driver-table .judge-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;color:#fff}
+.aico-driver-table .judge-ok{background:#10b981}
+.aico-driver-table .judge-up{background:#f59e0b}
+.aico-driver-table .support-note{font-size:9px;color:#475569;margin-top:2px;display:block;font-weight:500}
 /* Seisan table */
 .seisan-group td:first-child{text-align:right;font-weight:600;font-size:12px;white-space:nowrap;padding-right:8px;width:140px}
 .seisan-group td:last-child{width:160px}
@@ -523,7 +556,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v18.3</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v18.4</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -1261,6 +1294,34 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
         </div>
       </div>
 
+      <!-- ===== 経営計画 月次比較（先月計画 / 前月実績 / 当月計画 / 計画(仮)・(意思) / 前年） ===== -->
+      <div class="card">
+        <div class="flex justify-between items-center mb-2" style="flex-wrap:wrap;gap:8px">
+          <div class="section-title" style="margin:0">📊 経営計画 月次比較<button class="help-btn" data-help-title="経営計画 月次比較の見方" data-help="経営計画の主要KPIを「先月計画 / 前月実績 / 当月計画(仮) / 当月計画(意思) / 当月実績 / 前年実績」で並べた比較表です。<br><br>・<b>先月計画</b>：先月の月初に立てた計画（state.history から最新の保存計画 1 件）<br>・<b>前月実績</b>：state.seisan_prev<br>・<b>当月計画(仮)</b>：state.monthly.target_uriage 等<br>・<b>当月計画(意思)</b>：当月計画(仮) と現在の history 最新の差<br>・<b>当月実績</b>：state.seisan<br>・<b>前年実績</b>：state.seisan_lastyear<br><br><b>計画比%</b> = 実績 ÷ 計画 × 100<br><b>前年比%</b> = 当月 ÷ 前年 × 100">?</button></div>
+          <div class="flex gap-2"><button class="btn-secondary btn-sm" onclick="renderMgmtCompare()">🔄 再計算</button></div>
+        </div>
+        <div class="overflow-auto">
+          <table class="mgmt-compare-table" id="mgmt-compare-table"></table>
+        </div>
+        <div class="input-hint" style="margin-top:6px">💡 数値は精算書／月次計画／保存計画から自動算出。手入力は精算書タブと月次目標タブで行ってください。</div>
+      </div>
+
+      <!-- ===== 処方箋/ドライバ次週計画（自動判定: 処方箋通 / 上方修正） ===== -->
+      <div class="card">
+        <div class="flex justify-between items-center mb-2" style="flex-wrap:wrap;gap:8px">
+          <div class="section-title" style="margin:0">🚚 処方箋/ドライバ次週計画<button class="help-btn" data-help-title="処方箋/ドライバ計画と自動判定" data-help="<b>判定ロジック</b><br>・<b>処方箋通</b>：すべての日のドライバ設定値が処方箋設定値<u>以下</u>で運用されている<br>・<b>上方修正</b>：1日でもドライバ設定値が処方箋設定値を<u>超えて</u>運用されている<br><br>判定式: 平日(月火水木金)の各日 ≤ 処方箋(平日)、土日(土日)の各日 ≤ 処方箋(土日) → 処方箋通／いずれか超過 → 上方修正<br><br><b>本部支援算出方法</b><br>① 処方箋通：標準の見切・処分支援（売変率の段階で 20%/30%/55% 本部負担）<br>② 上方修正：処方箋を超える上方修正分の見切・廃棄は本部支援対象外。<br><br>※支援額の最終確定は本部基準に従ってください。本表示は判定の目安です。">?</button></div>
+          <div class="flex gap-2" style="flex-wrap:wrap">
+            <button class="btn-secondary btn-sm" onclick="recomputeAicoJudgments()">🔄 自動判定</button>
+            <button class="btn-secondary btn-sm" onclick="resetAicoDriver()">🔢 ドライバ全リセット</button>
+          </div>
+        </div>
+        <div class="overflow-auto">
+          <table class="aico-driver-table" id="aico-driver-table"></table>
+        </div>
+        <div id="aico-judgment-summary" style="margin-top:8px;padding:10px;background:#f8fafc;border:1px solid var(--border);border-radius:6px;font-size:12px"></div>
+        <div class="input-hint" style="margin-top:6px">💡 ドライバ・在庫の数値は曜日別に入力／判定は値変更時にリアルタイム更新／全角→半角・Enter次へ・↑↓移動対応</div>
+      </div>
+
     </div><!-- /tab1-cat -->
 
     <!-- ===== FC-Cn 契約 支援算出 ===== -->
@@ -1775,7 +1836,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v18.3';
+const APP_VERSION='v18.4';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -2546,13 +2607,15 @@ let state={
     sessaku_booklet:{filename:'',uploaded_at:'',items:[]}},
   daily:{t_asa_u:0,t_asa_k:0,t_asa_u_nen:100,t_asa_k_nen:100,t_hiru_u:0,t_hiru_k:0,t_hiru_u_nen:100,t_hiru_k_nen:100,t_yu_u:0,t_yu_k:0,t_yu_u_nen:100,t_yu_k_nen:100,youbi:DAYS.map(d=>({day:d,nishin:0,nishin_diff:0,kyaku:0,kyaku_diff:0,tanka:0,tanka_diff:0}))},
   cats:CATS.reduce((o,c)=>({...o,[c]:{sm_u:0,mp_u:0,sw_u:0,kp_u:0,sw_uh:0,sm_a:0,mp_a:0,sw_a:0,kp_a:0,aico_u:0,aico_a:0,aico_ne:0,aico_hai:0,driver_h:1,driver_d:2,driver_hantei:'処方箋通',driver_riyu:''}}),{}),
-  // v18.3: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）の入力用ストア
+  // v18.4: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）の入力用ストア
   // 構造: catReport[section][row][col_curr|col_prev] = number   例 catReport.dept['米飯'].sales_curr
   catReport:{
     period:{curr_start:'',curr_end:'',prev_start:'',prev_end:''},
     dept:DEPT_ROWS.reduce((o,r)=>({...o,[r]:{}}),{}),
     alco:ALCO_ROWS.reduce((o,r)=>({...o,[r]:{}}),{})
   },
+  // v18.4: 処方箋/ドライバ次週計画（自動判定: 処方箋通／上方修正）
+  aicoDriver:{},
   sessaku:[],
   layout:LAYOUT_AREAS.map(a=>({area:a,shoten:'',point:''})),
   ff_face:[],
@@ -5227,7 +5290,7 @@ function renderWeeklyProgress(){
 }
 
 // ===== DAILY =====
-// v18.3: 月累計・先週実績の入力欄は廃止。互換のため stub だけ残す（古い保存データ等の影響を吸収）
+// v18.4: 月累計・先週実績の入力欄は廃止。互換のため stub だけ残す（古い保存データ等の影響を吸収）
 function calcDailyStats(){ /* deprecated: kept as no-op for backward compat */ }
 function calcTimeStats(){
   const au=num('t-asa-u'),hu=num('t-hiru-u'),yu=num('t-yu-u');
@@ -5271,7 +5334,7 @@ function saveYoubi(){
 
 // ===== CATEGORY TAB =====
 // ===== 週次お店づくりレポート（DEPT別／ALCOカテゴリ別） =====
-// v18.3: 本部の週次レポートPDFを取り込み、PDFを左に表示しながら手入力できる
+// v18.4: 本部の週次レポートPDFを取り込み、PDFを左に表示しながら手入力できる
 function _ensureCatReport(){
   if(!state.catReport)state.catReport={period:{curr_start:'',curr_end:'',prev_start:'',prev_end:''},dept:{},alco:{}};
   ['dept','alco'].forEach(sec=>{
@@ -5739,9 +5802,339 @@ async function parseCategoryPDFViaClaude(){
   }
 }
 
+// ===== 経営計画 月次比較（カテゴリ別予算実績比較ベース） =====
+// state.seisan / state.seisan_prev / state.seisan_lastyear / state.monthly / state.history から自動算出
+const MGMT_COMPARE_ROWS = [
+  {section:'【売上系】'},
+  {key:'_nichihan',  label:'平均日販'},
+  {key:'_nichi_yoy', label:'平均日販前年比'},
+  {key:'_kyaku',     label:'客数(月)'},
+  {key:'_nissu',     label:'営業日数'},
+  {key:'_tanka',     label:'客単価'},
+  {key:'_urihen_r',  label:'売変率'},
+  {key:'urihen',     label:'売変高Ⅲ'},
+  {key:'uriage',     label:'商品売上高'},
+  {key:'sonotauriage', label:'その他営業収入'},
+  {key:'_uriage_total', label:'売上高合計'},
+  {section:'【粗利・FC収入】'},
+  {key:'arari',      label:'総粗利益高'},
+  {key:'_fcnyu',     label:'フランチャイジー収入'},
+  {section:'【営業費】'},
+  {key:'kyuyo',      label:'パート給与'},
+  {key:'mikiri',     label:'見切・処分(営業費)'},
+  {key:'loss',       label:'棚卸ロス(営業費)'},
+  {key:'hoso',       label:'包装費'},
+  {key:'konetsu',    label:'水道光熱費'},
+  {key:'zappi',      label:'雑費'},
+  {key:'_eigyokei',  label:'営業費計'},
+  {section:'【支援・店利益】'},
+  {key:'mikiri_shien', label:'見切・処分支援'},
+  {key:'denki_shien',  label:'電気・光熱費支援'},
+  {key:'zatsuyeki',    label:'雑益計'},
+  {key:'_tenrieki',    label:'店利益'}
+];
+
+function _mgmtComputeKPIs(bucket, nissu){
+  const u = (bucket.uriage||0) + (bucket.sonotauriage||0);
+  const arari = sumCalc(SEISAN_ROWS.find(r=>r.key==='arari'), bucket||{});
+  const eigyokei = sumCalc(SEISAN_ROWS.find(r=>r.key==='_eigyokei'), bucket||{});
+  const tenrieki = sumCalc(SEISAN_ROWS.find(r=>r.key==='_tenrieki'), bucket||{});
+  const fcnyu = sumCalc(SEISAN_ROWS.find(r=>r.key==='_fcnyu'), bucket||{});
+  const nichihan = nissu? u/nissu : 0;
+  const urihen = bucket.urihen || 0;
+  const urihenR = bucket.uriage ? (urihen/(bucket.uriage||1))*100 : 0;
+  return {nichihan,uriage_total:u,arari,eigyokei,tenrieki,fcnyu,urihen,urihen_r:urihenR};
+}
+
+function _mgmtRowValue(rowKey, bucket, nissu){
+  if(!bucket)return null;
+  const k = _mgmtComputeKPIs(bucket, nissu);
+  switch(rowKey){
+    case '_nichihan': return k.nichihan;
+    case '_nichi_yoy': return null; // 前年比は別計算
+    case '_kyaku': return null; // 客数は state.daily にないので空
+    case '_nissu': return nissu;
+    case '_tanka': return null;
+    case '_urihen_r': return k.urihen_r;
+    case '_uriage_total': return k.uriage_total;
+    case '_fcnyu': return k.fcnyu;
+    case '_eigyokei': return k.eigyokei;
+    case '_tenrieki': return k.tenrieki;
+  }
+  return bucket[rowKey] || 0;
+}
+
+function _fmtYen(v){ if(v==null||isNaN(v)||v===0)return '—'; return '¥'+Math.round(v).toLocaleString(); }
+function _fmtPct(v){ if(v==null||isNaN(v))return '—'; return v.toFixed(1)+'%'; }
+
+function renderMgmtCompare(){
+  const t = document.getElementById('mgmt-compare-table');
+  if(!t)return;
+  const sN = state.seisan?.eigyo_nissu || 30;
+  const pN = sN; // 前月も同じ営業日数で簡易比較
+  const lyN = sN;
+  const planM = state.monthly?.eigyo_nissu || sN;
+
+  // 先月計画: state.history で前月の保存スナップショットを取る
+  const prevMonth = (()=>{
+    const cur = state.seisan?.month || '';
+    if(!/^\d{4}-\d{2}$/.test(cur))return '';
+    let [y,m]=cur.split('-').map(Number); m--; if(m<1){m=12;y--;}
+    return `${y}-${String(m).padStart(2,'0')}`;
+  })();
+  const prevSnap = (state.history||[]).find(h=>h.label===prevMonth);
+  const prevPlan = prevSnap ? (prevSnap.seisan_planned||{}) : {};
+
+  // 当月計画(仮): state.monthly.target_uriage 等から構築
+  const m = state.monthly||{};
+  const planTentative = {
+    uriage: m.target_uriage||0,
+    sonotauriage: 0,
+    arari: 0,
+    urihen: m.target_urihen||0,
+    kyuyo: m.target_kyuyo||0,
+    mikiri: m.target_mikiri||0,
+    loss: m.target_loss||0,
+    hoso: m.target_hoso||0,
+    konetsu: m.target_konetsu||0,
+    zappi: m.target_zappi||0,
+    mikiri_shien: m.target_mikiri_shien||0,
+    denki_shien: m.target_denki_shien||0,
+    zatsuyeki: m.target_zatsuyeki||0
+  };
+  // 当月計画(意思): state.history の最新で当月分があればそれを使う
+  const curMonth = state.seisan?.month||'';
+  const curSnap = (state.history||[]).find(h=>h.label===curMonth);
+  const planFinal = curSnap ? (curSnap.seisan_planned||{}) : planTentative;
+
+  const buckets = {
+    prevPlan, prevAct: state.seisan_prev, planTent: planTentative,
+    planFin: planFinal, curAct: state.seisan, ly: state.seisan_lastyear
+  };
+
+  let html = `<thead>
+    <tr>
+      <th rowspan="2" class="row-name" style="background:#f3f4f6">項目</th>
+      <th colspan="3" class="g-prev">先月（${prevMonth||'—'}）</th>
+      <th colspan="3" class="g-curr">当月計画（${curMonth||'—'}）</th>
+      <th colspan="2" class="g-curr">当月実績</th>
+      <th colspan="2" class="g-ly">前年</th>
+    </tr>
+    <tr>
+      <th class="g-prev">計画</th><th class="g-prev">実績</th><th class="g-prev">計画比</th>
+      <th class="g-curr">計画(仮)</th><th class="g-curr">計画(意思)</th><th class="g-curr">前年比</th>
+      <th class="g-curr">実績</th><th class="g-curr">計画比</th>
+      <th class="g-ly">実績</th><th class="g-ly">前年比</th>
+    </tr>
+  </thead><tbody>`;
+
+  MGMT_COMPARE_ROWS.forEach(row=>{
+    if(row.section){
+      html += `<tr class="section-row"><td colspan="11">${row.section}</td></tr>`;
+      return;
+    }
+    const k = row.key;
+    // 各セルを計算
+    const valPrevPlan = _mgmtRowValue(k, buckets.prevPlan, pN);
+    const valPrevAct  = _mgmtRowValue(k, buckets.prevAct, pN);
+    const valPlanTent = _mgmtRowValue(k, buckets.planTent, planM);
+    const valPlanFin  = _mgmtRowValue(k, buckets.planFin, planM);
+    const valCurAct   = _mgmtRowValue(k, buckets.curAct, sN);
+    const valLy       = _mgmtRowValue(k, buckets.ly, lyN);
+
+    // 計画比% (前月)
+    const prevPct = (valPrevPlan && valPrevAct!=null)? (valPrevAct/valPrevPlan*100) : null;
+    // 当月計画比% (実績/計画(意思))
+    const curPct = (valPlanFin && valCurAct!=null)? (valCurAct/valPlanFin*100) : null;
+    // 前年比% (当月計画(意思)/前年実績) - 計画ベースの前年比
+    const planYoy = (valLy && valPlanFin)? (valPlanFin/valLy*100) : null;
+    // 前年比% (当月実績/前年実績)
+    const actYoy = (valLy && valCurAct)? (valCurAct/valLy*100) : null;
+
+    const isPct = (k==='_nichi_yoy' || k==='_urihen_r');
+    const isCount = (k==='_kyaku' || k==='_nissu');
+    const fmt = (v)=>{
+      if(v==null||v===0)return '—';
+      if(isPct)return _fmtPct(v);
+      if(isCount)return Math.round(v).toLocaleString();
+      return _fmtYen(v);
+    };
+    const cls = (pct)=>{
+      if(pct==null)return '';
+      return pct>=100? 'pct-good' : 'pct-bad';
+    };
+    html += `<tr>
+      <td class="row-name">${row.label}</td>
+      <td class="g-prev">${fmt(valPrevPlan)}</td>
+      <td class="g-prev">${fmt(valPrevAct)}</td>
+      <td class="g-prev ${cls(prevPct)}">${_fmtPct(prevPct)}</td>
+      <td class="g-curr">${fmt(valPlanTent)}</td>
+      <td class="g-curr">${fmt(valPlanFin)}</td>
+      <td class="g-curr ${cls(planYoy)}">${_fmtPct(planYoy)}</td>
+      <td class="g-curr">${fmt(valCurAct)}</td>
+      <td class="g-curr ${cls(curPct)}">${_fmtPct(curPct)}</td>
+      <td class="g-ly">${fmt(valLy)}</td>
+      <td class="g-ly ${cls(actYoy)}">${_fmtPct(actYoy)}</td>
+    </tr>`;
+  });
+  html += '</tbody>';
+  t.innerHTML = html;
+}
+
+// ===== 処方箋/ドライバ次週計画（自動判定: 処方箋通 / 上方修正） =====
+// PDFの「処方箋/ドライバ次週計画」表と整合。判定により本部支援算出方法が変わる。
+const AICO_DRIVER_CATS = ['弁当','チルド弁当','常温寿司','おにぎり','調理パン','冷し麺','ホット麺','パスタ','焼きそば他','サラダ','オリジナル惣菜','オリジナル軽食','チルド和洋菓子','食卓パン','菓子パン','惣菜パン','健康・機能性ベーカリー'];
+// 表示順は PDF と合わせる：木 金 土 日 月 火 水（次週開始＝木曜のレポート想定）
+const AICO_DRIVER_DAYS = [
+  {key:'thu',label:'木',type:'平日'},
+  {key:'fri',label:'金',type:'平日'},
+  {key:'sat',label:'土',type:'土日'},
+  {key:'sun',label:'日',type:'土日'},
+  {key:'mon',label:'月',type:'平日'},
+  {key:'tue',label:'火',type:'平日'},
+  {key:'wed',label:'水',type:'平日'}
+];
+
+function _ensureAicoDriver(){
+  if(!state.aicoDriver)state.aicoDriver={};
+  AICO_DRIVER_CATS.forEach(cat=>{
+    if(!state.aicoDriver[cat]){
+      state.aicoDriver[cat]={syohou_weekday:0,syohou_weekend:0,days:{},hokyo:0,plus:0};
+    }
+    if(!state.aicoDriver[cat].days)state.aicoDriver[cat].days={};
+    AICO_DRIVER_DAYS.forEach(d=>{
+      if(!state.aicoDriver[cat].days[d.key])state.aicoDriver[cat].days[d.key]={driver:0,stock:0};
+    });
+  });
+}
+
+function _judgeAicoCategory(cat){
+  const d = state.aicoDriver?.[cat];
+  if(!d)return {judge:'処方箋通',overDays:[]};
+  const sw = +d.syohou_weekday || 0;
+  const se = +d.syohou_weekend || 0;
+  const overDays = [];
+  AICO_DRIVER_DAYS.forEach(day=>{
+    const dv = +(d.days?.[day.key]?.driver) || 0;
+    if(dv<=0)return; // 未入力はスキップ
+    const limit = day.type==='平日' ? sw : se;
+    if(limit>0 && dv > limit)overDays.push(day.label);
+  });
+  return {judge: overDays.length>0?'上方修正':'処方箋通', overDays};
+}
+
+function renderAicoDriver(){
+  _ensureAicoDriver();
+  const t=document.getElementById('aico-driver-table');
+  if(!t)return;
+  let html=`<thead>
+    <tr>
+      <th rowspan="3" class="row-name">カテゴリ</th>
+      <th colspan="2" class="g-syohou">処方箋設定値</th>
+      <th colspan="${AICO_DRIVER_DAYS.length*2}" class="g-day">日別設定（ドライバ／在庫）</th>
+      <th colspan="2" class="g-hokyo">担保品数</th>
+      <th rowspan="3" class="g-judge">判定</th>
+      <th rowspan="3" class="g-judge">本部支援算出</th>
+    </tr>
+    <tr>
+      <th rowspan="2" class="g-syohou">平日<br>(火〜月)</th>
+      <th rowspan="2" class="g-syohou">土日</th>`;
+  AICO_DRIVER_DAYS.forEach(d=>{
+    html += `<th colspan="2" class="g-day" title="${d.type}">${d.label}<div style="font-size:9px">${d.type}</div></th>`;
+  });
+  html += `<th rowspan="2" class="g-hokyo">担保<br>設定品数</th><th rowspan="2" class="g-hokyo">＋設定<br>品数</th></tr>
+    <tr>`;
+  AICO_DRIVER_DAYS.forEach(()=>{
+    html += `<th class="g-day">D</th><th class="g-day">在</th>`;
+  });
+  html += `</tr></thead><tbody>`;
+
+  let countOK=0, countUp=0;
+  AICO_DRIVER_CATS.forEach(cat=>{
+    const d=state.aicoDriver[cat];
+    const j=_judgeAicoCategory(cat);
+    if(j.judge==='処方箋通')countOK++; else countUp++;
+    html += `<tr><td class="row-name">${cat}</td>`;
+    html += `<td class="g-syohou"><input type="text" inputmode="numeric" value="${d.syohou_weekday||''}" data-cat="${cat}" data-key="syohou_weekday"></td>`;
+    html += `<td class="g-syohou"><input type="text" inputmode="numeric" value="${d.syohou_weekend||''}" data-cat="${cat}" data-key="syohou_weekend"></td>`;
+    AICO_DRIVER_DAYS.forEach(day=>{
+      const dv=d.days[day.key]?.driver||'';
+      const sv=d.days[day.key]?.stock||'';
+      const limit = day.type==='平日'?(+d.syohou_weekday||0):(+d.syohou_weekend||0);
+      const isOver = limit>0 && (+dv>0) && (+dv > limit);
+      html += `<td class="g-day${isOver?' over':''}"><input type="text" inputmode="numeric" value="${dv}" data-cat="${cat}" data-day="${day.key}" data-dk="driver" title="${day.type} ${day.label}曜日 ドライバ"></td>`;
+      html += `<td class="g-day"><input type="text" inputmode="numeric" value="${sv}" data-cat="${cat}" data-day="${day.key}" data-dk="stock" title="${day.label}曜日 在庫"></td>`;
+    });
+    html += `<td class="g-hokyo"><input type="text" inputmode="numeric" value="${d.hokyo||''}" data-cat="${cat}" data-key="hokyo"></td>`;
+    html += `<td class="g-hokyo"><input type="text" inputmode="numeric" value="${d.plus||''}" data-cat="${cat}" data-key="plus"></td>`;
+    // 判定
+    const badgeCls = j.judge==='処方箋通'?'judge-ok':'judge-up';
+    const tip = j.overDays.length?` (${j.overDays.join('・')}超過)`:'';
+    html += `<td><span class="judge-badge ${badgeCls}" title="${j.judge}${tip}">${j.judge}</span></td>`;
+    // 本部支援算出
+    const supportText = j.judge==='処方箋通'
+      ? '✅ 標準支援対象<br><span class="support-note">売変率 2%〜3% : 20% 負担／3%〜4% : 30%／4%〜 : 55%</span>'
+      : '⚠ 上方修正分は対象外<br><span class="support-note">超過分の見切・廃棄は本部負担なし</span>';
+    html += `<td style="text-align:left;font-size:10px;line-height:1.4">${supportText}</td>`;
+    html += '</tr>';
+  });
+  html += `</tbody>`;
+  t.innerHTML = html;
+
+  // サマリー表示
+  const sum=document.getElementById('aico-judgment-summary');
+  if(sum){
+    sum.innerHTML = `
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+        <div><span class="judge-badge judge-ok" style="display:inline-block;padding:2px 8px;border-radius:10px;background:#10b981;color:#fff;font-size:11px;font-weight:700">処方箋通</span> <b>${countOK}</b> / ${AICO_DRIVER_CATS.length} カテゴリ</div>
+        <div><span class="judge-badge judge-up" style="display:inline-block;padding:2px 8px;border-radius:10px;background:#f59e0b;color:#fff;font-size:11px;font-weight:700">上方修正</span> <b>${countUp}</b> / ${AICO_DRIVER_CATS.length} カテゴリ</div>
+        <div style="flex:1;min-width:220px;font-size:11px;color:#475569">💡 上方修正カテゴリは見切・廃棄の本部負担対象外。FC-Cn 支援算出時に手動で調整するか、判定別に補正係数をかけてください。</div>
+      </div>`;
+  }
+
+  // 入力イベント
+  t.querySelectorAll('input').forEach(inp=>{
+    if(inp.dataset.bound==='1')return;
+    inp.dataset.bound='1';
+    inp.addEventListener('input',()=>{
+      const cat=inp.dataset.cat;
+      if(!cat)return;
+      _ensureAicoDriver();
+      const v = parseFloat((inp.value||'').replace(/[^\d.\-]/g,''))||0;
+      if(inp.dataset.day){
+        const day=inp.dataset.day, dk=inp.dataset.dk;
+        if(!state.aicoDriver[cat].days[day])state.aicoDriver[cat].days[day]={driver:0,stock:0};
+        state.aicoDriver[cat].days[day][dk]=v;
+      }else{
+        const k=inp.dataset.key;
+        if(k)state.aicoDriver[cat][k]=v;
+      }
+      // 判定をリアルタイム更新（軽量にrerenderで十分）
+      clearTimeout(window._aicoRerenderT);
+      window._aicoRerenderT=setTimeout(()=>{ renderAicoDriver(); saveAll(); },200);
+    });
+  });
+  attachNumericEnhance(t);
+}
+
+function recomputeAicoJudgments(){ renderAicoDriver(); }
+
+function resetAicoDriver(){
+  if(!confirm('処方箋・ドライバ・在庫・担保品数を全カテゴリで 0 にリセットしますか？'))return;
+  AICO_DRIVER_CATS.forEach(cat=>{
+    state.aicoDriver[cat]={syohou_weekday:0,syohou_weekend:0,days:{},hokyo:0,plus:0};
+    AICO_DRIVER_DAYS.forEach(d=>{ state.aicoDriver[cat].days[d.key]={driver:0,stock:0}; });
+  });
+  renderAicoDriver();
+  saveAll(true);
+  showToast('✅ ドライバをリセットしました');
+}
+
 function renderCategoryTab(){
   // 週次レポートはタブを開くたびに最新で再描画
   try{ renderCatReport(); }catch(e){ console.warn(e); }
+  try{ renderMgmtCompare(); }catch(e){ console.warn(e); }
+  try{ renderAicoDriver(); }catch(e){ console.warn(e); }
   if(document.getElementById('cat-sales-body').dataset.rendered)return;
   document.getElementById('cat-sales-body').dataset.rendered='1';
   // Sales view
@@ -6444,7 +6837,7 @@ function collectFormValues(){
   const jyEl=document.getElementById('m-jyokyo-nenhi');if(jyEl)state.monthly.jyokyo_nenhi=parseFloat(jyEl.value)||0;
   const znEl=document.getElementById('m-zennen-nishin');if(znEl)state.monthly.zennen_nishin=parseNum(znEl.value);
   const kEl=document.getElementById('kaizen-memo');if(kEl)state.kaizen_memo=kEl.value;
-  // v18.3: 月累計・先週は廃止。時間帯別のみ保存
+  // v18.4: 月累計・先週は廃止。時間帯別のみ保存
   ['t_asa_u','t_asa_k','t_asa_u_nen','t_asa_k_nen','t_hiru_u','t_hiru_k','t_hiru_u_nen','t_hiru_k_nen','t_yu_u','t_yu_k','t_yu_u_nen','t_yu_k_nen'].forEach(k=>{
     const el=document.getElementById(k.replace(/_/g,'-'));if(el)state.daily[k]=parseNum(el.value);
   });
@@ -6482,7 +6875,14 @@ function loadAll(){
     }
     if(s.daily)Object.assign(state.daily,s.daily);
     if(s.cats)Object.keys(s.cats).forEach(k=>{state.cats[k]=Object.assign(state.cats[k]||{},s.cats[k]);});
-    // v18.3: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）
+    // v18.4: 処方箋/ドライバ次週計画
+    if(s.aicoDriver){
+      state.aicoDriver=state.aicoDriver||{};
+      Object.keys(s.aicoDriver).forEach(cat=>{
+        state.aicoDriver[cat]=Object.assign({},state.aicoDriver[cat]||{},s.aicoDriver[cat]||{});
+      });
+    }
+    // v18.4: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）
     if(s.catReport){
       if(!state.catReport)state.catReport={period:{},dept:{},alco:{}};
       if(s.catReport.period)state.catReport.period=Object.assign(state.catReport.period||{},s.catReport.period);
@@ -6540,7 +6940,7 @@ function restoreForm(){
   if(!state.monthly.target_uriage&&state.seisan.uriage){const el=document.getElementById('m-target-uriage');if(el)el.value=state.seisan.uriage;}
   const jEl=document.getElementById('m-juten-sessaku');if(jEl)jEl.value=state.monthly.juten_sessaku||'';
   const kEl=document.getElementById('kaizen-memo');if(kEl)kEl.value=state.kaizen_memo||'';
-  // v18.3: 月累計・先週の復元は廃止（state.daily.tsuki_*/sen_* は localStorage に残るが UI からは参照しない）
+  // v18.4: 月累計・先週の復元は廃止（state.daily.tsuki_*/sen_* は localStorage に残るが UI からは参照しない）
   ['t_asa_u','t_asa_k','t_asa_u_nen','t_asa_k_nen','t_hiru_u','t_hiru_k','t_hiru_u_nen','t_hiru_k_nen','t_yu_u','t_yu_k','t_yu_u_nen','t_yu_k_nen'].forEach(k=>{
     const el=document.getElementById(k.replace(/_/g,'-'));if(el&&state.daily[k])el.value=state.daily[k];
   });
