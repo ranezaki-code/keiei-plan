@@ -511,7 +511,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v18.1</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v18.2</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -531,7 +531,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="content">
 
     <!-- ============================================================ -->
-    <!-- ===== グループ ⓪ 実績（精算書 + 日販・客数） ============== -->
+    <!-- ===== グループ ⓪ 実績（精算書 + 時間帯・曜日別実績 + 計画vs実績） ============== -->
     <!-- ============================================================ -->
     <div class="group active" id="group-jisseki">
       <div class="layout-sidebar">
@@ -1601,27 +1601,27 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
             <div class="cycle-day">📅 月初</div>
             <div class="cycle-name">計画</div>
             <div class="cycle-detail">「① 当月計画」タブで売上・粗利・経費の目標を入力。FC-Cn 契約のチャージも自動計算。施策（販促・売場改善）を登録して計画ROIを確認。</div>
-            <div class="cycle-action">▶ 「📊 月次計画の保存と比較」で<br><b>＋ この計画を保存</b></div>
+            <div class="cycle-action">▶ 「📈 計画 vs 実績」タブで<br><b>＋ この計画を保存</b></div>
           </div>
           <div class="cycle-arrow">→</div>
           <div class="cycle-step cycle-2">
-            <div class="cycle-day">📅 月中</div>
-            <div class="cycle-name">調整</div>
-            <div class="cycle-detail">日販・客数の進捗を「📊 日販・客数」で記録。先週の達成度を「先週検証」で振り返り、必要なら施策を追加。</div>
-            <div class="cycle-action">▶ 進捗が遅れていれば施策を強化</div>
+            <div class="cycle-day">📅 毎週</div>
+            <div class="cycle-name">週次PDCA</div>
+            <div class="cycle-detail">毎週変わる施策の予実を「🔍 先週検証」で振り返り。<b>※生の売上・客数の入力は不要</b>（月次のみ）。施策ごとの達成度・改善メモ・QSCスコアを記録。</div>
+            <div class="cycle-action">▶ 達成度に応じて翌週施策を調整</div>
           </div>
           <div class="cycle-arrow">→</div>
           <div class="cycle-step cycle-3">
             <div class="cycle-day">📅 月末</div>
             <div class="cycle-name">実績反映</div>
-            <div class="cycle-detail">本部から届いた精算書PDFを「📄 精算書PDFを取り込む」でアップロード。サイドバイサイドで PDF を見ながら数値を入力。</div>
+            <div class="cycle-detail">本部から届いた精算書PDFを「📄 精算書PDFを取り込む」でアップロード。サイドバイサイドで PDF を見ながら数値を入力。続けて「📊 時間帯・曜日別実績」も月次レポートから入力。</div>
             <div class="cycle-action">▶ 入力後、自動で粗利・店利益が算出</div>
           </div>
           <div class="cycle-arrow">→</div>
           <div class="cycle-step cycle-4">
             <div class="cycle-day">📅 翌月初</div>
             <div class="cycle-name">予実比較</div>
-            <div class="cycle-detail">「📊 月次計画の保存と比較」で先月保存した計画をクリック → 計画 vs 実績 の達成率と科目別の差額が一目で見える。</div>
+            <div class="cycle-detail">「📈 計画 vs 実績」で先月保存した計画をクリック → 計画 vs 実績 の達成率と科目別の差額がグラフで一目で見える。</div>
             <div class="cycle-action">▶ 達成率の悪い項目を翌月の重点に</div>
           </div>
         </div>
@@ -1652,8 +1652,8 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
           <div class="why-row">
             <div class="why-num">4</div>
             <div class="why-content">
-              <div class="why-title">🔍 先週検証 + QSC で改善ループ</div>
-              <div class="why-desc">「先週の振り返りメモ」と「QSCスコア」を毎週記録。改善が回り続けるので、計画精度が月を追うごとに上がります。</div>
+              <div class="why-title">🔍 週次PDCA は施策に集中</div>
+              <div class="why-desc">月次の損益データ（精算書・時間帯・曜日別）は <b>月1回</b> 入力に統一。週次は <b>施策の予実だけ</b> を「先週検証」「QSC」で記録するので、二度手間がなく改善ループが回り続けます。</div>
             </div>
           </div>
           <div class="why-row">
@@ -1669,8 +1669,9 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
         <div class="manual-tabmap">
           <div class="tabmap-group">
             <div class="tabmap-head">⓪ 実績</div>
-            <div class="tabmap-row"><b>📒 精算書</b><span>本部精算書を入力。粗利・店利益・支援額が自動算出。当月／先月／前年同月の3列比較。</span></div>
-            <div class="tabmap-row"><b>📊 日販・客数</b><span>日販・客単価・時間帯別の実績を記録。前年比とトレンドを把握。</span></div>
+            <div class="tabmap-row"><b>📒 精算書</b><span>本部精算書を <b>月1回</b> 入力。粗利・店利益・支援額が自動算出。当月／先月／前年同月の3列比較。</span></div>
+            <div class="tabmap-row"><b>📊 時間帯・曜日別実績</b><span>時間帯別（朝/昼/夕）と曜日別の月次集計値を <b>月1回</b> 入力。前年比グラフで弱い時間帯がひと目で分かる。</span></div>
+            <div class="tabmap-row"><b>📈 計画 vs 実績</b><span>月初に計画を保存 → 月末に実績入力後、達成率・科目別差額・施策ROIをグラフで比較。</span></div>
           </div>
           <div class="tabmap-group">
             <div class="tabmap-head">① 当月計画</div>
@@ -1697,14 +1698,15 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
             <li>当月の数値も同様に入力。粗利・店利益が自動表示される</li>
             <li><b>「📊 計画ダッシュボード」</b>で当月目標利益を入力 → 必要な売上・粗利が逆算される</li>
             <li><b>「🎯 施策・売場」</b>で今月予定の施策を1〜2件登録 → 計画ROI を確認</li>
-            <li><b>「📒 精算書」に戻り「📊 月次計画の保存と比較」で「＋ この計画を保存」</b> → 月末に達成率を見る</li>
+            <li><b>「📈 計画 vs 実績」</b>タブで「＋ この計画を保存」 → 月末に達成率をグラフで確認</li>
           </ol>
         </div>
 
         <h3 class="manual-h">⚙️ よくある質問</h3>
         <div class="manual-faq">
+          <details><summary>Q. 入力頻度がタブごとに違うのはなぜ？</summary><div><b>月次データ</b>（📒 精算書／📊 時間帯・曜日別実績）は本部からの月次レポートが届いてから入力するので <b>月1回</b>。<br><b>週次データ</b>（🔍 先週検証／✨ QSC）は毎週変わる施策のPDCAなので <b>週1回</b>。<br>役割を分けることで「いつ何を入れるか」が明確になり、二度手間も発生しません。</div></details>
           <details><summary>Q. 計画を保存し忘れた月があります</summary><div>そのまま当月の精算書を入力しても問題ありません。比較対象がないだけで、来月以降の計画と比較できます。</div></details>
-          <details><summary>Q. 同じ月で複数案を比較したい</summary><div>「＋ この計画を保存」を再度押すと、上書き or 別バージョンとして追加するか選べます。「キャンセル」を押せば別バージョンとして保存されます。</div></details>
+          <details><summary>Q. 同じ月で複数案を比較したい</summary><div>「📈 計画 vs 実績」タブで「＋ この計画を保存」を再度押すと、上書き or 別バージョンとして追加するか選べます。「キャンセル」を押せば別バージョンとして保存されます。</div></details>
           <details><summary>Q. 数値を間違えて入力した</summary><div>各項目の隣にある「🔢 当月をリセット」「🔢 先月をリセット」で列ごとに 0 に戻せます。Cmd+Z（Ctrl+Z）でも個別に戻せます。</div></details>
           <details><summary>Q. パスワードを変更したい</summary><div>現状はソースコード内に固定。変更が必要な場合は管理者に依頼してください。</div></details>
           <details><summary>Q. データはどこに保存されている？</summary><div>① ブラウザの localStorage（端末内）／② GitHub Gist（クラウド設定済みの場合）。「② その他」タブでクラウド同期を設定すると、全端末で自動同期されます。</div></details>
@@ -1732,7 +1734,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v18.1';
+const APP_VERSION='v18.2';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -5161,7 +5163,7 @@ function renderWeeklyProgress(){
 }
 
 // ===== DAILY =====
-// v18.1: 月累計・先週実績の入力欄は廃止。互換のため stub だけ残す（古い保存データ等の影響を吸収）
+// v18.2: 月累計・先週実績の入力欄は廃止。互換のため stub だけ残す（古い保存データ等の影響を吸収）
 function calcDailyStats(){ /* deprecated: kept as no-op for backward compat */ }
 function calcTimeStats(){
   const au=num('t-asa-u'),hu=num('t-hiru-u'),yu=num('t-yu-u');
@@ -5907,7 +5909,7 @@ function collectFormValues(){
   const jyEl=document.getElementById('m-jyokyo-nenhi');if(jyEl)state.monthly.jyokyo_nenhi=parseFloat(jyEl.value)||0;
   const znEl=document.getElementById('m-zennen-nishin');if(znEl)state.monthly.zennen_nishin=parseNum(znEl.value);
   const kEl=document.getElementById('kaizen-memo');if(kEl)state.kaizen_memo=kEl.value;
-  // v18.1: 月累計・先週は廃止。時間帯別のみ保存
+  // v18.2: 月累計・先週は廃止。時間帯別のみ保存
   ['t_asa_u','t_asa_k','t_asa_u_nen','t_asa_k_nen','t_hiru_u','t_hiru_k','t_hiru_u_nen','t_hiru_k_nen','t_yu_u','t_yu_k','t_yu_u_nen','t_yu_k_nen'].forEach(k=>{
     const el=document.getElementById(k.replace(/_/g,'-'));if(el)state.daily[k]=parseNum(el.value);
   });
@@ -5990,7 +5992,7 @@ function restoreForm(){
   if(!state.monthly.target_uriage&&state.seisan.uriage){const el=document.getElementById('m-target-uriage');if(el)el.value=state.seisan.uriage;}
   const jEl=document.getElementById('m-juten-sessaku');if(jEl)jEl.value=state.monthly.juten_sessaku||'';
   const kEl=document.getElementById('kaizen-memo');if(kEl)kEl.value=state.kaizen_memo||'';
-  // v18.1: 月累計・先週の復元は廃止（state.daily.tsuki_*/sen_* は localStorage に残るが UI からは参照しない）
+  // v18.2: 月累計・先週の復元は廃止（state.daily.tsuki_*/sen_* は localStorage に残るが UI からは参照しない）
   ['t_asa_u','t_asa_k','t_asa_u_nen','t_asa_k_nen','t_hiru_u','t_hiru_k','t_hiru_u_nen','t_hiru_k_nen','t_yu_u','t_yu_k','t_yu_u_nen','t_yu_k_nen'].forEach(k=>{
     const el=document.getElementById(k.replace(/_/g,'-'));if(el&&state.daily[k])el.value=state.daily[k];
   });
