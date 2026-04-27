@@ -348,7 +348,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .aico-driver-table .judge-ok{background:#10b981}
 .aico-driver-table .judge-up{background:#f59e0b}
 .aico-driver-table .support-note{font-size:9px;color:#475569;margin-top:2px;display:block;font-weight:500}
-/* v23.1: 計算ブレークダウン */
+/* v23.2: 計算ブレークダウン */
 .breakdown-body.open{display:block!important}
 .breakdown-step{display:grid;grid-template-columns:30px 1fr 100px 140px;gap:6px;padding:6px 8px;border-bottom:1px solid var(--border);font-size:12px;align-items:center}
 .breakdown-step.section{background:#1e3a5f;color:#fff;font-weight:700;grid-template-columns:1fr;border-radius:4px;margin-top:6px}
@@ -396,7 +396,43 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .sessaku-order-row{display:grid;grid-template-columns:1fr 70px 30px;gap:4px;margin-bottom:3px}
 .sessaku-order-row input{font-size:11px;padding:3px 6px}
 .sessaku-order-del{background:none;border:1px solid #fecaca;color:#dc2626;border-radius:3px;font-size:10px;padding:1px 5px;cursor:pointer}
-/* v23.1: 比較タブ（シンプル） */
+/* v23.2: ファイルタブ — NotebookLM風 ソース一覧 */
+.src-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px}
+.src-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;flex-wrap:wrap;gap:10px}
+.src-title{margin:0;font-size:16px;color:#1e3a5f;font-weight:700}
+.src-count{font-size:11px;color:#9ca3af;margin-left:6px}
+.src-add-wrap{position:relative}
+.src-add-btn{padding:8px 18px;background:#1e3a5f;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.src-add-btn:hover{background:#152c47}
+.src-add-menu{position:absolute;right:0;top:calc(100% + 6px);background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:6px;z-index:1000;min-width:300px}
+.src-add-item{display:flex;align-items:center;gap:10px;padding:10px;border-radius:6px;cursor:pointer;transition:background .12s}
+.src-add-item:hover{background:#f3f4f6}
+.src-add-icon{font-size:20px;width:32px;text-align:center;flex-shrink:0}
+.src-add-item div{display:flex;flex-direction:column}
+.src-add-item b{font-size:13px;color:#1e3a5f;font-weight:600}
+.src-add-item small{font-size:10px;color:#6b7280}
+
+.src-list{display:flex;flex-direction:column;gap:0;border-top:1px solid var(--border)}
+.src-empty{padding:40px 20px;text-align:center;color:#9ca3af;font-size:13px;background:#fafafa;border:1px dashed var(--border);border-radius:8px}
+.src-row{display:grid;grid-template-columns:24px 28px 1fr auto auto;gap:10px;align-items:center;padding:12px 4px;border-bottom:1px solid var(--border);transition:background .1s}
+.src-row:hover{background:#fafbff}
+.src-row:last-child{border-bottom:0}
+.src-check{cursor:pointer;width:18px;height:18px}
+.src-row .src-icon{font-size:18px;text-align:center}
+.src-row .src-name-block{overflow:hidden}
+.src-row .src-name{font-size:13px;color:#1e3a5f;font-weight:600;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.src-row .src-meta{font-size:10px;color:#9ca3af;margin-top:2px}
+.src-row .src-date{font-size:11px;color:#6b7280;text-align:right;white-space:nowrap}
+.src-row .src-menu-btn{background:none;border:none;cursor:pointer;color:#6b7280;padding:4px 8px;font-size:16px;border-radius:4px}
+.src-row .src-menu-btn:hover{background:#fee2e2;color:#dc2626}
+.src-folded{margin-top:14px;border:1px solid var(--border);border-radius:10px;background:#fff;overflow:hidden}
+.src-folded>summary{cursor:pointer;padding:12px 16px;font-weight:600;color:#475569;font-size:12px;background:#f9fafb;list-style:none}
+.src-folded>summary:hover{background:#f3f4f6}
+.src-folded>summary::before{content:'▶';font-size:9px;color:#6b7280;transition:transform .15s;margin-right:6px}
+.src-folded[open]>summary::before{transform:rotate(90deg)}
+.src-folded>*:not(summary){padding:14px}
+
+/* v23.2: 比較タブ（シンプル） */
 .cmp-header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:14px;font-size:14px}
 .cmp-header b{font-size:18px;color:#1e3a5f}
 .cmp-month-sep{color:#9ca3af;font-size:11px}
@@ -425,7 +461,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .cmp-cat-table .rate-warn{color:#f59e0b;font-weight:700}
 .cmp-cat-table .rate-bad{color:#dc2626;font-weight:700}
 
-/* v23.1: ホームダッシュボード（廃止予定・互換のため残置） */
+/* v23.2: ホームダッシュボード（廃止予定・互換のため残置） */
 .home-banner{background:linear-gradient(135deg,#ede9fe 0%,#dbeafe 50%,#ccfbf1 100%);border:1px solid #c4b5fd;padding:18px}
 .home-banner-grid{display:grid;grid-template-columns:auto 1fr auto;gap:24px;align-items:center;flex-wrap:wrap}
 @media(max-width:760px){.home-banner-grid{grid-template-columns:1fr}}
@@ -699,7 +735,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v23.1</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v23.2</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -727,7 +763,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="content">
 
     <!-- ============================================================ -->
-    <!-- ===== グループ 📊 比較（v23.1 — シンプルな計画 vs 実績） ===== -->
+    <!-- ===== グループ 📊 比較（v23.2 — シンプルな計画 vs 実績） ===== -->
     <!-- ============================================================ -->
     <div class="group active" id="group-home">
       <div class="tab-panel active" id="tab-home">
@@ -872,7 +908,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
         </div>
       </div>
 
-      <!-- ===== v23.1: 店利益 計算ブレークダウン（差額の原因が見える） ===== -->
+      <!-- ===== v23.2: 店利益 計算ブレークダウン（差額の原因が見える） ===== -->
       <div class="card">
         <div class="flex justify-between items-center mb-2">
           <div class="section-title" style="margin:0">🔍 店利益 計算ブレークダウン<button class="help-btn" data-help-title="計算式の見方" data-help="自動算出された店利益と本部記載の店利益が乖離する場合、ここで原因を特定できます。<br><br><b>よくある誤入力</b><br>① 雑益(4030) に「雑益計（本部負担込み）」を入れていて、別欄にも見切支援・電気支援を入れている → <u>二重計上</u><br>② 5030/5040 に <u>原価ベース</u>の値を入れている（正しくは売価ベース）<br>③ 6030/6040 に 5030/5040 と <u>同じ売価値</u>を入れている（正しくは原価相当額）<br>④ 期首・期末在庫高の入力モレ">?</button></div>
@@ -1839,102 +1875,57 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
         </nav>
         <div class="sidebar-pane">
 
-    <!-- ===== Tab files: 📁 ファイル管理（一元アップロード） ===== -->
+    <!-- ===== Tab files: 📁 ファイル — NotebookLM風 ソース一覧 ===== -->
     <div class="tab-panel active" id="tab-files">
-      <div class="card">
-        <div class="section-title">📁 月次ファイル管理（一元アップロード）<button class="help-btn" data-help-title="月次ファイル管理の使い方" data-help="毎月本部から届く各種ファイルをここで一括アップロード・管理できます。<br><br>① 📒 精算書PDF：月末に届く損益計算書<br>② 📦 週次お店づくりレポート PDF：DEPT別／ALCOカテゴリ別の実績<br>③ 📘 お店作り冊子 PDF：本部の月次重点施策リスト<br>④ 💊 月次処方箋 PDF：AICOドライバ・処方箋設定値<br><br>ここからアップロードしても、各タブのアップロードボタンと同じ処理が走ります。<br>過去にアップロードしたファイルの一覧と日時、再処理ボタンも提供します。">?</button></div>
-        <div class="input-hint" style="margin-bottom:10px">毎月の各種PDFをここから一元的にアップロード。各タブで同じ処理が走ります（同一の状態を共有）。</div>
-
-        <!-- 4 つのファイル種別 -->
-        <div class="files-grid">
-          <div class="file-card" data-type="seisan">
-            <div class="file-card-head">
-              <span class="file-card-icon">📒</span>
-              <div>
-                <div class="file-card-title">精算書（月次）</div>
-                <div class="file-card-desc">本部精算書PDFを取り込み、損益計算書を自動入力</div>
-              </div>
-            </div>
-            <div class="file-card-actions">
-              <label class="btn-primary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px">📄 PDFを選択<input type="file" id="files-seisan-input" accept="application/pdf" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="handleSeisanPDF(event)"></label>
-              <button class="btn-secondary btn-sm" onclick="showGroup('jisseki');showSub('jisseki','seisan')">→ 精算書タブを開く</button>
-            </div>
-            <div class="drop-zone" data-handler="handleSeisanPDF" data-accept="application/pdf" style="margin:4px 0 0;padding:8px;font-size:11px">📥 ここにドロップでもOK</div>
-            <div class="file-card-status" id="files-seisan-status">— 未取り込み —</div>
+      <div class="src-card">
+        <div class="src-header">
+          <div>
+            <h3 class="src-title">📚 ソース</h3>
+            <span class="src-count" id="src-count">0 件</span>
           </div>
-
-          <div class="file-card" data-type="catreport">
-            <div class="file-card-head">
-              <span class="file-card-icon">📦</span>
-              <div>
-                <div class="file-card-title">週次お店づくりレポート</div>
-                <div class="file-card-desc">DEPT別／ALCOカテゴリ別の実績PDF（週次）</div>
+          <div class="src-actions">
+            <div class="src-add-wrap">
+              <button class="src-add-btn" onclick="srcToggleAddMenu()" id="src-add-btn">+ ファイル追加</button>
+              <div class="src-add-menu" id="src-add-menu" style="display:none">
+                <label class="src-add-item" data-handler="handleSeisanPDF" data-accept="application/pdf">
+                  <span class="src-add-icon">📒</span>
+                  <div><b>精算書</b><small>月次の損益計算書</small></div>
+                  <input type="file" accept="application/pdf" onchange="srcHandleAdd(event,'handleSeisanPDF')" style="display:none">
+                </label>
+                <label class="src-add-item" data-handler="handleCategoryPDF" data-accept="application/pdf">
+                  <span class="src-add-icon">📦</span>
+                  <div><b>週次お店づくりレポート</b><small>DEPT別／ALCO別実績</small></div>
+                  <input type="file" accept="application/pdf" onchange="srcHandleAdd(event,'handleCategoryPDF')" style="display:none">
+                </label>
+                <label class="src-add-item" data-handler="handleBookletPDF" data-accept="application/pdf">
+                  <span class="src-add-icon">📘</span>
+                  <div><b>お店作り冊子</b><small>月次重点施策（複数PDF可）</small></div>
+                  <input type="file" accept="application/pdf" multiple onchange="srcHandleAdd(event,'handleBookletPDF')" style="display:none">
+                </label>
+                <label class="src-add-item" data-handler="handleSyohouPDF" data-accept="application/pdf">
+                  <span class="src-add-icon">💊</span>
+                  <div><b>月次処方箋</b><small>AICOドライバ設定</small></div>
+                  <input type="file" accept="application/pdf" onchange="srcHandleAdd(event,'handleSyohouPDF')" style="display:none">
+                </label>
+                <label class="src-add-item" data-handler="handleExternalPDF" data-accept="application/pdf,text/plain,.md">
+                  <span class="src-add-icon">🌤️</span>
+                  <div><b>外部要因／商圏調査</b><small>天気・イベント・競合（複数可）</small></div>
+                  <input type="file" accept="application/pdf,text/plain,.md" multiple onchange="srcHandleAdd(event,'handleExternalPDF')" style="display:none">
+                </label>
               </div>
             </div>
-            <div class="file-card-actions">
-              <label class="btn-primary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px">📄 PDFを選択<input type="file" id="files-catreport-input" accept="application/pdf" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="handleCategoryPDF(event)"></label>
-              <button class="btn-secondary btn-sm" onclick="showGroup('plan');showSub('plan','plan-cat')">→ カテゴリ別計画タブを開く</button>
-            </div>
-            <div class="drop-zone" data-handler="handleCategoryPDF" data-accept="application/pdf" style="margin:4px 0 0;padding:8px;font-size:11px">📥 ここにドロップでもOK</div>
-            <div class="file-card-status" id="files-catreport-status">— 未取り込み —</div>
-          </div>
-
-          <div class="file-card" data-type="booklet">
-            <div class="file-card-head">
-              <span class="file-card-icon">📘</span>
-              <div>
-                <div class="file-card-title">お店作り冊子（月次）</div>
-                <div class="file-card-desc">本部の月次重点施策リスト。施策候補を自動抽出。<b style="color:#10b981">複数PDF対応（追記）</b></div>
-              </div>
-            </div>
-            <div class="file-card-actions">
-              <label class="btn-primary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px">📄 PDF選択（複数可）<input type="file" id="files-booklet-input" accept="application/pdf" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="handleBookletPDF(event)"></label>
-              <button class="btn-secondary btn-sm" onclick="showGroup('plan');showSub('plan','plan-sessaku')">→ 施策・売場タブを開く</button>
-            </div>
-            <div class="drop-zone" data-handler="handleBookletPDF" data-accept="application/pdf" style="margin:4px 0 0;padding:8px;font-size:11px">📥 ここにドロップでもOK</div>
-            <div class="file-card-status" id="files-booklet-status">— 未取り込み —</div>
-          </div>
-
-          <div class="file-card" data-type="syohou">
-            <div class="file-card-head">
-              <span class="file-card-icon">💊</span>
-              <div>
-                <div class="file-card-title">月次処方箋</div>
-                <div class="file-card-desc">AICOドライバ／処方箋設定値の月次一覧PDF</div>
-              </div>
-            </div>
-            <div class="file-card-actions">
-              <label class="btn-primary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px">📄 PDFを選択<input type="file" id="files-syohou-input" accept="application/pdf" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="handleSyohouPDF(event)"></label>
-              <button class="btn-secondary btn-sm" onclick="showGroup('plan');showSub('plan','plan-cat')">→ AICOドライバを開く</button>
-            </div>
-            <div class="drop-zone" data-handler="handleSyohouPDF" data-accept="application/pdf" style="margin:4px 0 0;padding:8px;font-size:11px">📥 ここにドロップでもOK</div>
-            <div class="file-card-status" id="files-syohou-status">— 未取り込み —</div>
-          </div>
-
-          <div class="file-card" data-type="external">
-            <div class="file-card-head">
-              <span class="file-card-icon">🌤️</span>
-              <div>
-                <div class="file-card-title">外部要因／商圏調査</div>
-                <div class="file-card-desc">天気・イベント・競合・商圏調査PDF。テキスト要約として保存され AI 提案で参照されます。<b style="color:#10b981">複数ファイル対応（追記）</b></div>
-              </div>
-            </div>
-            <div class="file-card-actions">
-              <label class="btn-primary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px">📄 ファイル選択（複数可）<input type="file" id="files-external-input" accept="application/pdf,text/plain,.md" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="handleExternalPDF(event)"></label>
-              <button class="btn-secondary btn-sm" onclick="showGroup('home')">→ ホームを開く</button>
-            </div>
-            <div class="drop-zone" data-handler="handleExternalPDF" data-accept="application/pdf,text/plain,.md" style="margin:4px 0 0;padding:8px;font-size:11px">📥 PDF / テキスト / Markdown もOK</div>
-            <div class="file-card-status" id="files-external-status">— 未取り込み —</div>
           </div>
         </div>
 
-        <div class="section-title" style="margin-top:18px;font-size:14px">📅 アップロード履歴</div>
-        <div id="files-history-list" style="margin-top:6px"></div>
+        <div class="drop-zone" data-handler="handleSeisanPDF" data-accept="application/pdf" style="margin:8px 0 12px;padding:14px;font-size:12px">📥 ここに PDF をドロップでも追加できます（精算書として取り込まれます）</div>
 
-        <div class="section-title" style="margin-top:18px;font-size:14px">🌤️ 外部要因テキスト要約（PDF/MD抽出）</div>
-        <div class="input-hint" style="margin-bottom:6px">アップロードした外部要因/商圏調査PDFのテキストを保持。先週検証タブの外部要因表に自動で1行追加されます。</div>
-        <div id="external-summary-list"></div>
+        <div id="src-list" class="src-list"></div>
       </div>
+
+      <details class="src-folded">
+        <summary>⚙ クラウド同期・その他設定</summary>
+        <div id="src-settings-host"></div>
+      </details>
     </div>
 
     <!-- ===== Tab 9: クラウド同期・その他計画 ===== -->
@@ -2155,7 +2146,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v23.1';
+const APP_VERSION='v23.2';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -2927,30 +2918,30 @@ let state={
     sessaku_booklet:{filename:'',uploaded_at:'',items:[]}},
   daily:{t_asa_u:0,t_asa_k:0,t_asa_u_nen:100,t_asa_k_nen:100,t_hiru_u:0,t_hiru_k:0,t_hiru_u_nen:100,t_hiru_k_nen:100,t_yu_u:0,t_yu_k:0,t_yu_u_nen:100,t_yu_k_nen:100,youbi:DAYS.map(d=>({day:d,nishin:0,nishin_diff:0,kyaku:0,kyaku_diff:0,tanka:0,tanka_diff:0}))},
   cats:CATS.reduce((o,c)=>({...o,[c]:{sm_u:0,mp_u:0,sw_u:0,kp_u:0,sw_uh:0,sm_a:0,mp_a:0,sw_a:0,kp_a:0,aico_u:0,aico_a:0,aico_ne:0,aico_hai:0,driver_h:1,driver_d:2,driver_hantei:'処方箋通',driver_riyu:''}}),{}),
-  // v23.1: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）の入力用ストア
+  // v23.2: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）の入力用ストア
   // 構造: catReport[section][row][col_curr|col_prev] = number   例 catReport.dept['米飯'].sales_curr
   catReport:{
     period:{curr_start:'',curr_end:'',prev_start:'',prev_end:''},
     dept:DEPT_ROWS.reduce((o,r)=>({...o,[r]:{}}),{}),
     alco:ALCO_ROWS.reduce((o,r)=>({...o,[r]:{}}),{})
   },
-  // v23.1: 処方箋/ドライバ次週計画（自動判定: 処方箋通／上方修正）
+  // v23.2: 処方箋/ドライバ次週計画（自動判定: 処方箋通／上方修正）
   aicoDriver:{},
-  // v23.1: 月次ファイル管理（一元アップロード履歴） + v23.1: external（外部要因）追加
+  // v23.2: 月次ファイル管理（一元アップロード履歴） + v23.2: external（外部要因）追加
   fileUploads:{seisan:[],catreport:[],booklet:[],syohou:[],external:[]},
-  // v23.1: 外部要因テキスト（PDF抽出・要約）
+  // v23.2: 外部要因テキスト（PDF抽出・要約）
   externalFactors:[],
-  // v23.1: AI計画提案
+  // v23.2: AI計画提案
   aiProposals:[],
   aiPromptCustom:'',
-  // v23.1: Q&A メモ（NotebookLM代替）
+  // v23.2: Q&A メモ（NotebookLM代替）
   qaLog:[],
-  // v23.1: 世界一挑戦支援
+  // v23.2: 世界一挑戦支援
   sekaiichi:{challenges:[]},
-  // v23.1: 計画月（プラニング対象） — state.seisan.month は「確定月（精算書月）」
+  // v23.2: 計画月（プラニング対象） — state.seisan.month は「確定月（精算書月）」
   // 速報月は確定月の +1 として自動算出
   planMonth:'',
-  // v23.1: 月別データアーカイブ（対象月切替時に過去月のデータを保持）
+  // v23.2: 月別データアーカイブ（対象月切替時に過去月のデータを保持）
   byMonth:{},
   sessaku:[],
   layout:LAYOUT_AREAS.map(a=>({area:a,shoten:'',point:''})),
@@ -3109,7 +3100,7 @@ function showTab(n){
 }
 
 // グローバル月セレクタ
-// ===== v23.1: 月別データアーカイブ =====
+// ===== v23.2: 月別データアーカイブ =====
 // state.byMonth = { 'YYYY-MM': { seisan, seisan_prev, seisan_lastyear, monthly, cats,
 //                                 catReport, aicoDriver, sessaku, fileUploads, daily } }
 // 対象月を切り替えると、現在の月別データを archive に退避し、新しい月のデータを読み込む。
@@ -3243,7 +3234,7 @@ function updateGlobalMonthInfo(){
 function onPlanMonthChange(){
   const v = document.getElementById('plan-month')?.value || '';
   state.planMonth = v;
-  // v23.1: 計画月を変えたら確定月（精算書月）= 計画月-2 を自動セット
+  // v23.2: 計画月を変えたら確定月（精算書月）= 計画月-2 を自動セット
   if(v){
     const auto = _addMonths(v, -2);
     const oldMonth = state.seisan?.month || '';
@@ -3264,7 +3255,7 @@ function onPlanMonthChange(){
   try{ renderAIProposalsTab && renderAIProposalsTab(); }catch(e){}
 }
 
-// v23.1: 精算書テーブルのヘッダーを動的に更新
+// v23.2: 精算書テーブルのヘッダーを動的に更新
 function updateSeisanHeaders(){
   const km = state.seisan?.month || '';
   const prevM = km ? _addMonths(km, -1) : '';
@@ -3301,7 +3292,7 @@ function syncNishinUriage(src){
 }
 
 // ===== 精算書：動的レンダリング =====
-// v23.1: 上書き可能な subtotal キー（本部精算書記載値を直接入力できる）
+// v23.2: 上書き可能な subtotal キー（本部精算書記載値を直接入力できる）
 const SEISAN_OVERRIDABLE = new Set(['arari','_fcnyu','_tenrieki']);
 
 function renderSeisanTable(){
@@ -3312,7 +3303,7 @@ function renderSeisanTable(){
     const k=r.key, cls=(r.subtotal?'s-subtotal ':'')+(r.highlight?'s-highlight ':'')+(r.final?'s-final ':'');
     const nameCell=`<td class="s-name">${escapeHtml(r.name)}</td><td class="s-code">${r.code||''}</td>`;
     if(r.subtotal){
-      // v23.1: arari / _fcnyu / _tenrieki は本部精算書記載値の上書き入力可
+      // v23.2: arari / _fcnyu / _tenrieki は本部精算書記載値の上書き入力可
       if(SEISAN_OVERRIDABLE.has(k)){
         const nameCellSub=`<td class="s-name">${escapeHtml(r.name)} <span style="font-size:9px;color:#7c3aed;background:#f5f3ff;padding:1px 4px;border-radius:8px;margin-left:4px">本部記載値</span></td><td class="s-code">${r.code||''}</td>`;
         const inCurr=`<input type="text" id="s-${k}-kisai" inputmode="numeric" placeholder="自動算出" oninput="onSeisanKisaiInput('${k}','curr',this.value)" title="本部精算書に書かれている値を直接入力。空欄なら自動算出値を使用。">`;
@@ -3342,7 +3333,7 @@ function renderSeisanTable(){
   tb.innerHTML=rows;
 }
 
-// v23.1: 上書き入力ハンドラ
+// v23.2: 上書き入力ハンドラ
 function onSeisanKisaiInput(key, col, val){
   const n = parseNum(val);
   const scale = UNIT.factor ? 1/UNIT.factor : 1;
@@ -3377,7 +3368,7 @@ function sumCalc(row,bucket){
   return s;
 }
 
-// v23.1: スマート雑益計（4030に「雑益計」が入っている場合の二重計上を回避）
+// v23.2: スマート雑益計（4030に「雑益計」が入っている場合の二重計上を回避）
 function _smartZatsukei(bucket){
   if(!bucket)return 0;
   const z = bucket.zatsuyeki||0, m = bucket.mikiri_shien||0, d = bucket.denki_shien||0;
@@ -3403,7 +3394,7 @@ function clearSeisanCol(col){
   else if(col==='ly')target=state.seisan_lastyear;
   else target=state.seisan;
   SEISAN_KEYS.forEach(k=>{target[k]=0;});
-  // v23.1: 上書き値（arari_kisai / _fcnyu_kisai / _tenrieki_kisai）も削除
+  // v23.2: 上書き値（arari_kisai / _fcnyu_kisai / _tenrieki_kisai）も削除
   ['arari_kisai','_fcnyu_kisai','_tenrieki_kisai'].forEach(k=>{ delete target[k]; });
   restoreSeisanInputs();calcSeisan();saveAll();
 }
@@ -3422,7 +3413,7 @@ function restoreSeisanInputs(){
     if(ep)ep.value=vp?Math.round(vp).toLocaleString('ja-JP'):'';
     if(el)el.value=vl?Math.round(vl).toLocaleString('ja-JP'):'';
   });
-  // v23.1: 上書き入力欄（arari_kisai 等）の復元
+  // v23.2: 上書き入力欄（arari_kisai 等）の復元
   if(typeof SEISAN_OVERRIDABLE!=='undefined'){
     SEISAN_OVERRIDABLE.forEach(k=>{
       const fk = k+'_kisai';
@@ -3455,7 +3446,7 @@ function calcSeisan(){
       vPrev=nissu?(buckets.prev.uriage||0)/nissu:0;
       vLy=nissu?(buckets.ly.uriage||0)/nissu:0;
     }else if(r.subtotal){
-      // v23.1: 雑益計と店利益はスマート判定（二重計上回避）
+      // v23.2: 雑益計と店利益はスマート判定（二重計上回避）
       if(k === '_zatsukei'){
         vCurr=_smartZatsukei(buckets.curr);
         vPrev=_smartZatsukei(buckets.prev);
@@ -3479,7 +3470,7 @@ function calcSeisan(){
       const elC=document.getElementById('s-'+k+'-curr-v');
       const elP=document.getElementById('s-'+k+'-prev-v');
       const elL=document.getElementById('s-'+k+'-ly-v');
-      // v23.1: 上書き入力可能項目は「計算: ¥XXX」のヒント表示 + 入力値との乖離を警告
+      // v23.2: 上書き入力可能項目は「計算: ¥XXX」のヒント表示 + 入力値との乖離を警告
       if(typeof SEISAN_OVERRIDABLE!=='undefined' && SEISAN_OVERRIDABLE.has(k)){
         const kisaiCurr = state.seisan?.[k+'_kisai'];
         const kisaiPrev = state.seisan_prev?.[k+'_kisai'];
@@ -3532,7 +3523,7 @@ function calcSeisan(){
   // 既存サマリーカード更新（旧ID: r-eigyo, r-rieki, r-urihenritsu, r-toshi, r-nishin…）
   const s=state.seisan;
   const u=(s.uriage||0)+(s.sonotauriage||0);  // 売上高
-  // v23.1: 自動算出値（雑益計＆店利益はスマート判定済み）
+  // v23.2: 自動算出値（雑益計＆店利益はスマート判定済み）
   const arari_auto = sumCalc(SEISAN_ROWS.find(r=>r.key==='arari'),s);
   const fcnyu_auto = sumCalc(SEISAN_ROWS.find(r=>r.key==='_fcnyu'),s);
   const eigyo = sumCalc(SEISAN_ROWS.find(r=>r.key==='_eigyokei'),s);
@@ -3542,7 +3533,7 @@ function calcSeisan(){
   const _zatsukeiCombinedDetected = (_zZ > 50000) && (_zM>0 || _zD>0) && (_zZ >= _zM + _zD);
   window._zatsukeiCombinedDetected = _zatsukeiCombinedDetected;
   window._zatsukei_smart = zatsukei_smart;
-  // v23.1: 上書き値（_kisai）が入力されていればそちらを真値として採用
+  // v23.2: 上書き値（_kisai）が入力されていればそちらを真値として採用
   const arari = (s.arari_kisai != null) ? s.arari_kisai : arari_auto;
   const fcnyu = (s._fcnyu_kisai != null) ? s._fcnyu_kisai : fcnyu_auto;
   const rieki = (s._tenrieki_kisai != null) ? s._tenrieki_kisai : rieki_auto;
@@ -3554,7 +3545,7 @@ function calcSeisan(){
   const nishin=u?u/nissu:0;
   const urihenR=(s.uriage||0)?((s.urihen||0)/(s.uriage||1)*100).toFixed(2):'0.00';
   setText('r-eigyo',fmt(eigyo*UNIT.factor));
-  // v23.1: 上書き値が入っていれば 📒 マーカーを付けて表示
+  // v23.2: 上書き値が入っていれば 📒 マーカーを付けて表示
   if(useOverrideRieki){
     const el = document.getElementById('r-rieki');
     if(el){
@@ -3570,7 +3561,7 @@ function calcSeisan(){
   setText('r-toshi',fmt(toshi*UNIT.factor));
   setText('r-nishin',nishin?fmt(nishin*UNIT.factor):'¥—');
   setText('r-nishin-sub',nissu+'日換算');
-  // v23.1: 旧フィールドも override-aware で書き戻し（下流で state.seisan.arari を読む箇所のため）
+  // v23.2: 旧フィールドも override-aware で書き戻し（下流で state.seisan.arari を読む箇所のため）
   s.arari = arari;
   const invCard=document.getElementById('box-invest');
   if(invCard)invCard.className='stat-card '+(toshi>=0?'good':'bad');
@@ -3580,7 +3571,7 @@ function calcSeisan(){
   // リアルタイムグラフ更新
   try{renderSeisanCharts();}catch(e){}
   try{if(document.getElementById('tab-vs')?.classList.contains('active'))renderVsCharts();}catch(e){}
-  // v23.1: 計算ブレークダウンも再描画
+  // v23.2: 計算ブレークダウンも再描画
   try{renderSeisanBreakdown();}catch(e){}
   saveAll();
 }
@@ -4177,7 +4168,7 @@ function renderSeisanCharts(){
     const ctx=document.getElementById('chart-seisan-kpi');
     if(ctx){
       _chartDestroy('chart-seisan-kpi');
-      // v23.1: 採用済みAI提案があればオーバーレイ
+      // v23.2: 採用済みAI提案があればオーバーレイ
       const aiP = (typeof _latestAdoptedAIProposal==='function') ? _latestAdoptedAIProposal() : null;
       const aiPr = aiP?.proposal || null;
       const datasets = [
@@ -4481,9 +4472,9 @@ function renderVsCharts(){
   }
 }
 
-// ===== v23.1: ホームダッシュボード =====
+// ===== v23.2: ホームダッシュボード =====
 function renderHomeDashboard(){
-  // v23.1: シンプルな比較タブ
+  // v23.2: シンプルな比較タブ
   const planMonthEl = document.getElementById('cmp-plan-month');
   if(!planMonthEl)return;
 
@@ -4584,7 +4575,7 @@ function renderHomeDashboard(){
   }
 }
 
-// ===== v23.1: 店利益 計算ブレークダウン =====
+// ===== v23.2: 店利益 計算ブレークダウン =====
 function renderSeisanBreakdown(){
   const el = document.getElementById('seisan-breakdown-content');
   if(!el)return;
@@ -4619,13 +4610,13 @@ function renderSeisanBreakdown(){
   const eigyokeiKeys = ['kyuyo','houtei_fukuri','mikiri','loss','shomohin','hoso','shuzen','genkin','setsubi_lease','setsubi_shuzen','tsushin','konetsu','shiharai_risoku','songai','hieigyo','zappi'];
   const eigyokei = eigyokeiKeys.reduce((sum,k)=>sum+v(k),0);
   const zatsuyeki = v('zatsuyeki'), mikiriShien = v('mikiri_shien'), denkiShien = v('denki_shien');
-  // v23.1: 雑益計のスマート判定
+  // v23.2: 雑益計のスマート判定
   const _zatsuCombined = (zatsuyeki > 50000) && (mikiriShien>0 || denkiShien>0) && (zatsuyeki >= mikiriShien + denkiShien);
   const zatsukei = _zatsuCombined ? zatsuyeki : (zatsuyeki + mikiriShien + denkiShien);
   const zatsuTotal_naive = zatsuyeki + mikiriShien + denkiShien;  // 素朴な合計（参考表示）
   const tenrieki = fcin - eigyokei + zatsukei;
 
-  // 警告判定（v23.1: スマート判定通知に変更）
+  // 警告判定（v23.2: スマート判定通知に変更）
   let warnings = [];
   let notes = [];
   // 雑益計の自動判定通知（二重計上を回避済み）
@@ -4739,7 +4730,7 @@ function renderSeisanBreakdown(){
   el.innerHTML = html;
 }
 
-// ===== v23.1: 世界一挑戦支援 =====
+// ===== v23.2: 世界一挑戦支援 =====
 // state.sekaiichi.challenges[] = { id, name, metric, target, current, tiers:[{threshold_pct, amount}], note }
 // 達成率 = current / target * 100
 // 達成率が tier.threshold_pct 以上の最大ティアの amount を支援額とする
@@ -4897,7 +4888,7 @@ function renderSekaiichi(){
   try{ if(typeof calcCnSupport==='function')calcCnSupport(); }catch(e){}
 }
 
-// ===== v23.1: AI計画提案 =====
+// ===== v23.2: AI計画提案 =====
 // 現在の state を集約して Claude に渡し、構造化された計画提案を取得する
 // 設計方針:
 //   - すべての関連state を 1つの JSON にまとめる（snapshot）
@@ -4984,7 +4975,7 @@ function _aiCollectInput(scope){
     confidence: p.proposal?.confidence
   }));
 
-  // v23.1: 3層タイミングモデル
+  // v23.2: 3層タイミングモデル
   const kakuteiMonth = state.seisan?.month || '';
   const sokuhouMonth = kakuteiMonth ? _addMonths(kakuteiMonth, 1) : '';
   const planMonth = state.planMonth || (kakuteiMonth ? _addMonths(kakuteiMonth, 2) : '');
@@ -5300,7 +5291,7 @@ function adoptAIProposal(id){
   // 月次目標タブに値が入っているはずなので restoreForm を呼んで反映
   try{ restoreForm && restoreForm(); }catch(e){}
   try{ calcMonthly && calcMonthly(); }catch(e){}
-  // v23.1: チャートのAI推奨値オーバーレイも更新
+  // v23.2: チャートのAI推奨値オーバーレイも更新
   try{ renderSeisanCharts && renderSeisanCharts(); }catch(e){}
   showToast('✅ 提案を採用し月次目標に反映しました');
 }
@@ -5358,7 +5349,7 @@ function duplicateAIProposalAsCustomPrompt(id){
   showToast('📝 プロンプトをカスタム欄にコピーしました');
 }
 
-// ===== v23.1: AI提案比較ビュー =====
+// ===== v23.2: AI提案比較ビュー =====
 function openAIProposalCompare(){
   const card=document.getElementById('ai-compare-card');
   if(card)card.style.display='';
@@ -5441,12 +5432,12 @@ function renderAIProposalCompare(){
   });
 }
 
-// ===== v23.1: AI推奨値を精算書チャートにオーバーレイ =====
+// ===== v23.2: AI推奨値を精算書チャートにオーバーレイ =====
 function _latestAdoptedAIProposal(){
   return (state.aiProposals||[]).find(p=>p.status==='adopted') || (state.aiProposals||[])[0] || null;
 }
 
-// ===== v23.1: Q&A メモ機能（NotebookLM代替） =====
+// ===== v23.2: Q&A メモ機能（NotebookLM代替） =====
 function _qaBuildContext(level){
   const s = state.seisan||{};
   const sumKey = (b,r)=>{ try{return sumCalc(SEISAN_ROWS.find(x=>x.key===r),b||{})}catch(e){return 0} };
@@ -5874,7 +5865,7 @@ async function handleSeisanPDF(ev){
 
 function ocrShowPageSelector(){
   document.getElementById('ocr-modal-loading').style.display='none';
-  // v23.1: 取込中表示が残らないようタイトルを更新
+  // v23.2: 取込中表示が残らないようタイトルを更新
   document.getElementById('ocr-modal-title').textContent='📄 精算書 — ページを選択';
   const result = document.getElementById('ocr-modal-result');
   result.style.display='block';
@@ -6738,7 +6729,7 @@ function ocrApplyValues(){
 // ===== MONTHLY =====
 function calcMonthly(){
   const s=state.seisan;
-  // v23.1: 計算修正 — 営業費全項目／ローソンチャージ／スマート雑益計を使用
+  // v23.2: 計算修正 — 営業費全項目／ローソンチャージ／スマート雑益計を使用
   const sEigyo = (typeof sumCalc==='function' && typeof SEISAN_ROWS!=='undefined')
     ? sumCalc(SEISAN_ROWS.find(r=>r.key==='_eigyokei'), s)
     : (s.kyuyo+s.houtei_fukuri+s.mikiri+s.loss+s.shomohin+s.hoso+s.shuzen+s.genkin+s.setsubi_lease+s.setsubi_shuzen+s.tsushin+s.konetsu+s.shiharai_risoku+s.songai+s.hieigyo+s.zappi);
@@ -6769,7 +6760,7 @@ function calcMonthly(){
   const pArari=pUriage*(pArariRitsu/100);
   const pKeihi=sEigyo;
   const pZeki=sZeki;
-  // v23.1: チャージを考慮した予測利益
+  // v23.2: チャージを考慮した予測利益
   const pChaji = pArari * sChajiRate;
   const pFcin = pArari - pChaji;
   const pRieki = pFcin - pKeihi + pZeki;
@@ -6801,7 +6792,7 @@ function calcMonthly(){
   const tArariRate=tArariRateInput||pArariRitsu;
   const keihiGensaku=parseNum(document.getElementById('m-keihi-gensaku')?.value)||0;
   const needKeihi=Math.max(pKeihi-keihiGensaku,0);
-  // v23.1: チャージを考慮した必要粗利・必要売上
+  // v23.2: チャージを考慮した必要粗利・必要売上
   // 店利益 = FC収入 − 営業費 + 雑益計
   // FC収入 = 粗利 × (1 − チャージ実効率)
   // 解いて: 粗利 = (targetProfit + needKeihi − pZeki) / (1 − sChajiRate)
@@ -7134,7 +7125,7 @@ function renderWeeklyProgress(){
 }
 
 // ===== DAILY =====
-// v23.1: 月累計・先週実績の入力欄は廃止。互換のため stub だけ残す（古い保存データ等の影響を吸収）
+// v23.2: 月累計・先週実績の入力欄は廃止。互換のため stub だけ残す（古い保存データ等の影響を吸収）
 function calcDailyStats(){ /* deprecated: kept as no-op for backward compat */ }
 function calcTimeStats(){
   const au=num('t-asa-u'),hu=num('t-hiru-u'),yu=num('t-yu-u');
@@ -7178,7 +7169,7 @@ function saveYoubi(){
 
 // ===== CATEGORY TAB =====
 // ===== 週次お店づくりレポート（DEPT別／ALCOカテゴリ別） =====
-// v23.1: 本部の週次レポートPDFを取り込み、PDFを左に表示しながら手入力できる
+// v23.2: 本部の週次レポートPDFを取り込み、PDFを左に表示しながら手入力できる
 function _ensureCatReport(){
   if(!state.catReport)state.catReport={period:{curr_start:'',curr_end:'',prev_start:'',prev_end:''},dept:{},alco:{}};
   ['dept','alco'].forEach(sec=>{
@@ -7364,7 +7355,7 @@ async function handleCategoryPDF(ev){
 
 function _catReportShowPageSelector(){
   document.getElementById('ocr-modal-loading').style.display='none';
-  // v23.1: 取込中表示が残らないようタイトルを更新
+  // v23.2: 取込中表示が残らないようタイトルを更新
   document.getElementById('ocr-modal-title').textContent='📦 週次レポート — ページを選択';
   const result=document.getElementById('ocr-modal-result');
   result.style.display='block';
@@ -7759,7 +7750,7 @@ function renderMgmtCompare(){
     planFin: planFinal, curAct: state.seisan, ly: state.seisan_lastyear
   };
 
-  // v23.1: タイミング3層モデルに応じてラベル変更
+  // v23.2: タイミング3層モデルに応じてラベル変更
   const planMonthDisp = state.planMonth || (curMonth?_addMonths(curMonth,2):'') || '—';
   let html = `<thead>
     <tr>
@@ -7984,11 +7975,11 @@ function renderCategoryTab(){
   try{ renderCatReport(); }catch(e){ console.warn(e); }
   try{ renderMgmtCompare(); }catch(e){ console.warn(e); }
   try{ renderAicoDriver(); }catch(e){ console.warn(e); }
-  // v23.1: 旧「カテゴリ別計画（売上/粗利/AICO）」UI は撤去。
+  // v23.2: 旧「カテゴリ別計画（売上/粗利/AICO）」UI は撤去。
   // データ自体は state.cats に残るので互換のため saveCat は維持。
 }
 // 後方互換: 既存の onclick 等から呼ばれても落ちないように noop
-function switchCatView(_v){ /* removed in v23.1 */ }
+function switchCatView(_v){ /* removed in v23.2 */ }
 function saveCat(cat,key,val){
   if(!state.cats[cat])state.cats[cat]={};
   state.cats[cat][key]=isNaN(val)?val:parseFloat(val)||0;
@@ -7996,7 +7987,7 @@ function saveCat(cat,key,val){
 }
 
 // ===== SESSAKU BOOKLET (PDF) =====
-// v23.1: 複数ファイル一括取込対応
+// v23.2: 複数ファイル一括取込対応
 async function handleBookletPDF(ev){
   const files = Array.from(ev.target.files || []);
   ev.target.value=''; // 同じファイルを再選択できるように先にクリア
@@ -8033,7 +8024,7 @@ async function handleBookletPDF(ev){
         if(cur.parts.length)lines.push(cur.parts.join('').trim());
         fullText+=lines.join('\n')+'\n';
       }
-      // v23.1: スマート抽出（Claude API → regex フォールバック）
+      // v23.2: スマート抽出（Claude API → regex フォールバック）
       const onProg = (msg)=>{ if(prog)prog.textContent = msg; };
       const result = await extractBookletItemsSmart(fullText, file.name, onProg);
       const items = result.items;
@@ -8093,7 +8084,7 @@ async function handleBookletPDF(ev){
   }
 }
 
-// v23.1: 取込済みファイル単位での取り消し（その出典のitemsを削除）
+// v23.2: 取込済みファイル単位での取り消し（その出典のitemsを削除）
 function removeBookletSource(filename){
   if(!state.monthly?.sessaku_booklet)return;
   if(!confirm(`「${filename}」由来の施策候補をすべて削除しますか？\n（ユーザーがチェック済み・週割当した項目もまとめて削除されます）`))return;
@@ -8113,7 +8104,7 @@ function removeBookletSource(filename){
 }
 
 function extractBookletItems(text){
-  // v23.1: regex フォールバック（Claude API キー未設定時用）
+  // v23.2: regex フォールバック（Claude API キー未設定時用）
   // 抽出条件を緩めて、より多くの行を施策候補として拾う
   const lines=text.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
   const out=[];const seen=new Set();
@@ -8138,7 +8129,7 @@ function extractBookletItems(text){
   return out.slice(0,300);
 }
 
-// v23.1: Claude API でスマート抽出
+// v23.2: Claude API でスマート抽出
 async function extractBookletItemsViaClaude(text, filename, apiKey){
   const prompt = `次のテキストはローソンの「お店作り冊子」または同様の本部資料です。
 店舗で実施すべき施策・取り組み・キャンペーン・重点商品の名称を、項目として箇条書き抽出してください。
@@ -8212,7 +8203,7 @@ function renderBookletList(){
   const b=state.monthly.sessaku_booklet||{items:[]};
   const items=b.items||[];
   if(!items.length){
-    // v23.1: ソースは存在するが items 0 件のケース
+    // v23.2: ソースは存在するが items 0 件のケース
     if(Array.isArray(b.sources) && b.sources.length){
       const srcChipsEmpty = b.sources.map(s=>{
         const dt = new Date(s.uploaded_at).toLocaleDateString('ja-JP',{month:'2-digit',day:'2-digit'});
@@ -8224,7 +8215,7 @@ function renderBookletList(){
     }
     el.innerHTML='<div class="text-gray text-sm">まだ施策候補がありません。PDFをアップロードするか「＋手動追加」してください。</div>';return;
   }
-  // v23.1: 複数PDF対応 - 取込ファイル一覧（各ファイルに×取消ボタン）
+  // v23.2: 複数PDF対応 - 取込ファイル一覧（各ファイルに×取消ボタン）
   let meta = '';
   if(Array.isArray(b.sources) && b.sources.length){
     const srcChips = b.sources.map(s=>{
@@ -8476,6 +8467,28 @@ function _ensureFileUploads(){
   if(!state.fileUploads)state.fileUploads={seisan:[],catreport:[],booklet:[],syohou:[]};
   ['seisan','catreport','booklet','syohou','external'].forEach(t=>{ if(!Array.isArray(state.fileUploads[t]))state.fileUploads[t]=[]; });
 }
+// v23.2: NotebookLM風 ソース一覧 — 統一表示・操作
+function srcToggleAddMenu(){
+  const m = document.getElementById('src-add-menu');
+  if(!m)return;
+  m.style.display = m.style.display==='none'?'block':'none';
+  // 外をクリックで閉じる
+  if(m.style.display==='block'){
+    setTimeout(()=>{
+      document.addEventListener('click', function closeOnOut(e){
+        if(!m.contains(e.target) && !document.getElementById('src-add-btn').contains(e.target)){
+          m.style.display='none';
+          document.removeEventListener('click', closeOnOut);
+        }
+      });
+    },0);
+  }
+}
+function srcHandleAdd(ev, handlerName){
+  document.getElementById('src-add-menu').style.display='none';
+  const handler = window[handlerName];
+  if(typeof handler === 'function')handler(ev);
+}
 function recordFileUpload(type, file){
   _ensureFileUploads();
   const month = state.seisan?.month || '';
@@ -8488,7 +8501,7 @@ function deleteFileUpload(type, idx){
   if(!state.fileUploads||!state.fileUploads[type])return;
   const entry = state.fileUploads[type][idx];
   if(!entry)return;
-  // v23.1: 副作用も含めて取消するか確認
+  // v23.2: 副作用も含めて取消するか確認
   let extra = '';
   if(type==='booklet')      extra = '\n（このファイル由来の施策候補も合わせて削除されます）';
   else if(type==='external')extra = '\n（このファイル由来の外部要因テキストも合わせて削除されます）';
@@ -8519,59 +8532,54 @@ function deleteFileUpload(type, idx){
 }
 function renderFileUploads(){
   _ensureFileUploads();
-  const set=(id,html)=>{ const e=document.getElementById(id); if(e)e.innerHTML=html; };
+  // v23.2: NotebookLM風 統一ソース一覧
+  const list = document.getElementById('src-list');
+  if(!list)return;
+  const TYPE_META = {
+    seisan:    {icon:'📒', label:'精算書'},
+    catreport: {icon:'📦', label:'週次レポート'},
+    booklet:   {icon:'📘', label:'お店作り冊子'},
+    syohou:    {icon:'💊', label:'月次処方箋'},
+    external:  {icon:'🌤️', label:'外部要因'}
+  };
+  const allRows = [];
   ['seisan','catreport','booklet','syohou','external'].forEach(t=>{
-    const arr=state.fileUploads[t]||[];
-    const last=arr[0];
-    const elm=document.getElementById('files-'+t+'-status');
-    if(elm){
-      if(last){
-        elm.classList.add('ok');
-        const dt=new Date(last.date).toLocaleString('ja-JP',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-        elm.innerHTML=`✅ 最新：${last.name} <span style="color:#9ca3af">／ ${dt} ／ ${(last.size/1024/1024).toFixed(2)}MB</span>`;
-      }else{
-        elm.classList.remove('ok');
-        elm.textContent='— 未取り込み —';
-      }
-    }
+    (state.fileUploads[t]||[]).forEach((f,idx)=>allRows.push({...f, type:t, _idx:idx}));
   });
-  // 履歴一覧（月フィルタ付き）
-  const h=document.getElementById('files-history-list');
-  if(h){
-    const allRows=[];
-    ['seisan','catreport','booklet','syohou','external'].forEach(t=>{
-      (state.fileUploads[t]||[]).forEach((f,idx)=>allRows.push({...f,type:t,_idx:idx}));
-    });
-    allRows.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-    const filterMonth = window._filesMonthFilter || '';
-    const filtered = filterMonth ? allRows.filter(r=>(r.month||'')===filterMonth) : allRows;
-    // 月フィルタ用の選択肢
-    const monthSet = new Set();
-    allRows.forEach(r=>{ if(r.month)monthSet.add(r.month); });
-    const months = Array.from(monthSet).sort().reverse();
-    let header = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;font-size:11px">
-      <span style="color:#6b7280">実績月で絞り込み:</span>
-      <select onchange="window._filesMonthFilter=this.value;renderFileUploads()" style="font-size:11px;padding:3px 6px;width:auto;min-width:100px">
-        <option value="" ${!filterMonth?'selected':''}>すべて</option>
-        ${months.map(m=>`<option value="${m}" ${filterMonth===m?'selected':''}>${m}</option>`).join('')}
-      </select>
-      <span style="color:#9ca3af;margin-left:auto">合計 ${allRows.length} 件 / 表示 ${filtered.length} 件</span>
-    </div>`;
-    if(!filtered.length){
-      h.innerHTML=header+'<div class="text-gray text-sm" style="padding:10px;text-align:center">アップロード履歴はまだありません</div>';
-      return;
-    }
-    const labels={seisan:'📒 精算書',catreport:'📦 週次レポート',booklet:'📘 お店作り冊子',syohou:'💊 月次処方箋',external:'🌤️ 外部要因/商圏調査'};
-    let html=header+'<div class="overflow-auto"><table class="ocr-table" style="font-size:12px"><thead><tr><th>種別</th><th title="ファイルが対象とする実績月（精算書なら確定月）">実績月</th><th style="text-align:left">ファイル名</th><th>アップロード日時</th><th>サイズ</th><th></th></tr></thead><tbody>';
-    filtered.forEach(r=>{
-      const dt=new Date(r.date).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-      html+=`<tr><td>${labels[r.type]||r.type}</td><td>${r.month||'—'}</td><td style="text-align:left">${(r.name||'').replace(/</g,'&lt;')}</td><td>${dt}</td><td>${(r.size/1024/1024).toFixed(2)}MB</td><td><button class="btn-secondary btn-sm" style="padding:2px 8px;font-size:10px" onclick="deleteFileUpload('${r.type}',${r._idx})" title="履歴から削除">🗑️</button></td></tr>`;
-    });
-    html+='</tbody></table></div>';
-    h.innerHTML=html;
+  allRows.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  // カウント
+  const cnt = document.getElementById('src-count');
+  if(cnt)cnt.textContent = `${allRows.length} 件`;
+  if(!allRows.length){
+    list.innerHTML = `<div class="src-empty">📚 ソース未登録<br><span style="font-size:11px;color:#9ca3af">右上の「+ ファイル追加」から精算書・週次レポート・お店作り冊子などをアップロードしてください</span></div>`;
+    return;
   }
-  // 外部要因の一覧
-  try{ renderExternalFactors(); }catch(e){}
+  list.innerHTML = allRows.map(r=>{
+    const meta = TYPE_META[r.type] || {icon:'📄', label:r.type};
+    const dt = new Date(r.date).toLocaleDateString('ja-JP',{month:'2-digit',day:'2-digit'});
+    const fnEsc = (r.name||'').replace(/</g,'&lt;');
+    return `<div class="src-row">
+      <input type="checkbox" class="src-check" checked title="AI 提案で参照する">
+      <div class="src-icon" title="${meta.label}">${meta.icon}</div>
+      <div class="src-name-block">
+        <div class="src-name" title="${fnEsc}">${fnEsc}</div>
+        <div class="src-meta">${meta.label} ／ ${r.month||'—'} ／ ${(r.size/1024/1024).toFixed(2)}MB</div>
+      </div>
+      <div class="src-date">${dt}</div>
+      <button class="src-menu-btn" onclick="deleteFileUpload('${r.type}',${r._idx})" title="削除">🗑️</button>
+    </div>`;
+  }).join('');
+  // クラウド同期 details に既存の tab9 内容を移動（初回のみ）
+  const settingsHost = document.getElementById('src-settings-host');
+  if(settingsHost && !settingsHost.dataset.moved){
+    const tab9 = document.getElementById('tab9');
+    if(tab9){
+      // tab9 の中身全体（card 群）を移動
+      while(tab9.firstChild){ settingsHost.appendChild(tab9.firstChild); }
+      settingsHost.dataset.moved = '1';
+    }
+  }
+  // 外部要因テキスト要約（折り畳み内に隠す）— 旧 UI は不要なので削除
 }
 
 // 月次処方箋PDFハンドラ（仮：当面はファイル登録のみ。AICOドライバ自動入力は後続実装）
@@ -8586,7 +8594,7 @@ async function handleSyohouPDF(ev){
 
 // 外部要因 PDF / テキスト / Markdown ハンドラ
 // テキストを抽出して state.externalFactors に要約として追加し、先週検証タブの外部要因にも反映
-// v23.1: 複数ファイル対応
+// v23.2: 複数ファイル対応
 async function handleExternalPDF(ev){
   const files = Array.from(ev.target.files || []);
   ev.target.value='';
@@ -9125,7 +9133,7 @@ function gistHandleHash(){
 let saveTimer=null;
 function saveAll(immediate=false){
   collectFormValues();
-  // v23.1: ホームが開いている時はリアルタイム再描画 (①→②→③ 連動)
+  // v23.2: ホームが開いている時はリアルタイム再描画 (①→②→③ 連動)
   if(document.getElementById('group-home')?.classList.contains('active')){
     try{ renderHomeDashboard && renderHomeDashboard(); }catch(e){}
   }
@@ -9157,7 +9165,7 @@ function collectFormValues(){
   const jyEl=document.getElementById('m-jyokyo-nenhi');if(jyEl)state.monthly.jyokyo_nenhi=parseFloat(jyEl.value)||0;
   const znEl=document.getElementById('m-zennen-nishin');if(znEl)state.monthly.zennen_nishin=parseNum(znEl.value);
   const kEl=document.getElementById('kaizen-memo');if(kEl)state.kaizen_memo=kEl.value;
-  // v23.1: 月累計・先週は廃止。時間帯別のみ保存
+  // v23.2: 月累計・先週は廃止。時間帯別のみ保存
   ['t_asa_u','t_asa_k','t_asa_u_nen','t_asa_k_nen','t_hiru_u','t_hiru_k','t_hiru_u_nen','t_hiru_k_nen','t_yu_u','t_yu_k','t_yu_u_nen','t_yu_k_nen'].forEach(k=>{
     const el=document.getElementById(k.replace(/_/g,'-'));if(el)state.daily[k]=parseNum(el.value);
   });
@@ -9195,39 +9203,39 @@ function loadAll(){
     }
     if(s.daily)Object.assign(state.daily,s.daily);
     if(s.cats)Object.keys(s.cats).forEach(k=>{state.cats[k]=Object.assign(state.cats[k]||{},s.cats[k]);});
-    // v23.1: 処方箋/ドライバ次週計画
+    // v23.2: 処方箋/ドライバ次週計画
     if(s.aicoDriver){
       state.aicoDriver=state.aicoDriver||{};
       Object.keys(s.aicoDriver).forEach(cat=>{
         state.aicoDriver[cat]=Object.assign({},state.aicoDriver[cat]||{},s.aicoDriver[cat]||{});
       });
     }
-    // v23.1: 月次ファイル管理（アップロード履歴）
+    // v23.2: 月次ファイル管理（アップロード履歴）
     if(s.fileUploads){
       state.fileUploads=state.fileUploads||{seisan:[],catreport:[],booklet:[],syohou:[]};
       ['seisan','catreport','booklet','syohou','external'].forEach(t=>{
         if(Array.isArray(s.fileUploads[t]))state.fileUploads[t]=s.fileUploads[t].slice(0,10);
       });
     }
-    // v23.1: 月別データアーカイブ
+    // v23.2: 月別データアーカイブ
     if(s.byMonth && typeof s.byMonth==='object'){
       state.byMonth = s.byMonth;
     }
-    // v23.1: 外部要因テキスト要約
+    // v23.2: 外部要因テキスト要約
     if(Array.isArray(s.externalFactors))state.externalFactors=s.externalFactors;
-    // v23.1: AI計画提案
+    // v23.2: AI計画提案
     if(Array.isArray(s.aiProposals))state.aiProposals=s.aiProposals;
     if(typeof s.aiPromptCustom==='string')state.aiPromptCustom=s.aiPromptCustom;
-    // v23.1: Q&Aログ
+    // v23.2: Q&Aログ
     if(Array.isArray(s.qaLog))state.qaLog=s.qaLog;
-    // v23.1: 世界一挑戦支援
+    // v23.2: 世界一挑戦支援
     if(s.sekaiichi&&typeof s.sekaiichi==='object'){
       if(!state.sekaiichi)state.sekaiichi={challenges:[]};
       if(Array.isArray(s.sekaiichi.challenges))state.sekaiichi.challenges=s.sekaiichi.challenges;
     }
-    // v23.1: 計画月
+    // v23.2: 計画月
     if(typeof s.planMonth==='string')state.planMonth=s.planMonth;
-    // v23.1: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）
+    // v23.2: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）
     if(s.catReport){
       if(!state.catReport)state.catReport={period:{},dept:{},alco:{}};
       if(s.catReport.period)state.catReport.period=Object.assign(state.catReport.period||{},s.catReport.period);
@@ -9287,7 +9295,7 @@ function restoreForm(){
   if(!state.monthly.target_uriage&&state.seisan.uriage){const el=document.getElementById('m-target-uriage');if(el)el.value=state.seisan.uriage;}
   const jEl=document.getElementById('m-juten-sessaku');if(jEl)jEl.value=state.monthly.juten_sessaku||'';
   const kEl=document.getElementById('kaizen-memo');if(kEl)kEl.value=state.kaizen_memo||'';
-  // v23.1: 月累計・先週の復元は廃止（state.daily.tsuki_*/sen_* は localStorage に残るが UI からは参照しない）
+  // v23.2: 月累計・先週の復元は廃止（state.daily.tsuki_*/sen_* は localStorage に残るが UI からは参照しない）
   ['t_asa_u','t_asa_k','t_asa_u_nen','t_asa_k_nen','t_hiru_u','t_hiru_k','t_hiru_u_nen','t_hiru_k_nen','t_yu_u','t_yu_k','t_yu_u_nen','t_yu_k_nen'].forEach(k=>{
     const el=document.getElementById(k.replace(/_/g,'-'));if(el&&state.daily[k])el.value=state.daily[k];
   });
@@ -9425,7 +9433,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
   initYoubiGrid();initOrderFilter();
   if(typeof setupDropZones==='function')setupDropZones();
   if(typeof claudeKeyUpdateStatus==='function')claudeKeyUpdateStatus();
-  // v23.1: ホームダッシュボードを初期描画
+  // v23.2: ホームダッシュボードを初期描画
   try{ renderHomeDashboard(); }catch(e){ console.warn('home',e); }
   const now=new Date();
   setText('header-date',`${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`);
