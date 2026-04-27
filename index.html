@@ -396,7 +396,24 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .sessaku-order-row{display:grid;grid-template-columns:1fr 70px 30px;gap:4px;margin-bottom:3px}
 .sessaku-order-row input{font-size:11px;padding:3px 6px}
 .sessaku-order-del{background:none;border:1px solid #fecaca;color:#dc2626;border-radius:3px;font-size:10px;padding:1px 5px;cursor:pointer}
-/* v23.4: 計画スナップショット — 計画月の目標と「なぜ」を一画面で */
+/* v23.5: トップページは 5 要素のみ */
+.top-month-bar{text-align:center;font-size:14px;color:#6b7280;padding:14px 0 6px;margin-bottom:8px}
+.top-month-bar b{font-size:18px;color:#1e3a5f;margin:0 4px}
+.top-block{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px}
+.top-block-title{margin:0 0 14px;font-size:14px;color:#1e3a5f;font-weight:700}
+.top-chart-wrap{position:relative;height:240px}
+.top-chart-wrap.tall{height:320px}
+.top-week-group{margin-bottom:14px}
+.top-week-group:last-child{margin-bottom:0}
+.top-week-head{display:flex;align-items:center;gap:8px;padding:6px 10px;background:#f3f4f6;border-radius:6px;font-size:12px;font-weight:700;color:#1e3a5f;margin-bottom:6px}
+.top-week-head .week-num{background:#1e3a5f;color:#fff;border-radius:4px;padding:2px 8px;font-size:11px}
+.top-week-item{padding:8px 12px;border:1px solid var(--border);border-radius:6px;margin-bottom:4px;background:#fff;font-size:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.top-week-item .item-name{flex:1;min-width:200px;color:#1e3a5f;font-weight:600}
+.top-week-item .item-meta{font-size:10px;color:#6b7280}
+.top-week-item .item-effect{font-family:monospace;color:#10b981;font-weight:700}
+.top-empty{padding:20px;text-align:center;color:#9ca3af;font-size:12px;background:#fafafa;border:1px dashed var(--border);border-radius:6px}
+
+/* v23.4 (廃止予定の旧 CSS、互換のため残置) — 計画スナップショット */
 .plan-snapshot{background:#fff;border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
 .ps-month{text-align:center;font-size:14px;color:#6b7280;margin-bottom:16px}
 .ps-month span{font-size:18px;font-weight:700;color:#1e3a5f}
@@ -778,7 +795,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v23.4</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v23.5</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -810,87 +827,51 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
     <!-- ============================================================ -->
     <div class="group active" id="group-home">
       <div class="tab-panel active" id="tab-home">
-        <!-- 計画スナップショット（メインビュー：計画月の数字 + 図解で「なぜ」） -->
-        <div class="plan-snapshot">
-          <div class="ps-month">📅 <span id="cmp-plan-month">—</span> の計画</div>
-          <div class="ps-hero">
-            <div class="ps-hero-label">⭐ 目標店利益</div>
-            <div class="ps-hero-value" id="ps-rieki">¥—</div>
-            <div class="ps-hero-meta" id="ps-rieki-meta">—</div>
-          </div>
-          <div class="ps-section-title">なぜこの計画？</div>
-          <div class="ps-flow" id="ps-flow"></div>
-        </div>
+        <!-- 計画月ヘッダー -->
+        <div class="top-month-bar">📅 <b id="cmp-plan-month">—</b> の計画</div>
 
-        <!-- 計画 vs 実績（折り畳み） -->
-        <details class="cmp-details">
-          <summary>📊 計画 vs 実績（実績月: <b id="cmp-actual-month">—</b>）</summary>
-          <div class="cmp-kpi-grid" style="padding-top:0">
-          <div class="cmp-kpi" id="cmp-kpi-uriage">
-            <div class="cmp-kpi-label">💰 売上</div>
-            <div class="cmp-kpi-row"><span class="cmp-side">計画</span><span class="cmp-val" id="cmp-uriage-plan">—</span></div>
-            <div class="cmp-kpi-row"><span class="cmp-side">実績</span><span class="cmp-val" id="cmp-uriage-act">—</span></div>
-            <div class="cmp-kpi-rate" id="cmp-uriage-rate">—</div>
-          </div>
-          <div class="cmp-kpi" id="cmp-kpi-arari">
-            <div class="cmp-kpi-label">📈 粗利</div>
-            <div class="cmp-kpi-row"><span class="cmp-side">計画</span><span class="cmp-val" id="cmp-arari-plan">—</span></div>
-            <div class="cmp-kpi-row"><span class="cmp-side">実績</span><span class="cmp-val" id="cmp-arari-act">—</span></div>
-            <div class="cmp-kpi-rate" id="cmp-arari-rate">—</div>
-          </div>
-          <div class="cmp-kpi cmp-kpi-main" id="cmp-kpi-rieki">
-            <div class="cmp-kpi-label">⭐ 店利益</div>
-            <div class="cmp-kpi-row"><span class="cmp-side">計画</span><span class="cmp-val" id="cmp-rieki-plan">—</span></div>
-            <div class="cmp-kpi-row"><span class="cmp-side">実績</span><span class="cmp-val" id="cmp-rieki-act">—</span></div>
-            <div class="cmp-kpi-rate" id="cmp-rieki-rate">—</div>
-          </div>
-          <div class="cmp-kpi" id="cmp-kpi-eigyo">
-            <div class="cmp-kpi-label">📉 営業費</div>
-            <div class="cmp-kpi-row"><span class="cmp-side">計画</span><span class="cmp-val" id="cmp-eigyo-plan">—</span></div>
-            <div class="cmp-kpi-row"><span class="cmp-side">実績</span><span class="cmp-val" id="cmp-eigyo-act">—</span></div>
-            <div class="cmp-kpi-rate" id="cmp-eigyo-rate">—</div>
-          </div>
-          </div>
-        </details>
+        <!-- ① 計画 図解（全体） -->
+        <section class="top-block">
+          <h3 class="top-block-title">📊 計画 全体</h3>
+          <div class="top-chart-wrap"><canvas id="top-chart-overall"></canvas></div>
+        </section>
 
-        <!-- カテゴリ別 計画 vs 実績（折り畳み） -->
-        <details class="cmp-details">
-          <summary>📦 カテゴリ別 計画 vs 実績</summary>
-          <div class="overflow-auto">
-            <table class="cmp-cat-table" id="cmp-cat-table"></table>
-          </div>
-        </details>
+        <!-- ② カテゴリ別 -->
+        <section class="top-block">
+          <h3 class="top-block-title">📦 カテゴリ別</h3>
+          <div class="top-chart-wrap tall"><canvas id="top-chart-category"></canvas></div>
+        </section>
 
-        <!-- グラフ -->
-        <details class="cmp-details">
-          <summary>📊 比較チャート</summary>
-          <div class="chart-canvas-wrap"><canvas id="cmp-chart"></canvas></div>
-        </details>
+        <!-- ③ 施策別 -->
+        <section class="top-block">
+          <h3 class="top-block-title">🎯 施策別</h3>
+          <div class="top-chart-wrap tall"><canvas id="top-chart-sessaku"></canvas></div>
+        </section>
 
-        <!-- v23.4: Q&A 埋込（AI に質問する） -->
-        <div class="qa-embed-card" style="margin-top:14px">
-          <div class="qa-embed-head">
-            <span class="qa-embed-title">💬 AI に質問する</span>
-            <span style="font-size:10px;color:#9ca3af">店舗データを文脈に Claude が回答</span>
-          </div>
-          <div class="qa-embed-input">
-            <textarea id="qa-question" rows="2" placeholder="例：来週の弁当売上を10%伸ばすには？"></textarea>
-            <button class="btn-primary btn-sm" onclick="askClaudeQAEmbed()" style="background:#0891b2">質問する</button>
-          </div>
-          <!-- hidden compatibility -->
-          <input type="hidden" id="qa-tag" value="">
-          <select id="qa-context" style="display:none"><option value="all">all</option></select>
-          <div id="qa-current-answer" style="margin-top:8px"></div>
-          <details class="qa-embed-recent" id="qa-embed-history-wrap" style="display:none">
-            <summary style="cursor:pointer;font-size:11px;color:#6b7280">過去の Q&A</summary>
-            <div id="qa-history-list" style="margin-top:6px"></div>
-          </details>
-          <!-- hidden compat -->
-          <div style="display:none">
-            <input type="text" id="qa-search">
-            <select id="qa-filter-tag"></select>
-            <select id="qa-filter-month"></select>
-          </div>
+        <!-- ④ 施策一覧（週ごと） -->
+        <section class="top-block">
+          <h3 class="top-block-title">📋 施策一覧（週ごと）</h3>
+          <div id="top-sessaku-weeks"></div>
+        </section>
+
+        <!-- ⑤ 外部要因（週ごと） -->
+        <section class="top-block">
+          <h3 class="top-block-title">🌤️ 外部要因（週ごと）</h3>
+          <div id="top-external-weeks"></div>
+        </section>
+
+        <!-- 互換のため隠しフィールド（旧UI参照） -->
+        <div style="display:none">
+          <span id="cmp-actual-month">—</span><span id="ps-rieki">—</span><span id="ps-rieki-meta">—</span><div id="ps-flow"></div>
+          <span id="cmp-uriage-plan">—</span><span id="cmp-uriage-act">—</span><span id="cmp-uriage-rate">—</span>
+          <span id="cmp-arari-plan">—</span><span id="cmp-arari-act">—</span><span id="cmp-arari-rate">—</span>
+          <span id="cmp-rieki-plan">—</span><span id="cmp-rieki-act">—</span><span id="cmp-rieki-rate">—</span>
+          <span id="cmp-eigyo-plan">—</span><span id="cmp-eigyo-act">—</span><span id="cmp-eigyo-rate">—</span>
+          <table id="cmp-cat-table"></table>
+          <canvas id="cmp-chart"></canvas>
+          <textarea id="qa-question"></textarea><input type="hidden" id="qa-tag"><select id="qa-context"></select>
+          <div id="qa-current-answer"></div><div id="qa-history-list"></div>
+          <input id="qa-search"><select id="qa-filter-tag"></select><select id="qa-filter-month"></select>
         </div>
       </div>
     </div>
@@ -2248,7 +2229,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v23.4';
+const APP_VERSION='v23.5';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -4574,17 +4555,15 @@ function renderVsCharts(){
 
 // ===== v23.4: ホームダッシュボード =====
 function renderHomeDashboard(){
-  // v23.4: 計画スナップショット中心
+  // v23.5: トップページは 5 要素のみ
   const planMonthEl = document.getElementById('cmp-plan-month');
   if(!planMonthEl)return;
-
   const planMonth = state.planMonth || (state.seisan?.month ? _addMonths(state.seisan.month, 2) : '—');
-  const actualMonth = state.seisan?.month || '—';
   planMonthEl.textContent = planMonth;
+  // 互換 stub
   const actEl = document.getElementById('cmp-actual-month');
-  if(actEl)actEl.textContent = actualMonth;
+  if(actEl)actEl.textContent = state.seisan?.month || '—';
 
-  // === 計画スナップショット（計画月の目標 + 図解で「なぜ」） ===
   const m = state.monthly || {};
   const target_uriage = m.target_uriage || 0;
   const target_arari_rate = m.target_arari_rate || 0;
@@ -4592,157 +4571,168 @@ function renderHomeDashboard(){
   const target_rieki = m.target_profit || 0;
   const target_eigyo = (m.target_kyuyo||0)+(m.target_mikiri||0)+(m.target_loss||0)+(m.target_hoso||0)+(m.target_konetsu||0)+(m.target_zappi||0);
   const target_zatsu = (m.target_zatsuyeki||0)+(m.target_mikiri_shien||0)+(m.target_denki_shien||0);
-  // FC-Cn チャージ実効率（精算書の値から推定、なければ45%デフォルト）
   const sChajiRate = (state.seisan?.arari) ? ((state.seisan.chaji||0)/state.seisan.arari) : 0.45;
   const target_chaji = target_arari * sChajiRate;
 
-  const _fmtYY = v => v?'¥'+Math.round(v).toLocaleString():'¥—';
-
-  // ヒーロー
-  const heroEl = document.getElementById('ps-rieki');
-  if(heroEl){
-    heroEl.textContent = target_rieki ? '¥'+Math.round(target_rieki).toLocaleString() : '¥—';
-  }
-  const lyU = (state.seisan_lastyear?.uriage||0) + (state.seisan_lastyear?.sonotauriage||0);
-  const heroMeta = document.getElementById('ps-rieki-meta');
-  if(heroMeta){
-    if(target_rieki){
-      heroMeta.innerHTML = `想定売上 <b>${_fmtYY(target_uriage)}</b> ／ 粗利率 <b>${target_arari_rate||0}%</b>`;
-    }else{
-      heroMeta.innerHTML = '<span style="color:#9ca3af">計画未設定 — 「🎯 計画」タブで AI に提案させるか、月次目標を入力してください</span>';
-    }
-  }
-
-  // 図解フロー
-  const flowEl = document.getElementById('ps-flow');
-  if(flowEl){
-    if(!target_uriage && !target_rieki){
-      flowEl.innerHTML = `<div style="text-align:center;padding:24px;color:#9ca3af;font-size:13px;border:1px dashed var(--border);border-radius:10px">
-        まだ計画が設定されていません<br>
-        <button class="btn-primary btn-sm" style="margin-top:10px;background:#7c3aed" onclick="showGroup('plan');showSub('plan','plan-main')">🎯 計画タブを開く</button>
-      </div>`;
-    }else{
-      const yoyPct = lyU?((target_uriage/lyU)*100).toFixed(0):null;
-      const sessakuTotal = (state.sessaku||[]).reduce((s,x)=>s+(x.effect||0),0);
-      const arrowSmall = (txt) => `<div class="ps-arrow">↓ <small>${txt}</small></div>`;
-      let html = '';
-      if(lyU>0){
-        html += `<div class="ps-step input"><div class="ps-step-name">前年同月の売上<small>${state.seisan_lastyear?.month||''}</small></div><div class="ps-step-val">${_fmtYY(lyU)}</div></div>`;
-        html += arrowSmall(yoyPct?`× ${yoyPct}% (前年比)`:'前年実績ベース');
-      }
-      if(sessakuTotal>0){
-        html += `<div class="ps-step input"><div class="ps-step-name">+ 施策効果<small>${(state.sessaku||[]).length}個の施策合計</small></div><div class="ps-step-val">${_fmtYY(sessakuTotal)}</div></div>`;
-        html += arrowSmall('期待売上増');
-      }
-      html += `<div class="ps-step calc"><div class="ps-step-name">計画売上</div><div class="ps-step-val">${_fmtYY(target_uriage)}</div></div>`;
-      html += arrowSmall(`× 粗利率 ${target_arari_rate||0}%`);
-      html += `<div class="ps-step calc"><div class="ps-step-name">粗利</div><div class="ps-step-val">${_fmtYY(target_arari)}</div></div>`;
-      if(target_chaji>0){
-        html += arrowSmall(`− ローソンチャージ (約${(sChajiRate*100).toFixed(0)}%)`);
-        html += `<div class="ps-step minus"><div class="ps-step-name">− ローソンチャージ</div><div class="ps-step-val">−${_fmtYY(target_chaji)}</div></div>`;
-      }
-      if(target_eigyo>0){
-        html += arrowSmall(`− 営業費（給与・光熱費等）`);
-        html += `<div class="ps-step minus"><div class="ps-step-name">− 営業費計</div><div class="ps-step-val">−${_fmtYY(target_eigyo)}</div></div>`;
-      }
-      if(target_zatsu>0){
-        html += arrowSmall(`+ 雑益・本部負担`);
-        html += `<div class="ps-step input"><div class="ps-step-name">+ 雑益計<small>見切支援・光熱費支援等</small></div><div class="ps-step-val">+${_fmtYY(target_zatsu)}</div></div>`;
-      }
-      html += arrowSmall('=');
-      html += `<div class="ps-step result"><div class="ps-step-name">⭐ 店利益（目標）</div><div class="ps-step-val">${_fmtYY(target_rieki)}</div></div>`;
-      flowEl.innerHTML = html;
-    }
-  }
-
-  const fmtY = v => (v && !isNaN(v))?'¥'+Math.round(v).toLocaleString():'¥—';
-  const setRate = (id, plan, actual) => {
-    const el = document.getElementById(id);
-    if(!el)return;
-    if(!plan || plan===0){ el.textContent='—'; el.className='cmp-kpi-rate'; return; }
-    const rate = (actual/plan)*100;
-    el.textContent = rate.toFixed(0)+'%';
-    el.className = 'cmp-kpi-rate ' + (rate>=100?'good':rate>=80?'warn':'bad');
-  };
-
-  // 計画値（state.monthly から）と実績値（state.seisan から）
-  const s = state.seisan||{};
-  const u_actual = (s.uriage||0) + (s.sonotauriage||0);
-  const u_plan = m.target_uriage||0;
-  const arari_actual = (typeof window._lastArari === 'number') ? window._lastArari : 0;
-  const arari_plan = u_plan * ((m.target_arari_rate||0)/100);
-  const rieki_actual = (typeof window._lastTenrieki === 'number') ? window._lastTenrieki : 0;
-  const rieki_plan = m.target_profit||0;
-  const eigyo_actual = (typeof sumCalc==='function' && typeof SEISAN_ROWS!=='undefined') ? sumCalc(SEISAN_ROWS.find(r=>r.key==='_eigyokei'), s) : 0;
-  const eigyo_plan = (m.target_kyuyo||0)+(m.target_mikiri||0)+(m.target_loss||0)+(m.target_hoso||0)+(m.target_konetsu||0)+(m.target_zappi||0);
-
-  // KPI 4枚
-  document.getElementById('cmp-uriage-plan').textContent = fmtY(u_plan);
-  document.getElementById('cmp-uriage-act').textContent = fmtY(u_actual);
-  setRate('cmp-uriage-rate', u_plan, u_actual);
-  document.getElementById('cmp-arari-plan').textContent = fmtY(arari_plan);
-  document.getElementById('cmp-arari-act').textContent = fmtY(arari_actual);
-  setRate('cmp-arari-rate', arari_plan, arari_actual);
-  document.getElementById('cmp-rieki-plan').textContent = fmtY(rieki_plan);
-  document.getElementById('cmp-rieki-act').textContent = fmtY(rieki_actual);
-  setRate('cmp-rieki-rate', rieki_plan, rieki_actual);
-  document.getElementById('cmp-eigyo-plan').textContent = fmtY(eigyo_plan);
-  document.getElementById('cmp-eigyo-act').textContent = fmtY(eigyo_actual);
-  // 営業費は逆: 実績 < 計画 が良い
-  const eel = document.getElementById('cmp-eigyo-rate');
-  if(eel){
-    if(!eigyo_plan){ eel.textContent='—'; eel.className='cmp-kpi-rate'; }
-    else{
-      const r = (eigyo_actual/eigyo_plan)*100;
-      eel.textContent = r.toFixed(0)+'%';
-      eel.className = 'cmp-kpi-rate ' + (r<=100?'good':r<=110?'warn':'bad');
-    }
-  }
-
-  // カテゴリ別 計画 vs 実績テーブル
-  const catTable = document.getElementById('cmp-cat-table');
-  if(catTable && typeof CATS !== 'undefined'){
-    const rows = [];
-    CATS.forEach(c=>{
-      const plan = state.cats?.[c]?.kp_u || state.cats?.[c]?.mp_u || 0;
-      const actual = state.catReport?.alco?.[c]?.sales_curr || state.catReport?.dept?.[c]?.sales_curr || 0;
-      if(plan>0 || actual>0){
-        rows.push({cat:c, plan, actual});
-      }
-    });
-    if(rows.length){
-      let html = '<thead><tr><th>カテゴリ</th><th>計画</th><th>実績</th><th>達成率</th></tr></thead><tbody>';
-      rows.sort((a,b)=>b.plan-a.plan).slice(0,15).forEach(r=>{
-        const pct = r.plan?(r.actual/r.plan*100):null;
-        const cls = pct==null?'':(pct>=100?'rate-good':pct>=80?'rate-warn':'rate-bad');
-        html += `<tr><td>${r.cat}</td><td>${fmtY(r.plan)}</td><td>${fmtY(r.actual)}</td><td class="${cls}">${pct==null?'—':pct.toFixed(0)+'%'}</td></tr>`;
+  // ① 計画 全体（waterfall 風 horizontal bar）
+  if(typeof Chart !== 'undefined'){
+    const c1 = document.getElementById('top-chart-overall');
+    if(c1){
+      if(window._top1)try{window._top1.destroy()}catch(e){}
+      window._top1 = new Chart(c1, {
+        type:'bar',
+        data:{
+          labels:['売上','粗利','− チャージ','− 営業費','+ 雑益','店利益 ⭐'],
+          datasets:[{
+            data:[target_uriage, target_arari, target_chaji, target_eigyo, target_zatsu, target_rieki],
+            backgroundColor:['#3b82f6','#8b5cf6','#ef4444','#f59e0b','#10b981','#92400e']
+          }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false, indexAxis:'y',
+          plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>'¥'+Math.round(c.parsed.x||0).toLocaleString()}}},
+          scales:{x:{ticks:{font:{size:10}, callback:v=>'¥'+(v>=1e8?(v/1e8).toFixed(1)+'億':v>=1e4?(v/1e4).toFixed(0)+'万':v.toLocaleString())}}, y:{ticks:{font:{size:11}}}}
+        }
       });
-      html += '</tbody>';
-      catTable.innerHTML = html;
-    }else{
-      catTable.innerHTML = '<thead><tr><th colspan="4" style="text-align:center;color:#9ca3af;padding:14px">カテゴリデータが未入力です</th></tr></thead>';
     }
   }
 
-  // チャート（折りたたみ open 時のみ描画）
-  const chartCanvas = document.getElementById('cmp-chart');
-  if(chartCanvas && typeof Chart !== 'undefined'){
-    if(window._cmpChart){try{window._cmpChart.destroy()}catch(e){}}
-    window._cmpChart = new Chart(chartCanvas, {
-      type:'bar',
-      data:{
-        labels:['売上','粗利','店利益','営業費'],
-        datasets:[
-          {label:'計画', backgroundColor:'rgba(96,165,250,0.85)', data:[u_plan, arari_plan, rieki_plan, eigyo_plan]},
-          {label:'実績', backgroundColor:'rgba(34,197,94,0.85)', data:[u_actual, arari_actual, rieki_actual, eigyo_actual]}
-        ]
-      },
-      options:{
-        responsive:true, maintainAspectRatio:false,
-        plugins:{legend:{position:'top',labels:{font:{size:11}}}},
-        scales:{y:{ticks:{font:{size:10}, callback: v=>'¥'+(v>=1e8?(v/1e8).toFixed(1)+'億':v>=1e4?(v/1e4).toFixed(0)+'万':v.toLocaleString())}}}
+  // ② カテゴリ別グラフ
+  if(typeof Chart !== 'undefined' && typeof CATS !== 'undefined'){
+    const c2 = document.getElementById('top-chart-category');
+    if(c2){
+      if(window._top2)try{window._top2.destroy()}catch(e){}
+      const rows = [];
+      CATS.forEach(c=>{
+        const plan = state.cats?.[c]?.kp_u || state.cats?.[c]?.mp_u || 0;
+        const act = state.catReport?.alco?.[c]?.sales_curr || state.catReport?.dept?.[c]?.sales_curr || 0;
+        if(plan>0 || act>0)rows.push({cat:c, plan, act});
+      });
+      rows.sort((a,b)=>b.plan-a.plan);
+      const top = rows.slice(0,12);
+      if(top.length){
+        window._top2 = new Chart(c2, {
+          type:'bar',
+          data:{
+            labels: top.map(r=>r.cat),
+            datasets:[
+              {label:'計画', data: top.map(r=>r.plan), backgroundColor:'rgba(96,165,250,0.85)'},
+              {label:'実績', data: top.map(r=>r.act), backgroundColor:'rgba(34,197,94,0.85)'}
+            ]
+          },
+          options:{responsive:true, maintainAspectRatio:false, indexAxis:'y',
+            plugins:{legend:{position:'top',labels:{font:{size:11}}}},
+            scales:{x:{ticks:{font:{size:10}, callback:v=>'¥'+(v>=1e4?(v/1e4).toFixed(0)+'万':v.toLocaleString())}}, y:{ticks:{font:{size:10}}}}}
+        });
+      }else{
+        const ctx = c2.getContext('2d'); ctx.clearRect(0,0,c2.width,c2.height);
+        ctx.fillStyle='#9ca3af'; ctx.font='12px sans-serif'; ctx.textAlign='center';
+        ctx.fillText('カテゴリ計画／実績データが未入力', c2.width/2, c2.height/2);
       }
-    });
+    }
+  }
+
+  // ③ 施策別グラフ
+  if(typeof Chart !== 'undefined'){
+    const c3 = document.getElementById('top-chart-sessaku');
+    if(c3){
+      if(window._top3)try{window._top3.destroy()}catch(e){}
+      const sess = (state.sessaku||[]).filter(s=>(s.effect||0)>0).sort((a,b)=>(b.effect||0)-(a.effect||0)).slice(0,12);
+      if(sess.length){
+        window._top3 = new Chart(c3, {
+          type:'bar',
+          data:{
+            labels: sess.map(s=>s.name||'(無名)'),
+            datasets:[{label:'期待売上増', data: sess.map(s=>s.effect||0), backgroundColor:'rgba(124,58,237,0.85)'}]
+          },
+          options:{responsive:true, maintainAspectRatio:false, indexAxis:'y',
+            plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>'¥'+Math.round(c.parsed.x||0).toLocaleString()}}},
+            scales:{x:{ticks:{font:{size:10}, callback:v=>'¥'+(v>=1e4?(v/1e4).toFixed(0)+'万':v.toLocaleString())}}, y:{ticks:{font:{size:10}}}}}
+        });
+      }else{
+        const ctx = c3.getContext('2d'); ctx.clearRect(0,0,c3.width,c3.height);
+        ctx.fillStyle='#9ca3af'; ctx.font='12px sans-serif'; ctx.textAlign='center';
+        ctx.fillText('施策が未登録', c3.width/2, c3.height/2);
+      }
+    }
+  }
+
+  // ④ 施策一覧（週ごと）
+  const sw = document.getElementById('top-sessaku-weeks');
+  if(sw){
+    const sess = state.sessaku||[];
+    if(!sess.length){
+      sw.innerHTML = '<div class="top-empty">施策が未登録です — 「🎯 計画」タブの「🎯 施策・売場」から追加</div>';
+    }else{
+      // start 日付から週番号を判定（月内の週）
+      const byWeek = {1:[],2:[],3:[],4:[],5:[],unscheduled:[]};
+      sess.forEach(s=>{
+        let w = 'unscheduled';
+        if(s.start && /^\d{4}-\d{2}-\d{2}/.test(s.start)){
+          const d = parseInt(s.start.slice(8,10),10);
+          w = Math.min(5, Math.ceil(d/7));
+        }
+        byWeek[w].push(s);
+      });
+      let html = '';
+      [1,2,3,4,5].forEach(w=>{
+        if(!byWeek[w].length)return;
+        html += `<div class="top-week-group"><div class="top-week-head"><span class="week-num">第${w}週</span> ${byWeek[w].length}件</div>`;
+        byWeek[w].forEach(s=>{
+          const fmtY = v => v?'¥'+Math.round(v).toLocaleString():'¥—';
+          html += `<div class="top-week-item"><div class="item-name">${(s.name||'(無名)').replace(/</g,'&lt;')}</div><div class="item-meta">${(s.cat||'').replace(/</g,'&lt;')} ／ ${(s.start||'')} → ${(s.end||'')}</div><div class="item-effect">+${fmtY(s.effect||0)}</div></div>`;
+        });
+        html += '</div>';
+      });
+      if(byWeek.unscheduled.length){
+        html += `<div class="top-week-group"><div class="top-week-head" style="background:#fef3c7"><span class="week-num" style="background:#92400e">未定</span> ${byWeek.unscheduled.length}件</div>`;
+        byWeek.unscheduled.forEach(s=>{
+          const fmtY = v => v?'¥'+Math.round(v).toLocaleString():'¥—';
+          html += `<div class="top-week-item"><div class="item-name">${(s.name||'(無名)').replace(/</g,'&lt;')}</div><div class="item-meta">${(s.cat||'').replace(/</g,'&lt;')}</div><div class="item-effect">+${fmtY(s.effect||0)}</div></div>`;
+        });
+        html += '</div>';
+      }
+      sw.innerHTML = html;
+    }
+  }
+
+  // ⑤ 外部要因（週ごと）
+  const ew = document.getElementById('top-external-weeks');
+  if(ew){
+    const ext = (state.externalFactors||[]);
+    const kensho = (state.kensho_ext||[]).filter(g=>(g.factor||'').trim());
+    if(!ext.length && !kensho.length){
+      ew.innerHTML = '<div class="top-empty">外部要因が未登録です — 「📁 ファイル」から追加</div>';
+    }else{
+      let html = '';
+      // 外部要因テキスト要約は uploaded_at から週判定
+      const byWeek = {1:[],2:[],3:[],4:[],5:[],unscheduled:[]};
+      ext.forEach(f=>{
+        let w = 'unscheduled';
+        if(f.uploaded_at){
+          try{
+            const d = new Date(f.uploaded_at).getDate();
+            w = Math.min(5, Math.ceil(d/7));
+          }catch(e){}
+        }
+        byWeek[w].push({type:'pdf', name:f.filename, date:f.uploaded_at, summary:(f.summary||'').slice(0,80), note:f.note});
+      });
+      kensho.forEach(g=>{
+        byWeek.unscheduled.push({type:'note', name:g.factor||'', date:'', summary:g.plan||'', note:g.actual||''});
+      });
+      [1,2,3,4,5,'unscheduled'].forEach(w=>{
+        if(!byWeek[w].length)return;
+        const wlabel = w==='unscheduled'?'メモ':`第${w}週`;
+        const wbg = w==='unscheduled'?'background:#e0f2fe':'';
+        html += `<div class="top-week-group"><div class="top-week-head" style="${wbg}"><span class="week-num" style="${w==='unscheduled'?'background:#0891b2':''}">${wlabel}</span> ${byWeek[w].length}件</div>`;
+        byWeek[w].forEach(f=>{
+          const dt = f.date ? new Date(f.date).toLocaleDateString('ja-JP',{month:'2-digit',day:'2-digit'}) : '';
+          html += `<div class="top-week-item"><div class="item-name">${f.type==='pdf'?'📄':'📝'} ${(f.name||'').replace(/</g,'&lt;')}</div><div class="item-meta">${dt} ${(f.summary||'').replace(/</g,'&lt;')}</div></div>`;
+        });
+        html += '</div>';
+      });
+      ew.innerHTML = html;
+    }
   }
 }
 
