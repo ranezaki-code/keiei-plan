@@ -396,7 +396,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .sessaku-order-row{display:grid;grid-template-columns:1fr 70px 30px;gap:4px;margin-bottom:3px}
 .sessaku-order-row input{font-size:11px;padding:3px 6px}
 .sessaku-order-del{background:none;border:1px solid #fecaca;color:#dc2626;border-radius:3px;font-size:10px;padding:1px 5px;cursor:pointer}
-/* v23.5: トップページは 5 要素のみ */
+/* v23.6: トップページは 5 要素のみ */
 .top-month-bar{text-align:center;font-size:14px;color:#6b7280;padding:14px 0 6px;margin-bottom:8px}
 .top-month-bar b{font-size:18px;color:#1e3a5f;margin:0 4px}
 .top-block{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px}
@@ -472,13 +472,18 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .src-add-item b{font-size:13px;color:#1e3a5f;font-weight:600}
 .src-add-item small{font-size:10px;color:#6b7280}
 
-.src-list{display:flex;flex-direction:column;gap:0;border-top:1px solid var(--border)}
+.src-list{display:flex;flex-direction:column;gap:0}
 .src-empty{padding:40px 20px;text-align:center;color:#9ca3af;font-size:13px;background:#fafafa;border:1px dashed var(--border);border-radius:8px}
-.src-row{display:grid;grid-template-columns:24px 28px 1fr auto auto;gap:10px;align-items:center;padding:12px 4px;border-bottom:1px solid var(--border);transition:background .1s}
+.src-group{margin-bottom:16px}
+.src-group:last-child{margin-bottom:0}
+.src-group-head{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f9fafb;border-radius:8px;margin-bottom:6px}
+.src-group-icon{font-size:18px}
+.src-group-label{font-weight:700;color:#1e3a5f;font-size:13px;flex:1}
+.src-group-count{font-size:11px;color:#6b7280;background:#fff;padding:3px 10px;border-radius:10px;border:1px solid var(--border)}
+.src-row{display:grid;grid-template-columns:24px 1fr auto auto;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);transition:background .1s;margin-left:14px}
 .src-row:hover{background:#fafbff}
 .src-row:last-child{border-bottom:0}
 .src-check{cursor:pointer;width:18px;height:18px}
-.src-row .src-icon{font-size:18px;text-align:center}
 .src-row .src-name-block{overflow:hidden}
 .src-row .src-name{font-size:13px;color:#1e3a5f;font-weight:600;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .src-row .src-meta{font-size:10px;color:#9ca3af;margin-top:2px}
@@ -795,7 +800,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v23.5</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v23.6</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
@@ -2229,7 +2234,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v23.5';
+const APP_VERSION='v23.6';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -4555,7 +4560,7 @@ function renderVsCharts(){
 
 // ===== v23.4: ホームダッシュボード =====
 function renderHomeDashboard(){
-  // v23.5: トップページは 5 要素のみ
+  // v23.6: トップページは 5 要素のみ
   const planMonthEl = document.getElementById('cmp-plan-month');
   if(!planMonthEl)return;
   const planMonth = state.planMonth || (state.seisan?.month ? _addMonths(state.seisan.month, 2) : '—');
@@ -8752,54 +8757,64 @@ function deleteFileUpload(type, idx){
 }
 function renderFileUploads(){
   _ensureFileUploads();
-  // v23.4: NotebookLM風 統一ソース一覧
+  // v23.6: NotebookLM風 — 種別ごとにグループ化
   const list = document.getElementById('src-list');
   if(!list)return;
   const TYPE_META = {
-    seisan:    {icon:'📒', label:'精算書'},
-    catreport: {icon:'📦', label:'週次レポート'},
-    booklet:   {icon:'📘', label:'お店作り冊子'},
-    syohou:    {icon:'💊', label:'月次処方箋'},
-    external:  {icon:'🌤️', label:'外部要因'}
+    seisan:    {icon:'📒', label:'精算書',                     color:'#2196f3'},
+    catreport: {icon:'📦', label:'週次お店づくりレポート',       color:'#4caf50'},
+    booklet:   {icon:'📘', label:'お店作り冊子',                color:'#ff9800'},
+    syohou:    {icon:'💊', label:'月次処方箋',                  color:'#9c27b0'},
+    external:  {icon:'🌤️', label:'外部要因／商圏調査',          color:'#06b6d4'}
   };
-  const allRows = [];
-  ['seisan','catreport','booklet','syohou','external'].forEach(t=>{
-    (state.fileUploads[t]||[]).forEach((f,idx)=>allRows.push({...f, type:t, _idx:idx}));
-  });
-  allRows.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  // カウント
+  const TYPE_ORDER = ['seisan','catreport','booklet','syohou','external'];
+
+  let totalCount = 0;
+  TYPE_ORDER.forEach(t=>{ totalCount += (state.fileUploads[t]||[]).length; });
   const cnt = document.getElementById('src-count');
-  if(cnt)cnt.textContent = `${allRows.length} 件`;
-  if(!allRows.length){
-    list.innerHTML = `<div class="src-empty">📚 ソース未登録<br><span style="font-size:11px;color:#9ca3af">右上の「+ ファイル追加」から精算書・週次レポート・お店作り冊子などをアップロードしてください</span></div>`;
+  if(cnt)cnt.textContent = `${totalCount} 件`;
+  if(totalCount === 0){
+    list.innerHTML = `<div class="src-empty">📚 ソース未登録<br><span style="font-size:11px;color:#9ca3af">右上の「+ ファイル追加」から精算書・週次レポート・お店作り冊子などをアップロード</span></div>`;
     return;
   }
-  list.innerHTML = allRows.map(r=>{
-    const meta = TYPE_META[r.type] || {icon:'📄', label:r.type};
-    const dt = new Date(r.date).toLocaleDateString('ja-JP',{month:'2-digit',day:'2-digit'});
-    const fnEsc = (r.name||'').replace(/</g,'&lt;');
-    return `<div class="src-row">
-      <input type="checkbox" class="src-check" checked title="AI 提案で参照する">
-      <div class="src-icon" title="${meta.label}">${meta.icon}</div>
-      <div class="src-name-block">
-        <div class="src-name" title="${fnEsc}">${fnEsc}</div>
-        <div class="src-meta">${meta.label} ／ ${r.month||'—'} ／ ${(r.size/1024/1024).toFixed(2)}MB</div>
-      </div>
-      <div class="src-date">${dt}</div>
-      <button class="src-menu-btn" onclick="deleteFileUpload('${r.type}',${r._idx})" title="削除">🗑️</button>
-    </div>`;
-  }).join('');
+
+  let html = '';
+  TYPE_ORDER.forEach(t=>{
+    const arr = (state.fileUploads[t]||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    if(!arr.length)return;
+    const meta = TYPE_META[t];
+    html += `<div class="src-group">
+      <div class="src-group-head" style="border-left:3px solid ${meta.color}">
+        <span class="src-group-icon">${meta.icon}</span>
+        <span class="src-group-label">${meta.label}</span>
+        <span class="src-group-count">${arr.length}件</span>
+      </div>`;
+    arr.forEach((f,idx)=>{
+      const dt = new Date(f.date).toLocaleDateString('ja-JP',{month:'2-digit',day:'2-digit'});
+      const fnEsc = (f.name||'').replace(/</g,'&lt;');
+      html += `<div class="src-row">
+        <input type="checkbox" class="src-check" checked title="AI 提案で参照する">
+        <div class="src-name-block">
+          <div class="src-name" title="${fnEsc}">${fnEsc}</div>
+          <div class="src-meta">${f.month||'—'} ／ ${(f.size/1024/1024).toFixed(2)}MB</div>
+        </div>
+        <div class="src-date">${dt}</div>
+        <button class="src-menu-btn" onclick="deleteFileUpload('${t}',${idx})" title="削除">🗑️</button>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  list.innerHTML = html;
+
   // クラウド同期 details に既存の tab9 内容を移動（初回のみ）
   const settingsHost = document.getElementById('src-settings-host');
   if(settingsHost && !settingsHost.dataset.moved){
     const tab9 = document.getElementById('tab9');
     if(tab9){
-      // tab9 の中身全体（card 群）を移動
       while(tab9.firstChild){ settingsHost.appendChild(tab9.firstChild); }
       settingsHost.dataset.moved = '1';
     }
   }
-  // 外部要因テキスト要約（折り畳み内に隠す）— 旧 UI は不要なので削除
 }
 
 // 月次処方箋PDFハンドラ（仮：当面はファイル登録のみ。AICOドライバ自動入力は後続実装）
