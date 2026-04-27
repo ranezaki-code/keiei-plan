@@ -348,7 +348,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .aico-driver-table .judge-ok{background:#10b981}
 .aico-driver-table .judge-up{background:#f59e0b}
 .aico-driver-table .support-note{font-size:9px;color:#475569;margin-top:2px;display:block;font-weight:500}
-/* v22.0: 計算ブレークダウン */
+/* v23.0: 計算ブレークダウン */
 .breakdown-body.open{display:block!important}
 .breakdown-step{display:grid;grid-template-columns:30px 1fr 100px 140px;gap:6px;padding:6px 8px;border-bottom:1px solid var(--border);font-size:12px;align-items:center}
 .breakdown-step.section{background:#1e3a5f;color:#fff;font-weight:700;grid-template-columns:1fr;border-radius:4px;margin-top:6px}
@@ -396,7 +396,36 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .sessaku-order-row{display:grid;grid-template-columns:1fr 70px 30px;gap:4px;margin-bottom:3px}
 .sessaku-order-row input{font-size:11px;padding:3px 6px}
 .sessaku-order-del{background:none;border:1px solid #fecaca;color:#dc2626;border-radius:3px;font-size:10px;padding:1px 5px;cursor:pointer}
-/* v22.0: ホームダッシュボード */
+/* v23.0: 比較タブ（シンプル） */
+.cmp-header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:14px;font-size:14px}
+.cmp-header b{font-size:18px;color:#1e3a5f}
+.cmp-month-sep{color:#9ca3af;font-size:11px}
+.cmp-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:14px}
+.cmp-kpi{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px}
+.cmp-kpi-main{border:2px solid #f59e0b;background:linear-gradient(180deg,#fffbeb 0%,#fff 100%)}
+.cmp-kpi-label{font-size:13px;font-weight:700;color:#1e3a5f;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.cmp-kpi-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:13px}
+.cmp-kpi-row .cmp-side{color:#6b7280;font-size:11px;min-width:32px}
+.cmp-kpi-row .cmp-val{font-family:monospace;font-weight:600;color:#1e3a5f}
+.cmp-kpi-rate{font-size:22px;font-weight:700;text-align:right;margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
+.cmp-kpi-rate.good{color:#10b981}
+.cmp-kpi-rate.warn{color:#f59e0b}
+.cmp-kpi-rate.bad{color:#dc2626}
+.cmp-details{background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.cmp-details>summary{cursor:pointer;padding:12px 16px;font-weight:700;color:#1e3a5f;background:#f9fafb;list-style:none;display:flex;align-items:center;gap:6px}
+.cmp-details>summary:hover{background:#f3f4f6}
+.cmp-details>summary::before{content:'▶';font-size:9px;color:#6b7280;transition:transform .15s}
+.cmp-details[open]>summary::before{transform:rotate(90deg)}
+.cmp-details>*:not(summary){padding:14px}
+.cmp-cat-table{width:100%;border-collapse:collapse;font-size:12px}
+.cmp-cat-table th,.cmp-cat-table td{border-bottom:1px solid var(--border);padding:6px 10px;text-align:right}
+.cmp-cat-table th{background:#f9fafb;font-weight:700;font-size:11px;color:#6b7280}
+.cmp-cat-table td:first-child,.cmp-cat-table th:first-child{text-align:left;font-weight:600}
+.cmp-cat-table .rate-good{color:#10b981;font-weight:700}
+.cmp-cat-table .rate-warn{color:#f59e0b;font-weight:700}
+.cmp-cat-table .rate-bad{color:#dc2626;font-weight:700}
+
+/* v23.0: ホームダッシュボード（廃止予定・互換のため残置） */
 .home-banner{background:linear-gradient(135deg,#ede9fe 0%,#dbeafe 50%,#ccfbf1 100%);border:1px solid #c4b5fd;padding:18px}
 .home-banner-grid{display:grid;grid-template-columns:auto 1fr auto;gap:24px;align-items:center;flex-wrap:wrap}
 @media(max-width:760px){.home-banner-grid{grid-template-columns:1fr}}
@@ -670,15 +699,15 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="header">
     <h1>経営計画管理システム</h1>
     <span style="font-size:12px;opacity:.8">ローソン松本新村店</span>
-    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v22.0</span>
+    <span id="app-version" style="font-size:10px;opacity:.6;margin-left:6px;padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px">v23.0</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span id="header-date" style="font-size:11px;opacity:.7"></span>
     </div>
   </div>
   <div id="tabs">
-    <button class="tab-btn active" data-group="home" onclick="showGroup('home')">🏠 ホーム</button>
-    <button class="tab-btn" data-group="jisseki" onclick="showGroup('jisseki')">📒 実績</button>
-    <button class="tab-btn" data-group="plan" onclick="showGroup('plan')">📦 計画</button>
+    <button class="tab-btn active" data-group="home" onclick="showGroup('home')">📊 比較</button>
+    <button class="tab-btn" data-group="jisseki" onclick="showGroup('jisseki')">📥 入力</button>
+    <button class="tab-btn" data-group="plan" onclick="showGroup('plan')">🎯 計画</button>
     <button class="tab-btn" data-group="other" onclick="showGroup('other')">📁 ファイル</button>
     <button class="tab-btn" data-group="manual" onclick="showGroup('manual')">📖 ヘルプ</button>
   </div>
@@ -698,99 +727,58 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   <div id="content">
 
     <!-- ============================================================ -->
-    <!-- ===== グループ 🏠 ホーム（v22.0 新設・ランディング） ===== -->
+    <!-- ===== グループ 📊 比較（v23.0 — シンプルな計画 vs 実績） ===== -->
     <!-- ============================================================ -->
     <div class="group active" id="group-home">
       <div class="tab-panel active" id="tab-home">
-        <!-- ヘッダーバナー: 月の進捗 -->
-        <div class="card home-banner">
-          <div class="home-banner-grid">
-            <div class="home-banner-month">
-              <div class="home-banner-label">📅 計画月</div>
-              <div class="home-banner-value" id="home-plan-month">—</div>
-              <div class="home-banner-sub" id="home-plan-month-sub">—</div>
-            </div>
-            <div class="home-banner-progress">
-              <div class="home-banner-label">月の進捗</div>
-              <div class="home-progress-bar"><div class="home-progress-fill" id="home-progress-fill" style="width:0%"></div></div>
-              <div class="home-banner-sub" id="home-progress-text">—</div>
-            </div>
-            <div class="home-banner-actions">
-              <button class="btn-primary btn-sm" onclick="showGroup('other');showSub('other','files')" title="ファイル管理タブを開く">📄 PDF取込</button>
-              <button class="btn-primary btn-sm" onclick="showGroup('plan');showSub('plan','plan-ai')" style="background:#7c3aed">🤖 AI提案</button>
-            </div>
+        <!-- 月情報（最小限） -->
+        <div class="cmp-header">
+          <span class="cmp-month-plan">📅 <b id="cmp-plan-month">—</b></span>
+          <span class="cmp-month-sep">←計画 ／ 実績→</span>
+          <span class="cmp-month-act">✅ <b id="cmp-actual-month">—</b></span>
+        </div>
+
+        <!-- 主要KPI 4枚（計画 vs 実績 vs 達成率） -->
+        <div class="cmp-kpi-grid">
+          <div class="cmp-kpi" id="cmp-kpi-uriage">
+            <div class="cmp-kpi-label">💰 売上</div>
+            <div class="cmp-kpi-row"><span class="cmp-side">計画</span><span class="cmp-val" id="cmp-uriage-plan">—</span></div>
+            <div class="cmp-kpi-row"><span class="cmp-side">実績</span><span class="cmp-val" id="cmp-uriage-act">—</span></div>
+            <div class="cmp-kpi-rate" id="cmp-uriage-rate">—</div>
+          </div>
+          <div class="cmp-kpi" id="cmp-kpi-arari">
+            <div class="cmp-kpi-label">📈 粗利</div>
+            <div class="cmp-kpi-row"><span class="cmp-side">計画</span><span class="cmp-val" id="cmp-arari-plan">—</span></div>
+            <div class="cmp-kpi-row"><span class="cmp-side">実績</span><span class="cmp-val" id="cmp-arari-act">—</span></div>
+            <div class="cmp-kpi-rate" id="cmp-arari-rate">—</div>
+          </div>
+          <div class="cmp-kpi cmp-kpi-main" id="cmp-kpi-rieki">
+            <div class="cmp-kpi-label">⭐ 店利益</div>
+            <div class="cmp-kpi-row"><span class="cmp-side">計画</span><span class="cmp-val" id="cmp-rieki-plan">—</span></div>
+            <div class="cmp-kpi-row"><span class="cmp-side">実績</span><span class="cmp-val" id="cmp-rieki-act">—</span></div>
+            <div class="cmp-kpi-rate" id="cmp-rieki-rate">—</div>
+          </div>
+          <div class="cmp-kpi" id="cmp-kpi-eigyo">
+            <div class="cmp-kpi-label">📉 営業費</div>
+            <div class="cmp-kpi-row"><span class="cmp-side">計画</span><span class="cmp-val" id="cmp-eigyo-plan">—</span></div>
+            <div class="cmp-kpi-row"><span class="cmp-side">実績</span><span class="cmp-val" id="cmp-eigyo-act">—</span></div>
+            <div class="cmp-kpi-rate" id="cmp-eigyo-rate">—</div>
           </div>
         </div>
 
-        <!-- 次にやることガイド（状態ベース・動的） -->
-        <div id="home-next-step" class="card" style="display:none;background:linear-gradient(90deg,#fef3c7 0%,#dcfce7 100%);border:1px solid #fde047"></div>
+        <!-- カテゴリ別 計画 vs 実績（簡潔版） -->
+        <details class="cmp-details" open>
+          <summary>カテゴリ別 計画 vs 実績</summary>
+          <div class="overflow-auto">
+            <table class="cmp-cat-table" id="cmp-cat-table"></table>
+          </div>
+        </details>
 
-        <!-- 主要KPI -->
-        <div class="card">
-          <div class="section-title">📊 主要KPI（計画月の確定実績ベース）</div>
-          <div class="home-kpi-grid">
-            <div class="home-kpi-card good" id="home-kpi-uriage" onclick="showGroup('jisseki');showSub('jisseki','seisan')">
-              <div class="home-kpi-label">💰 売上</div>
-              <div class="home-kpi-value">—</div>
-              <div class="home-kpi-sub">—</div>
-            </div>
-            <div class="home-kpi-card good" id="home-kpi-arari" onclick="showGroup('jisseki');showSub('jisseki','seisan')">
-              <div class="home-kpi-label">📈 粗利</div>
-              <div class="home-kpi-value">—</div>
-              <div class="home-kpi-sub">—</div>
-            </div>
-            <div class="home-kpi-card accent" id="home-kpi-rieki" onclick="showGroup('jisseki');showSub('jisseki','seisan')">
-              <div class="home-kpi-label">⭐ 店利益</div>
-              <div class="home-kpi-value">—</div>
-              <div class="home-kpi-sub">—</div>
-            </div>
-            <div class="home-kpi-card" id="home-kpi-roi" onclick="showGroup('plan');showSub('plan','plan-sessaku')">
-              <div class="home-kpi-label">🎯 施策ROI</div>
-              <div class="home-kpi-value">—</div>
-              <div class="home-kpi-sub">—</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- AI 最新提案 + 達成度 -->
-        <div class="home-2col">
-          <div class="card">
-            <div class="flex justify-between items-center mb-2">
-              <div class="section-title" style="margin:0">🤖 最新の AI 計画提案</div>
-              <button class="btn-secondary btn-sm" onclick="showGroup('plan');showSub('plan','plan-ai')">→ AI タブを開く</button>
-            </div>
-            <div id="home-ai-summary"></div>
-          </div>
-          <div class="card">
-            <div class="flex justify-between items-center mb-2">
-              <div class="section-title" style="margin:0">🎯 計画達成度</div>
-              <button class="btn-secondary btn-sm" onclick="showGroup('jisseki');showSub('jisseki','vs')">→ 比較を開く</button>
-            </div>
-            <div id="home-tassei"></div>
-          </div>
-        </div>
-
-        <!-- クイックアクション -->
-        <div class="card">
-          <div class="section-title">⚡ クイックアクション</div>
-          <div class="home-quick-grid">
-            <button class="home-quick-btn" onclick="showGroup('jisseki');showSub('jisseki','seisan')">📒<br>精算書を入力</button>
-            <button class="home-quick-btn" onclick="showGroup('plan');showSub('plan','plan-cat')">📦<br>カテゴリ計画</button>
-            <button class="home-quick-btn" onclick="showGroup('plan');showSub('plan','plan-sessaku')">🎯<br>施策を追加</button>
-            <button class="home-quick-btn" onclick="showGroup('plan');showSub('plan','plan-ai')">🤖<br>AI に計画させる</button>
-            <button class="home-quick-btn" onclick="showGroup('plan');showSub('plan','plan-qa')">💬<br>AI に質問</button>
-            <button class="home-quick-btn" onclick="showGroup('other');showSub('other','files')">📁<br>ファイル管理</button>
-          </div>
-        </div>
-
-        <!-- 最近のQ&A -->
-        <div class="card">
-          <div class="flex justify-between items-center mb-2">
-            <div class="section-title" style="margin:0">💬 最近の Q&A</div>
-            <button class="btn-secondary btn-sm" onclick="showGroup('plan');showSub('plan','plan-qa')">→ Q&A を開く</button>
-          </div>
-          <div id="home-qa-recent"></div>
-        </div>
+        <!-- グラフ -->
+        <details class="cmp-details">
+          <summary>📊 比較チャート</summary>
+          <div class="chart-canvas-wrap"><canvas id="cmp-chart"></canvas></div>
+        </details>
       </div>
     </div>
 
@@ -885,7 +873,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
         </div>
       </div>
 
-      <!-- ===== v22.0: 店利益 計算ブレークダウン（差額の原因が見える） ===== -->
+      <!-- ===== v23.0: 店利益 計算ブレークダウン（差額の原因が見える） ===== -->
       <div class="card">
         <div class="flex justify-between items-center mb-2">
           <div class="section-title" style="margin:0">🔍 店利益 計算ブレークダウン<button class="help-btn" data-help-title="計算式の見方" data-help="自動算出された店利益と本部記載の店利益が乖離する場合、ここで原因を特定できます。<br><br><b>よくある誤入力</b><br>① 雑益(4030) に「雑益計（本部負担込み）」を入れていて、別欄にも見切支援・電気支援を入れている → <u>二重計上</u><br>② 5030/5040 に <u>原価ベース</u>の値を入れている（正しくは売価ベース）<br>③ 6030/6040 に 5030/5040 と <u>同じ売価値</u>を入れている（正しくは原価相当額）<br>④ 期首・期末在庫高の入力モレ">?</button></div>
@@ -2216,7 +2204,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
 <script>
 // ===== APP VERSION =====
-const APP_VERSION='v22.0';
+const APP_VERSION='v23.0';
 
 // ===== CLAUDE API (Anthropic Vision OCR) =====
 const CLAUDE_KEY_STORAGE='keiei_anthropic_key_v1';
@@ -2988,30 +2976,30 @@ let state={
     sessaku_booklet:{filename:'',uploaded_at:'',items:[]}},
   daily:{t_asa_u:0,t_asa_k:0,t_asa_u_nen:100,t_asa_k_nen:100,t_hiru_u:0,t_hiru_k:0,t_hiru_u_nen:100,t_hiru_k_nen:100,t_yu_u:0,t_yu_k:0,t_yu_u_nen:100,t_yu_k_nen:100,youbi:DAYS.map(d=>({day:d,nishin:0,nishin_diff:0,kyaku:0,kyaku_diff:0,tanka:0,tanka_diff:0}))},
   cats:CATS.reduce((o,c)=>({...o,[c]:{sm_u:0,mp_u:0,sw_u:0,kp_u:0,sw_uh:0,sm_a:0,mp_a:0,sw_a:0,kp_a:0,aico_u:0,aico_a:0,aico_ne:0,aico_hai:0,driver_h:1,driver_d:2,driver_hantei:'処方箋通',driver_riyu:''}}),{}),
-  // v22.0: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）の入力用ストア
+  // v23.0: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）の入力用ストア
   // 構造: catReport[section][row][col_curr|col_prev] = number   例 catReport.dept['米飯'].sales_curr
   catReport:{
     period:{curr_start:'',curr_end:'',prev_start:'',prev_end:''},
     dept:DEPT_ROWS.reduce((o,r)=>({...o,[r]:{}}),{}),
     alco:ALCO_ROWS.reduce((o,r)=>({...o,[r]:{}}),{})
   },
-  // v22.0: 処方箋/ドライバ次週計画（自動判定: 処方箋通／上方修正）
+  // v23.0: 処方箋/ドライバ次週計画（自動判定: 処方箋通／上方修正）
   aicoDriver:{},
-  // v22.0: 月次ファイル管理（一元アップロード履歴） + v22.0: external（外部要因）追加
+  // v23.0: 月次ファイル管理（一元アップロード履歴） + v23.0: external（外部要因）追加
   fileUploads:{seisan:[],catreport:[],booklet:[],syohou:[],external:[]},
-  // v22.0: 外部要因テキスト（PDF抽出・要約）
+  // v23.0: 外部要因テキスト（PDF抽出・要約）
   externalFactors:[],
-  // v22.0: AI計画提案
+  // v23.0: AI計画提案
   aiProposals:[],
   aiPromptCustom:'',
-  // v22.0: Q&A メモ（NotebookLM代替）
+  // v23.0: Q&A メモ（NotebookLM代替）
   qaLog:[],
-  // v22.0: 世界一挑戦支援
+  // v23.0: 世界一挑戦支援
   sekaiichi:{challenges:[]},
-  // v22.0: 計画月（プラニング対象） — state.seisan.month は「確定月（精算書月）」
+  // v23.0: 計画月（プラニング対象） — state.seisan.month は「確定月（精算書月）」
   // 速報月は確定月の +1 として自動算出
   planMonth:'',
-  // v22.0: 月別データアーカイブ（対象月切替時に過去月のデータを保持）
+  // v23.0: 月別データアーカイブ（対象月切替時に過去月のデータを保持）
   byMonth:{},
   sessaku:[],
   layout:LAYOUT_AREAS.map(a=>({area:a,shoten:'',point:''})),
@@ -3170,7 +3158,7 @@ function showTab(n){
 }
 
 // グローバル月セレクタ
-// ===== v22.0: 月別データアーカイブ =====
+// ===== v23.0: 月別データアーカイブ =====
 // state.byMonth = { 'YYYY-MM': { seisan, seisan_prev, seisan_lastyear, monthly, cats,
 //                                 catReport, aicoDriver, sessaku, fileUploads, daily } }
 // 対象月を切り替えると、現在の月別データを archive に退避し、新しい月のデータを読み込む。
@@ -3304,7 +3292,7 @@ function updateGlobalMonthInfo(){
 function onPlanMonthChange(){
   const v = document.getElementById('plan-month')?.value || '';
   state.planMonth = v;
-  // v22.0: 計画月を変えたら確定月（精算書月）= 計画月-2 を自動セット
+  // v23.0: 計画月を変えたら確定月（精算書月）= 計画月-2 を自動セット
   if(v){
     const auto = _addMonths(v, -2);
     const oldMonth = state.seisan?.month || '';
@@ -3325,7 +3313,7 @@ function onPlanMonthChange(){
   try{ renderAIProposalsTab && renderAIProposalsTab(); }catch(e){}
 }
 
-// v22.0: 精算書テーブルのヘッダーを動的に更新
+// v23.0: 精算書テーブルのヘッダーを動的に更新
 function updateSeisanHeaders(){
   const km = state.seisan?.month || '';
   const prevM = km ? _addMonths(km, -1) : '';
@@ -3362,7 +3350,7 @@ function syncNishinUriage(src){
 }
 
 // ===== 精算書：動的レンダリング =====
-// v22.0: 上書き可能な subtotal キー（本部精算書記載値を直接入力できる）
+// v23.0: 上書き可能な subtotal キー（本部精算書記載値を直接入力できる）
 const SEISAN_OVERRIDABLE = new Set(['arari','_fcnyu','_tenrieki']);
 
 function renderSeisanTable(){
@@ -3373,7 +3361,7 @@ function renderSeisanTable(){
     const k=r.key, cls=(r.subtotal?'s-subtotal ':'')+(r.highlight?'s-highlight ':'')+(r.final?'s-final ':'');
     const nameCell=`<td class="s-name">${escapeHtml(r.name)}</td><td class="s-code">${r.code||''}</td>`;
     if(r.subtotal){
-      // v22.0: arari / _fcnyu / _tenrieki は本部精算書記載値の上書き入力可
+      // v23.0: arari / _fcnyu / _tenrieki は本部精算書記載値の上書き入力可
       if(SEISAN_OVERRIDABLE.has(k)){
         const nameCellSub=`<td class="s-name">${escapeHtml(r.name)} <span style="font-size:9px;color:#7c3aed;background:#f5f3ff;padding:1px 4px;border-radius:8px;margin-left:4px">本部記載値</span></td><td class="s-code">${r.code||''}</td>`;
         const inCurr=`<input type="text" id="s-${k}-kisai" inputmode="numeric" placeholder="自動算出" oninput="onSeisanKisaiInput('${k}','curr',this.value)" title="本部精算書に書かれている値を直接入力。空欄なら自動算出値を使用。">`;
@@ -3403,7 +3391,7 @@ function renderSeisanTable(){
   tb.innerHTML=rows;
 }
 
-// v22.0: 上書き入力ハンドラ
+// v23.0: 上書き入力ハンドラ
 function onSeisanKisaiInput(key, col, val){
   const n = parseNum(val);
   const scale = UNIT.factor ? 1/UNIT.factor : 1;
@@ -3438,7 +3426,7 @@ function sumCalc(row,bucket){
   return s;
 }
 
-// v22.0: スマート雑益計（4030に「雑益計」が入っている場合の二重計上を回避）
+// v23.0: スマート雑益計（4030に「雑益計」が入っている場合の二重計上を回避）
 function _smartZatsukei(bucket){
   if(!bucket)return 0;
   const z = bucket.zatsuyeki||0, m = bucket.mikiri_shien||0, d = bucket.denki_shien||0;
@@ -3464,7 +3452,7 @@ function clearSeisanCol(col){
   else if(col==='ly')target=state.seisan_lastyear;
   else target=state.seisan;
   SEISAN_KEYS.forEach(k=>{target[k]=0;});
-  // v22.0: 上書き値（arari_kisai / _fcnyu_kisai / _tenrieki_kisai）も削除
+  // v23.0: 上書き値（arari_kisai / _fcnyu_kisai / _tenrieki_kisai）も削除
   ['arari_kisai','_fcnyu_kisai','_tenrieki_kisai'].forEach(k=>{ delete target[k]; });
   restoreSeisanInputs();calcSeisan();saveAll();
 }
@@ -3483,7 +3471,7 @@ function restoreSeisanInputs(){
     if(ep)ep.value=vp?Math.round(vp).toLocaleString('ja-JP'):'';
     if(el)el.value=vl?Math.round(vl).toLocaleString('ja-JP'):'';
   });
-  // v22.0: 上書き入力欄（arari_kisai 等）の復元
+  // v23.0: 上書き入力欄（arari_kisai 等）の復元
   if(typeof SEISAN_OVERRIDABLE!=='undefined'){
     SEISAN_OVERRIDABLE.forEach(k=>{
       const fk = k+'_kisai';
@@ -3516,7 +3504,7 @@ function calcSeisan(){
       vPrev=nissu?(buckets.prev.uriage||0)/nissu:0;
       vLy=nissu?(buckets.ly.uriage||0)/nissu:0;
     }else if(r.subtotal){
-      // v22.0: 雑益計と店利益はスマート判定（二重計上回避）
+      // v23.0: 雑益計と店利益はスマート判定（二重計上回避）
       if(k === '_zatsukei'){
         vCurr=_smartZatsukei(buckets.curr);
         vPrev=_smartZatsukei(buckets.prev);
@@ -3540,7 +3528,7 @@ function calcSeisan(){
       const elC=document.getElementById('s-'+k+'-curr-v');
       const elP=document.getElementById('s-'+k+'-prev-v');
       const elL=document.getElementById('s-'+k+'-ly-v');
-      // v22.0: 上書き入力可能項目は「計算: ¥XXX」のヒント表示 + 入力値との乖離を警告
+      // v23.0: 上書き入力可能項目は「計算: ¥XXX」のヒント表示 + 入力値との乖離を警告
       if(typeof SEISAN_OVERRIDABLE!=='undefined' && SEISAN_OVERRIDABLE.has(k)){
         const kisaiCurr = state.seisan?.[k+'_kisai'];
         const kisaiPrev = state.seisan_prev?.[k+'_kisai'];
@@ -3593,7 +3581,7 @@ function calcSeisan(){
   // 既存サマリーカード更新（旧ID: r-eigyo, r-rieki, r-urihenritsu, r-toshi, r-nishin…）
   const s=state.seisan;
   const u=(s.uriage||0)+(s.sonotauriage||0);  // 売上高
-  // v22.0: 自動算出値（雑益計＆店利益はスマート判定済み）
+  // v23.0: 自動算出値（雑益計＆店利益はスマート判定済み）
   const arari_auto = sumCalc(SEISAN_ROWS.find(r=>r.key==='arari'),s);
   const fcnyu_auto = sumCalc(SEISAN_ROWS.find(r=>r.key==='_fcnyu'),s);
   const eigyo = sumCalc(SEISAN_ROWS.find(r=>r.key==='_eigyokei'),s);
@@ -3603,7 +3591,7 @@ function calcSeisan(){
   const _zatsukeiCombinedDetected = (_zZ > 50000) && (_zM>0 || _zD>0) && (_zZ >= _zM + _zD);
   window._zatsukeiCombinedDetected = _zatsukeiCombinedDetected;
   window._zatsukei_smart = zatsukei_smart;
-  // v22.0: 上書き値（_kisai）が入力されていればそちらを真値として採用
+  // v23.0: 上書き値（_kisai）が入力されていればそちらを真値として採用
   const arari = (s.arari_kisai != null) ? s.arari_kisai : arari_auto;
   const fcnyu = (s._fcnyu_kisai != null) ? s._fcnyu_kisai : fcnyu_auto;
   const rieki = (s._tenrieki_kisai != null) ? s._tenrieki_kisai : rieki_auto;
@@ -3615,7 +3603,7 @@ function calcSeisan(){
   const nishin=u?u/nissu:0;
   const urihenR=(s.uriage||0)?((s.urihen||0)/(s.uriage||1)*100).toFixed(2):'0.00';
   setText('r-eigyo',fmt(eigyo*UNIT.factor));
-  // v22.0: 上書き値が入っていれば 📒 マーカーを付けて表示
+  // v23.0: 上書き値が入っていれば 📒 マーカーを付けて表示
   if(useOverrideRieki){
     const el = document.getElementById('r-rieki');
     if(el){
@@ -3631,7 +3619,7 @@ function calcSeisan(){
   setText('r-toshi',fmt(toshi*UNIT.factor));
   setText('r-nishin',nishin?fmt(nishin*UNIT.factor):'¥—');
   setText('r-nishin-sub',nissu+'日換算');
-  // v22.0: 旧フィールドも override-aware で書き戻し（下流で state.seisan.arari を読む箇所のため）
+  // v23.0: 旧フィールドも override-aware で書き戻し（下流で state.seisan.arari を読む箇所のため）
   s.arari = arari;
   const invCard=document.getElementById('box-invest');
   if(invCard)invCard.className='stat-card '+(toshi>=0?'good':'bad');
@@ -3641,7 +3629,7 @@ function calcSeisan(){
   // リアルタイムグラフ更新
   try{renderSeisanCharts();}catch(e){}
   try{if(document.getElementById('tab-vs')?.classList.contains('active'))renderVsCharts();}catch(e){}
-  // v22.0: 計算ブレークダウンも再描画
+  // v23.0: 計算ブレークダウンも再描画
   try{renderSeisanBreakdown();}catch(e){}
   saveAll();
 }
@@ -4238,7 +4226,7 @@ function renderSeisanCharts(){
     const ctx=document.getElementById('chart-seisan-kpi');
     if(ctx){
       _chartDestroy('chart-seisan-kpi');
-      // v22.0: 採用済みAI提案があればオーバーレイ
+      // v23.0: 採用済みAI提案があればオーバーレイ
       const aiP = (typeof _latestAdoptedAIProposal==='function') ? _latestAdoptedAIProposal() : null;
       const aiPr = aiP?.proposal || null;
       const datasets = [
@@ -4542,185 +4530,110 @@ function renderVsCharts(){
   }
 }
 
-// ===== v22.0: ホームダッシュボード =====
+// ===== v23.0: ホームダッシュボード =====
 function renderHomeDashboard(){
-  const el = document.getElementById('home-plan-month');
-  if(!el)return;
+  // v23.0: シンプルな比較タブ
+  const planMonthEl = document.getElementById('cmp-plan-month');
+  if(!planMonthEl)return;
 
-  // 計画月 / 確定月
   const planMonth = state.planMonth || (state.seisan?.month ? _addMonths(state.seisan.month, 2) : '—');
-  const kakuteiMonth = state.seisan?.month || '—';
-  el.textContent = planMonth;
-  document.getElementById('home-plan-month-sub').innerHTML = `✅ 確定月（精算書）: <b>${kakuteiMonth}</b>`;
+  const actualMonth = state.seisan?.month || '—';
+  planMonthEl.textContent = planMonth;
+  document.getElementById('cmp-actual-month').textContent = actualMonth;
 
-  // 月の進捗バー
-  const today = new Date();
-  const dayOfMonth = today.getDate();
-  const lastDay = new Date(today.getFullYear(), today.getMonth()+1, 0).getDate();
-  const progressPct = (dayOfMonth / lastDay) * 100;
-  document.getElementById('home-progress-fill').style.width = progressPct + '%';
-  document.getElementById('home-progress-text').textContent = `${today.getMonth()+1}月 ${dayOfMonth}/${lastDay}日（${progressPct.toFixed(0)}%）`;
-
-  // v22.0: 状態に基づく動的「次にやること」
-  const nextStepEl = document.getElementById('home-next-step');
-  if(nextStepEl){
-    const sCheck = state.seisan||{};
-    const hasSeisan = (sCheck.uriage||0) > 0;
-    const hasAIProposal = (state.aiProposals||[]).length > 0;
-    const hasAdopted = (state.aiProposals||[]).some(p=>p.status==='adopted');
-    const hasSessaku = (state.sessaku||[]).length > 0;
-    const hasMonthlyTarget = (state.monthly?.target_uriage||0) > 0;
-
-    let stepHTML = '';
-    if(!hasSeisan){
-      stepHTML = `<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-        <span style="font-size:28px">📒</span>
-        <div style="flex:1;min-width:200px">
-          <div style="font-weight:700;color:#92400e;font-size:14px">まず精算書を入力しましょう</div>
-          <div style="font-size:11px;color:#475569;margin-top:2px">本部精算書（PDF）を取込めば、ここから始まる流れがすべて自動連動します</div>
-        </div>
-        <button class="btn-primary btn-sm" onclick="showGroup('other');showSub('other','files')">📁 PDFアップロード</button>
-        <button class="btn-secondary btn-sm" onclick="showGroup('jisseki');showSub('jisseki','seisan')">✏️ 手動入力</button>
-      </div>`;
-    }else if(!hasAIProposal){
-      stepHTML = `<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-        <span style="font-size:28px">🤖</span>
-        <div style="flex:1;min-width:200px">
-          <div style="font-weight:700;color:#5b21b6;font-size:14px">AI に計画を提案させましょう</div>
-          <div style="font-size:11px;color:#475569;margin-top:2px">入力済みの精算書・施策・外部要因をもとに、AI が来月の最適計画を根拠付きで作成します</div>
-        </div>
-        <button class="btn-primary btn-sm" onclick="showGroup('plan');showSub('plan','plan-ai')" style="background:#7c3aed">✨ AI に提案させる</button>
-      </div>`;
-    }else if(!hasAdopted){
-      const pid = state.aiProposals[0].id;
-      stepHTML = `<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-        <span style="font-size:28px">✅</span>
-        <div style="flex:1;min-width:200px">
-          <div style="font-weight:700;color:#065f46;font-size:14px">AI 提案を採用しましょう</div>
-          <div style="font-size:11px;color:#475569;margin-top:2px">AI が出した提案を確認 → 「✓ 採用」で月次目標に反映 → 達成度モニタリングが始まります</div>
-        </div>
-        <button class="btn-primary btn-sm" onclick="showGroup('plan');showSub('plan','plan-ai');setTimeout(()=>viewAIProposal(${pid}),100)" style="background:#10b981">→ 提案を確認</button>
-      </div>`;
-    }else if(!hasSessaku){
-      stepHTML = `<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-        <span style="font-size:28px">🎯</span>
-        <div style="flex:1;min-width:200px">
-          <div style="font-weight:700;color:#1e3a5f;font-size:14px">施策を登録しましょう</div>
-          <div style="font-size:11px;color:#475569;margin-top:2px">具体的な販促・売場改善を登録すると、計画ROI と達成度が見えるようになります</div>
-        </div>
-        <button class="btn-primary btn-sm" onclick="showGroup('plan');showSub('plan','plan-sessaku')">+ 施策を追加</button>
-      </div>`;
-    }else{
-      stepHTML = `<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-        <span style="font-size:28px">🎉</span>
-        <div style="flex:1;min-width:200px">
-          <div style="font-weight:700;color:#065f46;font-size:14px">計画完了！実績を記録して進捗を確認しましょう</div>
-          <div style="font-size:11px;color:#475569;margin-top:2px">下のKPIで現状確認 / 週次レポートPDFを取込んでカテゴリ別の差分を見る</div>
-        </div>
-        <button class="btn-secondary btn-sm" onclick="showGroup('jisseki');showSub('jisseki','vs')">📈 計画 vs 実績</button>
-      </div>`;
-    }
-    nextStepEl.innerHTML = stepHTML;
-    nextStepEl.style.display = '';
-  }
-
-  // 主要KPI
-  const s = state.seisan||{};
-  const u = (s.uriage||0) + (s.sonotauriage||0);
-  const arari = (typeof window._lastArari === 'number') ? window._lastArari : 0;
-  const rieki = (typeof window._lastTenrieki === 'number') ? window._lastTenrieki : 0;
-  const fmtY = v => v?'¥'+Math.round(v).toLocaleString():'¥—';
-  const setKpi = (id, value, sub) => {
-    const card = document.getElementById(id);
-    if(!card)return;
-    card.querySelector('.home-kpi-value').textContent = value;
-    card.querySelector('.home-kpi-sub').textContent = sub;
+  const fmtY = v => (v && !isNaN(v))?'¥'+Math.round(v).toLocaleString():'¥—';
+  const setRate = (id, plan, actual) => {
+    const el = document.getElementById(id);
+    if(!el)return;
+    if(!plan || plan===0){ el.textContent='—'; el.className='cmp-kpi-rate'; return; }
+    const rate = (actual/plan)*100;
+    el.textContent = rate.toFixed(0)+'%';
+    el.className = 'cmp-kpi-rate ' + (rate>=100?'good':rate>=80?'warn':'bad');
   };
-  // 売上 - 前年比表示
-  const ly = state.seisan_lastyear||{};
-  const lyU = (ly.uriage||0) + (ly.sonotauriage||0);
-  const yoyU = lyU?((u/lyU*100).toFixed(0)+'%'):'—';
-  setKpi('home-kpi-uriage', fmtY(u), `前年比 ${yoyU}`);
-  // 粗利 - 利益率
-  const arariRate = u?((arari/u*100).toFixed(1)+'%'):'—';
-  setKpi('home-kpi-arari', fmtY(arari), `粗利率 ${arariRate}`);
-  // 店利益 - 計画達成
-  const targetProfit = state.monthly?.target_profit||0;
-  const profitVs = targetProfit?((rieki/targetProfit*100).toFixed(0)+'%'):'計画未設定';
-  setKpi('home-kpi-rieki', fmtY(rieki), `計画達成率 ${profitVs}`);
-  // 施策ROI
-  const totInvest = (state.sessaku||[]).reduce((s,x)=>s+(x.invest||0),0);
-  const totEffect = (state.sessaku||[]).reduce((s,x)=>s+(x.effect||0),0);
-  const roi = totInvest?((totEffect/totInvest*100).toFixed(0)+'%'):'施策未登録';
-  setKpi('home-kpi-roi', roi, `${(state.sessaku||[]).length}施策 / 投資 ${fmtY(totInvest)}`);
 
-  // AI 最新提案
-  const aiBox = document.getElementById('home-ai-summary');
-  const latest = (state.aiProposals||[])[0];
-  if(latest && latest.proposal){
-    const pr = latest.proposal;
-    const dt = new Date(latest.date).toLocaleDateString('ja-JP');
-    aiBox.innerHTML = `<div class="home-ai-summary-box">
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-        <b style="color:#5b21b6">${latest.scope==='week'?'📆 週次':'📅 月次'}提案 - ${latest.month||'—'}</b>
-        <span style="font-size:10px;color:#6b7280">${dt}</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">
-        <div>推奨売上: <b>${fmtY(pr.target_uriage)}</b></div>
-        <div>推奨店利益: <b>${fmtY(pr.target_tenrieki)}</b></div>
-      </div>
-      ${latest.summary_ja?`<div style="margin-top:6px;padding:6px;background:#fff;border-radius:4px;font-size:11px;color:#475569">${latest.summary_ja.slice(0,150)}${latest.summary_ja.length>150?'…':''}</div>`:''}
-      <div style="margin-top:6px"><button class="btn-secondary btn-sm" onclick="showGroup('plan');showSub('plan','plan-ai');setTimeout(()=>viewAIProposal(${latest.id}),100)">→ 詳細を見る</button></div>
-    </div>`;
-  }else{
-    aiBox.innerHTML = `<div class="text-gray text-sm" style="padding:14px;text-align:center;border:1px dashed var(--border);border-radius:6px">
-      まだ AI 提案がありません<br>
-      <button class="btn-primary btn-sm" onclick="showGroup('plan');showSub('plan','plan-ai')" style="background:#7c3aed;margin-top:6px">✨ AI に計画を提案させる</button>
-    </div>`;
+  // 計画値（state.monthly から）と実績値（state.seisan から）
+  const m = state.monthly||{};
+  const s = state.seisan||{};
+  const u_actual = (s.uriage||0) + (s.sonotauriage||0);
+  const u_plan = m.target_uriage||0;
+  const arari_actual = (typeof window._lastArari === 'number') ? window._lastArari : 0;
+  const arari_plan = u_plan * ((m.target_arari_rate||0)/100);
+  const rieki_actual = (typeof window._lastTenrieki === 'number') ? window._lastTenrieki : 0;
+  const rieki_plan = m.target_profit||0;
+  const eigyo_actual = (typeof sumCalc==='function' && typeof SEISAN_ROWS!=='undefined') ? sumCalc(SEISAN_ROWS.find(r=>r.key==='_eigyokei'), s) : 0;
+  const eigyo_plan = (m.target_kyuyo||0)+(m.target_mikiri||0)+(m.target_loss||0)+(m.target_hoso||0)+(m.target_konetsu||0)+(m.target_zappi||0);
+
+  // KPI 4枚
+  document.getElementById('cmp-uriage-plan').textContent = fmtY(u_plan);
+  document.getElementById('cmp-uriage-act').textContent = fmtY(u_actual);
+  setRate('cmp-uriage-rate', u_plan, u_actual);
+  document.getElementById('cmp-arari-plan').textContent = fmtY(arari_plan);
+  document.getElementById('cmp-arari-act').textContent = fmtY(arari_actual);
+  setRate('cmp-arari-rate', arari_plan, arari_actual);
+  document.getElementById('cmp-rieki-plan').textContent = fmtY(rieki_plan);
+  document.getElementById('cmp-rieki-act').textContent = fmtY(rieki_actual);
+  setRate('cmp-rieki-rate', rieki_plan, rieki_actual);
+  document.getElementById('cmp-eigyo-plan').textContent = fmtY(eigyo_plan);
+  document.getElementById('cmp-eigyo-act').textContent = fmtY(eigyo_actual);
+  // 営業費は逆: 実績 < 計画 が良い
+  const eel = document.getElementById('cmp-eigyo-rate');
+  if(eel){
+    if(!eigyo_plan){ eel.textContent='—'; eel.className='cmp-kpi-rate'; }
+    else{
+      const r = (eigyo_actual/eigyo_plan)*100;
+      eel.textContent = r.toFixed(0)+'%';
+      eel.className = 'cmp-kpi-rate ' + (r<=100?'good':r<=110?'warn':'bad');
+    }
   }
 
-  // 達成度
-  const tasseiBox = document.getElementById('home-tassei');
-  const tasseiData = [
-    {label:'売上', actual:u, target:state.monthly?.target_uriage||0},
-    {label:'粗利', actual:arari, target:(state.monthly?.target_uriage||0)*((state.monthly?.target_arari_rate||30)/100)},
-    {label:'店利益', actual:rieki, target:targetProfit}
-  ];
-  let tasseiHtml = '';
-  tasseiData.forEach(t=>{
-    if(t.target<=0){
-      tasseiHtml += `<div class="home-tassei-row"><span class="label">${t.label}</span><span style="font-size:11px;color:#9ca3af">計画未設定</span></div>`;
-      return;
+  // カテゴリ別 計画 vs 実績テーブル
+  const catTable = document.getElementById('cmp-cat-table');
+  if(catTable && typeof CATS !== 'undefined'){
+    const rows = [];
+    CATS.forEach(c=>{
+      const plan = state.cats?.[c]?.kp_u || state.cats?.[c]?.mp_u || 0;
+      const actual = state.catReport?.alco?.[c]?.sales_curr || state.catReport?.dept?.[c]?.sales_curr || 0;
+      if(plan>0 || actual>0){
+        rows.push({cat:c, plan, actual});
+      }
+    });
+    if(rows.length){
+      let html = '<thead><tr><th>カテゴリ</th><th>計画</th><th>実績</th><th>達成率</th></tr></thead><tbody>';
+      rows.sort((a,b)=>b.plan-a.plan).slice(0,15).forEach(r=>{
+        const pct = r.plan?(r.actual/r.plan*100):null;
+        const cls = pct==null?'':(pct>=100?'rate-good':pct>=80?'rate-warn':'rate-bad');
+        html += `<tr><td>${r.cat}</td><td>${fmtY(r.plan)}</td><td>${fmtY(r.actual)}</td><td class="${cls}">${pct==null?'—':pct.toFixed(0)+'%'}</td></tr>`;
+      });
+      html += '</tbody>';
+      catTable.innerHTML = html;
+    }else{
+      catTable.innerHTML = '<thead><tr><th colspan="4" style="text-align:center;color:#9ca3af;padding:14px">カテゴリデータが未入力です</th></tr></thead>';
     }
-    const pct = (t.actual/t.target*100);
-    const w = Math.min(100, Math.max(0, pct));
-    const color = pct>=100?'#10b981':pct>=80?'#f59e0b':'#ef4444';
-    tasseiHtml += `<div class="home-tassei-row">
-      <span class="label">${t.label}</span>
-      <div class="bar"><div class="bar-fill" style="width:${w}%;background:${color}"></div></div>
-      <span class="pct" style="color:${color}">${pct.toFixed(0)}%</span>
-    </div>`;
-  });
-  tasseiBox.innerHTML = tasseiHtml;
+  }
 
-  // 最近の Q&A
-  const qaBox = document.getElementById('home-qa-recent');
-  const recentQA = (state.qaLog||[]).slice(0,2);
-  if(recentQA.length){
-    qaBox.innerHTML = recentQA.map(q=>`
-      <div style="padding:8px;border:1px solid var(--border);border-radius:6px;margin-bottom:6px;font-size:11px">
-        <div style="font-weight:600;color:#0e7490;margin-bottom:4px">❓ ${(q.question||'').slice(0,60)}${(q.question||'').length>60?'…':''}</div>
-        <div style="color:#475569;line-height:1.5">${(q.answer||'').slice(0,120)}${(q.answer||'').length>120?'…':''}</div>
-      </div>`).join('');
-  }else{
-    qaBox.innerHTML = `<div class="text-gray text-sm" style="padding:10px;text-align:center;border:1px dashed var(--border);border-radius:6px">
-      まだ質問がありません<br>
-      <button class="btn-secondary btn-sm" onclick="showGroup('plan');showSub('plan','plan-qa')" style="margin-top:6px">💬 Claude に質問する</button>
-    </div>`;
+  // チャート（折りたたみ open 時のみ描画）
+  const chartCanvas = document.getElementById('cmp-chart');
+  if(chartCanvas && typeof Chart !== 'undefined'){
+    if(window._cmpChart){try{window._cmpChart.destroy()}catch(e){}}
+    window._cmpChart = new Chart(chartCanvas, {
+      type:'bar',
+      data:{
+        labels:['売上','粗利','店利益','営業費'],
+        datasets:[
+          {label:'計画', backgroundColor:'rgba(96,165,250,0.85)', data:[u_plan, arari_plan, rieki_plan, eigyo_plan]},
+          {label:'実績', backgroundColor:'rgba(34,197,94,0.85)', data:[u_actual, arari_actual, rieki_actual, eigyo_actual]}
+        ]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{position:'top',labels:{font:{size:11}}}},
+        scales:{y:{ticks:{font:{size:10}, callback: v=>'¥'+(v>=1e8?(v/1e8).toFixed(1)+'億':v>=1e4?(v/1e4).toFixed(0)+'万':v.toLocaleString())}}}
+      }
+    });
   }
 }
 
-// ===== v22.0: 店利益 計算ブレークダウン =====
+// ===== v23.0: 店利益 計算ブレークダウン =====
 function renderSeisanBreakdown(){
   const el = document.getElementById('seisan-breakdown-content');
   if(!el)return;
@@ -4755,13 +4668,13 @@ function renderSeisanBreakdown(){
   const eigyokeiKeys = ['kyuyo','houtei_fukuri','mikiri','loss','shomohin','hoso','shuzen','genkin','setsubi_lease','setsubi_shuzen','tsushin','konetsu','shiharai_risoku','songai','hieigyo','zappi'];
   const eigyokei = eigyokeiKeys.reduce((sum,k)=>sum+v(k),0);
   const zatsuyeki = v('zatsuyeki'), mikiriShien = v('mikiri_shien'), denkiShien = v('denki_shien');
-  // v22.0: 雑益計のスマート判定
+  // v23.0: 雑益計のスマート判定
   const _zatsuCombined = (zatsuyeki > 50000) && (mikiriShien>0 || denkiShien>0) && (zatsuyeki >= mikiriShien + denkiShien);
   const zatsukei = _zatsuCombined ? zatsuyeki : (zatsuyeki + mikiriShien + denkiShien);
   const zatsuTotal_naive = zatsuyeki + mikiriShien + denkiShien;  // 素朴な合計（参考表示）
   const tenrieki = fcin - eigyokei + zatsukei;
 
-  // 警告判定（v22.0: スマート判定通知に変更）
+  // 警告判定（v23.0: スマート判定通知に変更）
   let warnings = [];
   let notes = [];
   // 雑益計の自動判定通知（二重計上を回避済み）
@@ -4875,7 +4788,7 @@ function renderSeisanBreakdown(){
   el.innerHTML = html;
 }
 
-// ===== v22.0: 世界一挑戦支援 =====
+// ===== v23.0: 世界一挑戦支援 =====
 // state.sekaiichi.challenges[] = { id, name, metric, target, current, tiers:[{threshold_pct, amount}], note }
 // 達成率 = current / target * 100
 // 達成率が tier.threshold_pct 以上の最大ティアの amount を支援額とする
@@ -5033,7 +4946,7 @@ function renderSekaiichi(){
   try{ if(typeof calcCnSupport==='function')calcCnSupport(); }catch(e){}
 }
 
-// ===== v22.0: AI計画提案 =====
+// ===== v23.0: AI計画提案 =====
 // 現在の state を集約して Claude に渡し、構造化された計画提案を取得する
 // 設計方針:
 //   - すべての関連state を 1つの JSON にまとめる（snapshot）
@@ -5120,7 +5033,7 @@ function _aiCollectInput(scope){
     confidence: p.proposal?.confidence
   }));
 
-  // v22.0: 3層タイミングモデル
+  // v23.0: 3層タイミングモデル
   const kakuteiMonth = state.seisan?.month || '';
   const sokuhouMonth = kakuteiMonth ? _addMonths(kakuteiMonth, 1) : '';
   const planMonth = state.planMonth || (kakuteiMonth ? _addMonths(kakuteiMonth, 2) : '');
@@ -5436,7 +5349,7 @@ function adoptAIProposal(id){
   // 月次目標タブに値が入っているはずなので restoreForm を呼んで反映
   try{ restoreForm && restoreForm(); }catch(e){}
   try{ calcMonthly && calcMonthly(); }catch(e){}
-  // v22.0: チャートのAI推奨値オーバーレイも更新
+  // v23.0: チャートのAI推奨値オーバーレイも更新
   try{ renderSeisanCharts && renderSeisanCharts(); }catch(e){}
   showToast('✅ 提案を採用し月次目標に反映しました');
 }
@@ -5494,7 +5407,7 @@ function duplicateAIProposalAsCustomPrompt(id){
   showToast('📝 プロンプトをカスタム欄にコピーしました');
 }
 
-// ===== v22.0: AI提案比較ビュー =====
+// ===== v23.0: AI提案比較ビュー =====
 function openAIProposalCompare(){
   const card=document.getElementById('ai-compare-card');
   if(card)card.style.display='';
@@ -5577,12 +5490,12 @@ function renderAIProposalCompare(){
   });
 }
 
-// ===== v22.0: AI推奨値を精算書チャートにオーバーレイ =====
+// ===== v23.0: AI推奨値を精算書チャートにオーバーレイ =====
 function _latestAdoptedAIProposal(){
   return (state.aiProposals||[]).find(p=>p.status==='adopted') || (state.aiProposals||[])[0] || null;
 }
 
-// ===== v22.0: Q&A メモ機能（NotebookLM代替） =====
+// ===== v23.0: Q&A メモ機能（NotebookLM代替） =====
 function _qaBuildContext(level){
   const s = state.seisan||{};
   const sumKey = (b,r)=>{ try{return sumCalc(SEISAN_ROWS.find(x=>x.key===r),b||{})}catch(e){return 0} };
@@ -6010,7 +5923,7 @@ async function handleSeisanPDF(ev){
 
 function ocrShowPageSelector(){
   document.getElementById('ocr-modal-loading').style.display='none';
-  // v22.0: 取込中表示が残らないようタイトルを更新
+  // v23.0: 取込中表示が残らないようタイトルを更新
   document.getElementById('ocr-modal-title').textContent='📄 精算書 — ページを選択';
   const result = document.getElementById('ocr-modal-result');
   result.style.display='block';
@@ -7255,7 +7168,7 @@ function renderWeeklyProgress(){
 }
 
 // ===== DAILY =====
-// v22.0: 月累計・先週実績の入力欄は廃止。互換のため stub だけ残す（古い保存データ等の影響を吸収）
+// v23.0: 月累計・先週実績の入力欄は廃止。互換のため stub だけ残す（古い保存データ等の影響を吸収）
 function calcDailyStats(){ /* deprecated: kept as no-op for backward compat */ }
 function calcTimeStats(){
   const au=num('t-asa-u'),hu=num('t-hiru-u'),yu=num('t-yu-u');
@@ -7299,7 +7212,7 @@ function saveYoubi(){
 
 // ===== CATEGORY TAB =====
 // ===== 週次お店づくりレポート（DEPT別／ALCOカテゴリ別） =====
-// v22.0: 本部の週次レポートPDFを取り込み、PDFを左に表示しながら手入力できる
+// v23.0: 本部の週次レポートPDFを取り込み、PDFを左に表示しながら手入力できる
 function _ensureCatReport(){
   if(!state.catReport)state.catReport={period:{curr_start:'',curr_end:'',prev_start:'',prev_end:''},dept:{},alco:{}};
   ['dept','alco'].forEach(sec=>{
@@ -7485,7 +7398,7 @@ async function handleCategoryPDF(ev){
 
 function _catReportShowPageSelector(){
   document.getElementById('ocr-modal-loading').style.display='none';
-  // v22.0: 取込中表示が残らないようタイトルを更新
+  // v23.0: 取込中表示が残らないようタイトルを更新
   document.getElementById('ocr-modal-title').textContent='📦 週次レポート — ページを選択';
   const result=document.getElementById('ocr-modal-result');
   result.style.display='block';
@@ -7880,7 +7793,7 @@ function renderMgmtCompare(){
     planFin: planFinal, curAct: state.seisan, ly: state.seisan_lastyear
   };
 
-  // v22.0: タイミング3層モデルに応じてラベル変更
+  // v23.0: タイミング3層モデルに応じてラベル変更
   const planMonthDisp = state.planMonth || (curMonth?_addMonths(curMonth,2):'') || '—';
   let html = `<thead>
     <tr>
@@ -8105,11 +8018,11 @@ function renderCategoryTab(){
   try{ renderCatReport(); }catch(e){ console.warn(e); }
   try{ renderMgmtCompare(); }catch(e){ console.warn(e); }
   try{ renderAicoDriver(); }catch(e){ console.warn(e); }
-  // v22.0: 旧「カテゴリ別計画（売上/粗利/AICO）」UI は撤去。
+  // v23.0: 旧「カテゴリ別計画（売上/粗利/AICO）」UI は撤去。
   // データ自体は state.cats に残るので互換のため saveCat は維持。
 }
 // 後方互換: 既存の onclick 等から呼ばれても落ちないように noop
-function switchCatView(_v){ /* removed in v22.0 */ }
+function switchCatView(_v){ /* removed in v23.0 */ }
 function saveCat(cat,key,val){
   if(!state.cats[cat])state.cats[cat]={};
   state.cats[cat][key]=isNaN(val)?val:parseFloat(val)||0;
@@ -8117,7 +8030,7 @@ function saveCat(cat,key,val){
 }
 
 // ===== SESSAKU BOOKLET (PDF) =====
-// v22.0: 複数ファイル一括取込対応
+// v23.0: 複数ファイル一括取込対応
 async function handleBookletPDF(ev){
   const files = Array.from(ev.target.files || []);
   ev.target.value=''; // 同じファイルを再選択できるように先にクリア
@@ -8154,7 +8067,7 @@ async function handleBookletPDF(ev){
         if(cur.parts.length)lines.push(cur.parts.join('').trim());
         fullText+=lines.join('\n')+'\n';
       }
-      // v22.0: スマート抽出（Claude API → regex フォールバック）
+      // v23.0: スマート抽出（Claude API → regex フォールバック）
       const onProg = (msg)=>{ if(prog)prog.textContent = msg; };
       const result = await extractBookletItemsSmart(fullText, file.name, onProg);
       const items = result.items;
@@ -8214,7 +8127,7 @@ async function handleBookletPDF(ev){
   }
 }
 
-// v22.0: 取込済みファイル単位での取り消し（その出典のitemsを削除）
+// v23.0: 取込済みファイル単位での取り消し（その出典のitemsを削除）
 function removeBookletSource(filename){
   if(!state.monthly?.sessaku_booklet)return;
   if(!confirm(`「${filename}」由来の施策候補をすべて削除しますか？\n（ユーザーがチェック済み・週割当した項目もまとめて削除されます）`))return;
@@ -8234,7 +8147,7 @@ function removeBookletSource(filename){
 }
 
 function extractBookletItems(text){
-  // v22.0: regex フォールバック（Claude API キー未設定時用）
+  // v23.0: regex フォールバック（Claude API キー未設定時用）
   // 抽出条件を緩めて、より多くの行を施策候補として拾う
   const lines=text.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
   const out=[];const seen=new Set();
@@ -8259,7 +8172,7 @@ function extractBookletItems(text){
   return out.slice(0,300);
 }
 
-// v22.0: Claude API でスマート抽出
+// v23.0: Claude API でスマート抽出
 async function extractBookletItemsViaClaude(text, filename, apiKey){
   const prompt = `次のテキストはローソンの「お店作り冊子」または同様の本部資料です。
 店舗で実施すべき施策・取り組み・キャンペーン・重点商品の名称を、項目として箇条書き抽出してください。
@@ -8333,7 +8246,7 @@ function renderBookletList(){
   const b=state.monthly.sessaku_booklet||{items:[]};
   const items=b.items||[];
   if(!items.length){
-    // v22.0: ソースは存在するが items 0 件のケース
+    // v23.0: ソースは存在するが items 0 件のケース
     if(Array.isArray(b.sources) && b.sources.length){
       const srcChipsEmpty = b.sources.map(s=>{
         const dt = new Date(s.uploaded_at).toLocaleDateString('ja-JP',{month:'2-digit',day:'2-digit'});
@@ -8345,7 +8258,7 @@ function renderBookletList(){
     }
     el.innerHTML='<div class="text-gray text-sm">まだ施策候補がありません。PDFをアップロードするか「＋手動追加」してください。</div>';return;
   }
-  // v22.0: 複数PDF対応 - 取込ファイル一覧（各ファイルに×取消ボタン）
+  // v23.0: 複数PDF対応 - 取込ファイル一覧（各ファイルに×取消ボタン）
   let meta = '';
   if(Array.isArray(b.sources) && b.sources.length){
     const srcChips = b.sources.map(s=>{
@@ -8609,7 +8522,7 @@ function deleteFileUpload(type, idx){
   if(!state.fileUploads||!state.fileUploads[type])return;
   const entry = state.fileUploads[type][idx];
   if(!entry)return;
-  // v22.0: 副作用も含めて取消するか確認
+  // v23.0: 副作用も含めて取消するか確認
   let extra = '';
   if(type==='booklet')      extra = '\n（このファイル由来の施策候補も合わせて削除されます）';
   else if(type==='external')extra = '\n（このファイル由来の外部要因テキストも合わせて削除されます）';
@@ -8707,7 +8620,7 @@ async function handleSyohouPDF(ev){
 
 // 外部要因 PDF / テキスト / Markdown ハンドラ
 // テキストを抽出して state.externalFactors に要約として追加し、先週検証タブの外部要因にも反映
-// v22.0: 複数ファイル対応
+// v23.0: 複数ファイル対応
 async function handleExternalPDF(ev){
   const files = Array.from(ev.target.files || []);
   ev.target.value='';
@@ -9246,7 +9159,7 @@ function gistHandleHash(){
 let saveTimer=null;
 function saveAll(immediate=false){
   collectFormValues();
-  // v22.0: ホームが開いている時はリアルタイム再描画 (①→②→③ 連動)
+  // v23.0: ホームが開いている時はリアルタイム再描画 (①→②→③ 連動)
   if(document.getElementById('group-home')?.classList.contains('active')){
     try{ renderHomeDashboard && renderHomeDashboard(); }catch(e){}
   }
@@ -9278,7 +9191,7 @@ function collectFormValues(){
   const jyEl=document.getElementById('m-jyokyo-nenhi');if(jyEl)state.monthly.jyokyo_nenhi=parseFloat(jyEl.value)||0;
   const znEl=document.getElementById('m-zennen-nishin');if(znEl)state.monthly.zennen_nishin=parseNum(znEl.value);
   const kEl=document.getElementById('kaizen-memo');if(kEl)state.kaizen_memo=kEl.value;
-  // v22.0: 月累計・先週は廃止。時間帯別のみ保存
+  // v23.0: 月累計・先週は廃止。時間帯別のみ保存
   ['t_asa_u','t_asa_k','t_asa_u_nen','t_asa_k_nen','t_hiru_u','t_hiru_k','t_hiru_u_nen','t_hiru_k_nen','t_yu_u','t_yu_k','t_yu_u_nen','t_yu_k_nen'].forEach(k=>{
     const el=document.getElementById(k.replace(/_/g,'-'));if(el)state.daily[k]=parseNum(el.value);
   });
@@ -9316,39 +9229,39 @@ function loadAll(){
     }
     if(s.daily)Object.assign(state.daily,s.daily);
     if(s.cats)Object.keys(s.cats).forEach(k=>{state.cats[k]=Object.assign(state.cats[k]||{},s.cats[k]);});
-    // v22.0: 処方箋/ドライバ次週計画
+    // v23.0: 処方箋/ドライバ次週計画
     if(s.aicoDriver){
       state.aicoDriver=state.aicoDriver||{};
       Object.keys(s.aicoDriver).forEach(cat=>{
         state.aicoDriver[cat]=Object.assign({},state.aicoDriver[cat]||{},s.aicoDriver[cat]||{});
       });
     }
-    // v22.0: 月次ファイル管理（アップロード履歴）
+    // v23.0: 月次ファイル管理（アップロード履歴）
     if(s.fileUploads){
       state.fileUploads=state.fileUploads||{seisan:[],catreport:[],booklet:[],syohou:[]};
       ['seisan','catreport','booklet','syohou','external'].forEach(t=>{
         if(Array.isArray(s.fileUploads[t]))state.fileUploads[t]=s.fileUploads[t].slice(0,10);
       });
     }
-    // v22.0: 月別データアーカイブ
+    // v23.0: 月別データアーカイブ
     if(s.byMonth && typeof s.byMonth==='object'){
       state.byMonth = s.byMonth;
     }
-    // v22.0: 外部要因テキスト要約
+    // v23.0: 外部要因テキスト要約
     if(Array.isArray(s.externalFactors))state.externalFactors=s.externalFactors;
-    // v22.0: AI計画提案
+    // v23.0: AI計画提案
     if(Array.isArray(s.aiProposals))state.aiProposals=s.aiProposals;
     if(typeof s.aiPromptCustom==='string')state.aiPromptCustom=s.aiPromptCustom;
-    // v22.0: Q&Aログ
+    // v23.0: Q&Aログ
     if(Array.isArray(s.qaLog))state.qaLog=s.qaLog;
-    // v22.0: 世界一挑戦支援
+    // v23.0: 世界一挑戦支援
     if(s.sekaiichi&&typeof s.sekaiichi==='object'){
       if(!state.sekaiichi)state.sekaiichi={challenges:[]};
       if(Array.isArray(s.sekaiichi.challenges))state.sekaiichi.challenges=s.sekaiichi.challenges;
     }
-    // v22.0: 計画月
+    // v23.0: 計画月
     if(typeof s.planMonth==='string')state.planMonth=s.planMonth;
-    // v22.0: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）
+    // v23.0: 週次お店づくりレポート（DEPT別＋ALCOカテゴリ別）
     if(s.catReport){
       if(!state.catReport)state.catReport={period:{},dept:{},alco:{}};
       if(s.catReport.period)state.catReport.period=Object.assign(state.catReport.period||{},s.catReport.period);
@@ -9408,7 +9321,7 @@ function restoreForm(){
   if(!state.monthly.target_uriage&&state.seisan.uriage){const el=document.getElementById('m-target-uriage');if(el)el.value=state.seisan.uriage;}
   const jEl=document.getElementById('m-juten-sessaku');if(jEl)jEl.value=state.monthly.juten_sessaku||'';
   const kEl=document.getElementById('kaizen-memo');if(kEl)kEl.value=state.kaizen_memo||'';
-  // v22.0: 月累計・先週の復元は廃止（state.daily.tsuki_*/sen_* は localStorage に残るが UI からは参照しない）
+  // v23.0: 月累計・先週の復元は廃止（state.daily.tsuki_*/sen_* は localStorage に残るが UI からは参照しない）
   ['t_asa_u','t_asa_k','t_asa_u_nen','t_asa_k_nen','t_hiru_u','t_hiru_k','t_hiru_u_nen','t_hiru_k_nen','t_yu_u','t_yu_k','t_yu_u_nen','t_yu_k_nen'].forEach(k=>{
     const el=document.getElementById(k.replace(/_/g,'-'));if(el&&state.daily[k])el.value=state.daily[k];
   });
@@ -9546,7 +9459,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
   initYoubiGrid();initOrderFilter();
   if(typeof setupDropZones==='function')setupDropZones();
   if(typeof claudeKeyUpdateStatus==='function')claudeKeyUpdateStatus();
-  // v22.0: ホームダッシュボードを初期描画
+  // v23.0: ホームダッシュボードを初期描画
   try{ renderHomeDashboard(); }catch(e){ console.warn('home',e); }
   const now=new Date();
   setText('header-date',`${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`);
